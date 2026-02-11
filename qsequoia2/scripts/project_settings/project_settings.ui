@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>373</width>
-    <height>347</height>
+    <width>449</width>
+    <height>551</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -59,6 +59,9 @@
      </item>
      <item>
       <widget class="QLabel" name="label_occup">
+       <property name="toolTip">
+        <string>Occupation des entitées sur la mise en page</string>
+       </property>
        <property name="text">
         <string>Occupation [%] :</string>
        </property>
@@ -68,6 +71,9 @@
       <widget class="QgsDoubleSpinBox" name="dsb_occup">
        <property name="enabled">
         <bool>false</bool>
+       </property>
+       <property name="toolTip">
+        <string>Occupation des entitées sur la mise en page</string>
        </property>
        <property name="suffix">
         <string extracomment="%"/>
@@ -86,6 +92,64 @@
     </layout>
    </item>
    <item>
+    <layout class="QHBoxLayout" name="scaleLayout">
+     <item>
+      <widget class="QLabel" name="scale">
+       <property name="text">
+        <string>Échelle :</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSpinBox" name="scaleBox">
+       <property name="maximum">
+        <number>1000000000</number>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>10</width>
+         <height>10</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="optionsLayout">
+     <item>
+      <widget class="QCheckBox" name="copy_layers">
+       <property name="text">
+        <string>Copier et enregistrer les couches et styles dans le projet</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="optionsSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
     <widget class="QScrollArea" name="scrollArea">
      <property name="widgetResizable">
       <bool>true</bool>
@@ -95,21 +159,24 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>349</width>
-        <height>195</height>
+        <width>425</width>
+        <height>337</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="scrollLayout">
        <item>
         <widget class="QGroupBox" name="layers_box">
          <property name="title">
-          <string>Couches à inclure dans le composeur</string>
+          <string>Couches incluses dans le composeur</string>
          </property>
          <layout class="QVBoxLayout" name="layersLayout">
           <item>
            <widget class="QTabWidget" name="layers_tab">
             <property name="tabPosition">
-             <enum>QTabWidget::West</enum>
+             <enum>QTabWidget::North</enum>
+            </property>
+            <property name="currentIndex">
+             <number>-1</number>
             </property>
            </widget>
           </item>
@@ -136,7 +203,7 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="Mise_en_page">
+      <widget class="QPushButton" name="layout">
        <property name="styleSheet">
         <string notr="true">background-color: rgb(249, 255, 248);</string>
        </property>

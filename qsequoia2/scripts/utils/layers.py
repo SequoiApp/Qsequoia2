@@ -1,13 +1,5 @@
 from pathlib import Path
-from qgis.core import (
-    QgsProject,
-    QgsRasterLayer,
-    QgsVectorLayer,
-    QgsMessageLog,
-    Qgis,
-    QgsRelation,
-    QgsEditorWidgetSetup,
-)
+from qgis.core import (QgsProject,QgsVectorLayer,QgsMessageLog,Qgis,QgsRelation,QgsEditorWidgetSetup,)
 from osgeo import ogr
 
 from .config import get_wmts, get_display_name

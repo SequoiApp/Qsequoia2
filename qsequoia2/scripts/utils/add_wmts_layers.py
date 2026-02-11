@@ -12,12 +12,7 @@ Fonctionnalité :
 - Créer un groupe optionnel pour les couches
 """
 
-from qgis.core import (
-    QgsProject,
-    QgsRasterLayer,
-    QgsMessageLog,
-    Qgis,
-)
+from qgis.core import (QgsProject, QgsRasterLayer,QgsMessageLog,Qgis)
 
 from .config import get_wmts
 

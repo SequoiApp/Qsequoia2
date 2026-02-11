@@ -1,31 +1,33 @@
 assemblage:
   canvas:
     scale: 7500
-    zoom_on: parca_polygon_lgd_assemblage
-    readonly: [parca_polygon_lgd_assemblage]
+    zoom_on: SEQ_PARCA_poly
+    readonly: [SEQ_PARCA_poly]
     groups:
-      - name: LEGEND
-        type: vector
-        layers: [parca_polygon_lgd_assemblage]
+      #- name: LEGEND
+        #type: vector
+        #layers: [SEQ_PARCA_poly_lgd_assemblage]
+
       - name: VECTEUR
         type: vector
         layers: &assemblage_w_vect 
-          - com_line
-          - com_point
-          - infra_point_assemblage
-          - infra_line
-          - infra_polygon
-          - lieudit_point
-          - road_line
-          - road_polygon
-          - route_line
-          - route_polygon
+          - COMS_TOPO_line
+          - COMS_TOPO_point
+          - INFRA_point
+          - INFRA_line
+          - INFRA_poly
+          - TOPONYME_point
+          - ROAD_TOPO_line
+          - ROAD_TOPO_poly
+          - ROAD_GRAPH_line
+          - ROAD_GRAPH_poly
+          - CAD_PARCELLE_poly
       - name: SEQUOIA
         type: vector
         layers: &assemblage_w_seq
-          - prop_line
-          - parca_polygon_occup
-          - ua_polygon_occup
+          - SEQ_OWNER_line
+          - SEQ_PARCA_poly
+
       - name: WMTS
         type: wmts
         layers: &assemblage_w_wmts
@@ -47,9 +49,9 @@ assemblage:
     theme: '1_VECTEUR+SEQUOIA'
     legends:
       - name: legend1
-        layers: ['parca_polygon_lgd_assemblage']
-      - name: legend2
-        layers: ['parca_polygon_occup', 'ua_polygon_occup']
+        layers: ['SEQ_PARCA_poly']
+      #- name: legend2
+        #layers: ['parca_polygon_occup', 'ua_polygon_occup']
 
 situation:
   canvas:
@@ -115,7 +117,7 @@ peuplements:
     theme: '1_VECTEUR+SEQUOIA'
     legends:
       - name: legend1
-        layers: ['parca_polygon_lgd_peuplements']
+        layers: ['SEQ_SSPF_poly']
       - name: legend2
         layers: ['sspf_polygon_plt']
 

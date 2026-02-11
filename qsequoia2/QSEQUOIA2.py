@@ -394,6 +394,10 @@ class QSEQUOIA2:
             if hasattr(self.dockwidget, "data_settings_tab"):
                 self.dockwidget.data_settings_tab.current_project_name = self.current_project_name
                 self.dockwidget.data_settings_tab.current_project_folder = self.current_project_folder
+            
+            if hasattr(self.dockwidget, "project_settings_tab"):
+                self.dockwidget.project_settings_tab.current_project_name = self.current_project_name
+                self.dockwidget.project_settings_tab.current_project_folder = self.current_project_folder
 
         # Mise à jour éventuelle du connect_dialog
         if self.connect_dialog:

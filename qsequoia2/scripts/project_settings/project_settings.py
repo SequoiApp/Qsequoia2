@@ -1,168 +1,282 @@
-from qgis.PyQt.QtWidgets import QDialog, QMessageBox
+import os
+import yaml
 
-from PyQt5.QtWidgets import QDialog, QMessageBox, QFileDialog
-from qgis.PyQt.QtWidgets import QWidget, QVBoxLayout, QTreeWidget, QTreeWidgetItem, QCheckBox,QComboBox
-from PyQt5.QtCore import Qt, QTimer
-
-
-from qgis.core import QgsProject
-
-#from .project_settings_service import compute_layout_info, import_layout, configure_layout
-
-# Import from utils folder
-#from ...utils.config import get_project, get_path, get_project_canvas, get_project_layout
-#from ...utils.layers import configure_snapping 
-#from ...utils.utils import show_message, clear_project, create_project
-#from ...utils.variable import set_project_variable, get_project_variable, get_global_variable
-#from ..forest_settings.forest_settings import ForestSettingsDialog
-
+from dataclasses import dataclass, field
 from pathlib import Path
-import os,yaml, sys
-from PyQt5 import QtCore, QtGui, QtWidgets
+
+from qgis.PyQt.QtWidgets import QDialog, QMessageBox
+from PyQt5.QtWidgets import (QDialog,QWidget,QVBoxLayout,QCheckBox,QLabel)
+from qgis.core import Qgis, QgsProject, QgsMessageLog, QgsLayerTreeGroup, QgsCoordinateReferenceSystem, QgsMapThemeCollection
+from qgis.utils import iface
+
+from qsequoia2.scripts.utils.layers import resolve_layer_name
+
+
 from .project_settings_dialog import Ui_ProjectSettingsDialog
 
 
+# Import from utils folder
+from .project_config import ProjectConfig
+from .project_settings_service import compute_layout_info, import_layout, configure_layout
+from ..utils.layers import configure_snapping 
+from .layout import ProjectBuilder
+from ..utils.variable import set_project_variable
+
+
+
 class ProjectSettingsDialog(QDialog, Ui_ProjectSettingsDialog):
-    def __init__(self, current_project_name, current_style_folder, downloads_path, current_project_folder, iface, parent=None):
+
+    # ==========================================================
+    # INIT
+    # ==========================================================
+
+    def __init__(self,current_project_name,current_style_folder,downloads_path,current_project_folder,iface,parent=None):
         super().__init__(parent)
+
         self.iface = iface
 
-        self.current_project_name=current_project_name
-        self.current_style_folder=current_style_folder
-        self.downloads_path=downloads_path
-        self.curent_project_folder=current_project_folder
+        self.current_project_name = current_project_name
+        self.current_style_folder = current_style_folder
+        self.downloads_path = downloads_path
+        self.current_project_folder = current_project_folder
 
-        #self.ui = Ui_ProjectSettingsDialog()
         self.setupUi(self)
-        self.dock = parent
 
-        self.projects_list = self.get_current_project_type()
+        # YAML principal
+        self.yaml_path = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), "..", "..", "inst", "project.yaml")
+        )
 
-        cb = self.comboBox_projects
-        cb.addItem("") 
-        cb.addItems(self.projects_list)
-        cb.setCurrentIndex(0)
+        # Liste des projets
+        self.projects_list = self.get_current_project_type(self.yaml_path)
 
+        # ComboBox
+        self.comboBox_projects.addItem("")
+        self.comboBox_projects.addItems(self.projects_list)
+        self.comboBox_projects.setCurrentIndex(0)
+
+        # Connexions
         self.comboBox_projects.currentIndexChanged.connect(self._on_project_changed)
+        self.comboBox_projects.currentTextChanged.connect(self.update_scale)
+        self.layout.clicked.connect(self.accept)
 
-     
-    def get_current_project_type(self):
-        """Détermine les projets disponibles via project.yaml."""
-        yaml_path = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "..", "..", "inst", "project.yaml"))
-        
+
+        self.config = ProjectConfig(self.yaml_path)
+
+
+    # ==========================================================
+    # PROJECT TYPES
+    # ==========================================================
+
+    def get_current_project_type(self, yaml_path):
+        """Retourne les types de projets disponibles depuis project.yaml"""
+
+        if not os.path.exists(yaml_path):
+            return []
+
         with open(yaml_path, "r", encoding="utf-8") as f:
             data = yaml.safe_load(f) or {}
 
         if not isinstance(data, dict):
-            return
-        
-        return [str(k) for k in data.keys()]
-    
+            return []
+
+        return list(data.keys())
+
     def _get_project_key(self):
-        """
-        Retourne le type de projet choisi par l'utilisateur
-        """
+        """Retourne le projet sélectionné"""
         return self.comboBox_projects.currentText()
 
+    # ==========================================================
+    # CALLBACK PROJECT CHANGE
+    # ==========================================================
+
     def _on_project_changed(self):
-        """
-        """
+        """Quand l'utilisateur change de projet"""
+
         project_key = self._get_project_key()
-        print(project_key)
 
+        if project_key:
+            self._layers_tab()
 
-    
+    # ==========================================================
+    # LAYERS TAB
+    # ==========================================================
 
-
-    def layers_tab(self):
+    def _layers_tab(self):
         """
-        Crée et remplit les onglets de l'objet layers_tab avec un onglet sequoia, vecteur et raster,
-        - Affiche l'ensemble des couches de SEQ_layers.YAML sous formes de checkbox
-        - Par défaut les couches cochées sont celles renseignées dans project.yaml selon le type de projet choisi
+        Affiche les couches définies dans project.yaml
+        en respectant les groupes (VECTEUR / SEQUOIA / WMTS)
+        et coche celles du thème par défaut.
         """
+
         project_type = self._get_project_key()
-        print("Chargement des couches pour :", project_type)
+        print("Chargement des couches depuis project.yaml :", project_type)
+
+        tab = self.layers_tab
+        tab.clear()
+
+        # ================================
+        # Charger la config du projet
+        # ================================
+
+        cfg = self.config._load_project().get(project_type)
+
+        if not cfg:
+            print("Projet introuvable dans project.yaml")
+            return
+
+        canvas_cfg = cfg.get("canvas", {})
+        groups = canvas_cfg.get("groups", [])
+
+        # ================================
+        # Layers cochés par défaut
+        # ================================
+
+        default_layers = self.config.get_default_layers(project_type)
 
 
+        # ================================
+        # Création des onglets par groupe
+        # ================================
 
-    def create_new_project():
-        """Ajoute la possibilité de créer un nouveau projet personnalisé"""
+        for group in groups:
 
-"""
+            group_name = group.get("name", "Sans nom")
+            layers = group.get("layers", [])
+
+            # aplatissement si anchors YAML
+            layers = self.config.flatten(layers)
+
+            # Widget onglet
+            tab_widget = QWidget()
+            layout = QVBoxLayout(tab_widget)
+
+            title = QLabel(f"<b>{group_name}</b>")
+            layout.addWidget(title)
+
+            # ================================
+            # Checkboxes des layers du groupe
+            # ================================
+
+            for layer_name in layers:
+
+                cb = QCheckBox(layer_name)
+                cb.setObjectName(f"chk_{layer_name}")
+
+                # coche si layer dans thème par défaut
+                if layer_name in default_layers:
+                    cb.setChecked(True)
+
+                layout.addWidget(cb)
+
+            layout.addStretch()
+
+            # Ajout onglet
+            tab.addTab(tab_widget, group_name)
 
 
-    # ------------------------------------------------------------------------
+    # ==========================================================
+    # SCALE UPDATE
+    # ==========================================================
 
-    # ------------------------------------------------------------------------
+    def update_scale(self, project_name: str):
+        """Met à jour scaleBox selon project.yaml"""
 
-    def _get_project_key(self):
-        selected_project_name = self.ui.comboBox_projects.currentText()
-        project_key = next((key for key, name in self.projects_list.items() if name == selected_project_name), None)
-        return project_key
-    
-    def accept(self):
-        project_key = self._get_project_key()
-        if not project_key:
-            show_message(self.iface, f"Projet {project_key} n'existe pas", "critical", 15)
-            return 
+        if not project_name:
+            return
 
-        # Resolve path and check existence
-        project_path = get_path(project_key)
-        if project_path.exists():
-            reply = QMessageBox.question(
-                self.iface.mainWindow(),
-                "Projet existant",
-                f"Le projet '{project_key}' existe déjà.\n"
-                "Souhaitez-vous l'ouvrir plutôt que d'en créer un nouveau ?",
-                QMessageBox.Yes | QMessageBox.No,
-                QMessageBox.Yes
-            )
-            if reply == QMessageBox.Yes:
-                # Open existing project and exit early
-                print("Opening existing project:", project_path)
-                self.project.read(str(project_path))
-                new_forest_dir = ForestSettingsDialog.get_forest_path_lookup().get(get_project_variable("forest_dirname"))
-                set_project_variable("forest_directory", new_forest_dir)
-                super().accept()
-                return
-        
         try:
-            set_project_variable("forest_map_project", project_key) #why do i need that ? I think is because of composer but i'm not sure anymore
-            clear_project()
-            create_project(project_key)
+            canvas = self.config.get_project_canvas(project_name)
+
+            if canvas.scale:
+                self.scaleBox.setValue(canvas.scale)
+
+        except Exception as e:
+            print("Erreur update_scale :", e)
+
+
+    
+
+    # ==========================================================
+    # Prise en compte des paramètres et acceptation du projet
+    # ==========================================================
+
+
+    def accept(self):
+
+        project_key = self._get_project_key()
+
+        if not project_key:
+            QMessageBox.warning(self, "Erreur", "Aucun projet sélectionné.")
+            return
+
+        try:
+            # ================================
+            # 1. Variable projet
+            # ================================
+            set_project_variable("forest_map_project", project_key)
+
+            # ================================
+            # 2. Construire projet via la classe
+            # ================================
+
+            if self.copy_layers.isChecked():
+                copy_layers = True
+            else:
+                copy_layers = False
+
+            builder = ProjectBuilder(copy_layers,current_project_name=self.current_project_name,current_style_folder=self.current_style_folder,downloads_path=self.downloads_path,current_project_folder=self.current_project_folder,project_key=project_key, yaml_path=self.yaml_path,iface=self.iface)
+            print(self.current_project_folder)
+            builder.build()
+
+
+            # ================================
+            # 3. Snapping
+            # ================================
             configure_snapping()
 
-            if project_key == "expertise":
-                placette = LayerManager("placette").layer
-                style_path = Path(get_global_variable("styles_directory")) / "EXPERTISE_placette.qml"
-                placette.loadNamedStyle(str(style_path))
+            # ================================
+            # 4. Layout composeur si demandé
+            # ================================
+            if self.cb_composeur.isChecked():
 
-                transect = LayerManager("transect").layer
-                style_path = Path(get_global_variable("styles_directory")) / "EXPERTISE_transect.qml"
-                transect.loadNamedStyle(str(style_path))
-            
-            show_message(self.iface, f"Projet {project_key} généré avec succès", "success", 15)
-            
-            canvas_cfg = get_project_canvas(project_key)
-            layout_cfg = get_project_layout(project_key)
+                canvas_cfg = self.config.get_project_canvas(project_key)
+                layout_cfg = self.config.get_project_layout(project_key)
 
-            if self.ui.cb_composeur.isChecked():
-                # Create layout
-                # "parca_polygon" is used inside compute_layout_info considering all project should have downloaded parca
-                info = compute_layout_info(scale = canvas_cfg.scale, coeff_cadre = self.ui.dsb_occup.value()/100)
-                layout = import_layout(self.project, info.paper_format, info.orientation)
-                
-                # configure layout
+
+                builder = ProjectBuilder(self, project_key,canvas_cfg,layout_cfg,self.iface,self.current_project_name,self.current_style_folder,self.downloads_path,self.current_project_folder)
+                builder.build()
+                print(self.current_project_folder)
+
+                info = compute_layout_info(scale=canvas_cfg.scale,coeff_cadre=self.dsb_occup.value() / 100)
+
+                layout = import_layout(
+                    QgsProject.instance(),
+                    info.paper_format,
+                    info.orientation
+                )
+
                 if layout:
-                    configure_layout(self.project, self.iface, layout, layout_cfg.theme, canvas_cfg.scale, layout_cfg.legends)
-                    self.iface.openLayoutDesigner(layout)
-                    
-            self.project.setFileName(str(project_path))
-            self.project.setTitle(project_path.stem)
+                    configure_layout(
+                        QgsProject.instance(),
+                        self.iface,
+                        layout,
+                        layout_cfg.theme,
+                        canvas_cfg.scale,
+                        layout_cfg.legends
+                    )
 
+                    self.iface.openLayoutDesigner(layout)
+
+            # ================================
+            # 5. Fermer la fenêtre
+            # ================================
             super().accept()
 
         except Exception as e:
-            QMessageBox.critical(self, "Erreur", f"Une erreur est survenue :\n{e}")
-"""
+            QMessageBox.critical(self, "Erreur", str(e))
+
+
+
+
+

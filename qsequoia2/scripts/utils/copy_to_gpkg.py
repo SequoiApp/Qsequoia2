@@ -13,8 +13,12 @@ Email : alexlb329@gmail.com
 import os
 from pathlib import Path
 from qgis.core import (QgsProject,QgsVectorLayer,QgsMessageLog,Qgis)
+
+from qsequoia2.scripts.utils import layers
 from .add_vector_layers import load_vectors
-import processing
+
+from qgis.core import (QgsProject, QgsVectorLayer, QgsVectorFileWriter, QgsMessageLog, Qgis)
+
 
 # ==========================================================
 # COPY TO GPKG
@@ -47,67 +51,47 @@ def copy_to_gpkg(project_key,layer_paths, style_folder, project_folder, project_
 
     # Verification que les couches sont bien des couches vecteurs
 
-    for layer_path in layer_paths:
-        if not layer_path.lower().endswith(('.shp', '.geojson', '.gpkg')):
-            QgsMessageLog.logMessage(f"Type de couche non supporté pour la copie : {layer_path}","Qsequoia2",Qgis.Warning)
 
-    # TODO : gérer les rasters et autres types de couches
-
-    # création du dossier de stockage des couches
-
-    vector_root = os.path.join(project_folder, "2_VECTOR")
-    project_vector_dir = os.path.join(vector_root, project_key)
-
-    os.makedirs(vector_root, exist_ok=True)
-    os.makedirs(project_vector_dir, exist_ok=True)
-
-    gpkg_path = os.path.join(project_vector_dir, f"{project_key}.gpkg")
-
-    # boucle de copie des couches dans un geopackage via l'algorithme "native:package" de processing
-    if isinstance(layer_paths, str):
+    # Normaliser en liste
+    if isinstance(layer_paths, (str, Path)):
         layer_paths = [layer_paths]
-    print("DEBUG layer_paths =", layer_paths)
-    for layer_path in layer_paths:
 
-        print(f"Copying layer {layer_path} to {gpkg_path}...")
-        try:
-            processing.run("native:package", {
-                'LAYERS': [layer_path],
-                'OUTPUT': gpkg_path,
-                'OVERWRITE': False,
-                'SAVE_STYLES': True,
-                'SAVE_METADATA': True,
-                'SELECTED_FEATURES_ONLY': False,
-                'EXPORT_RELATED_LAYERS': False,
-                'LAYER_NAME': Path(layer_path).stem
-            })
-        except Exception as e:
-            QgsMessageLog.logMessage(f"Erreur copie couche {layer_path} : {e}","Qsequoia2",Qgis.Critical)
+    gpkg_path = Path(project_folder) / "2_VECTOR" / project_key / f"{project_key}.gpkg"
+    gpkg_path.parent.mkdir(parents=True, exist_ok=True)
+    gpkg_posix = gpkg_path.as_posix()
 
-    # ==========================================================
-    # Charger les couches dans le projet et appliquer + enregistrer les styles
-    # ==========================================================
+    for src in layer_paths:
+        src = Path(src)
+        v = QgsVectorLayer(src.as_posix(), src.stem, "ogr")
+        if not v.isValid():
+            QgsMessageLog.logMessage(f"Couche invalide: {src}", "Qsequoia2", Qgis.Critical)
+            continue
 
-    ## Reprendre ici car le paramètre NAME n'est pas correct voi si on peut lancer add_vector_layer directement sur le gpkg avec une liste de couches à charger, plutôt que couche par couche
-
-    for layer_path in layer_paths:
-        # extraire le nom de la couche du chemin pour construire l'URI de chargement
-        layer_name = Path(layer_path).stem
-        uri = f"{gpkg_path}|layername={layer_name}"
-
-        print("Loading layer:", uri)
-
-        layer = QgsVectorLayer(uri, layer_name, "ogr")
-
-        if layer.isValid():
-            QgsProject.instance().addMapLayer(layer)
-        else:
-            print("Layer not found:", layer_name)
+        print(f"test{layer_paths} et {src} et {v} et {gpkg_posix}")
         
-    # Enregistrer les styles dans le geopackage
 
+        opts = QgsVectorFileWriter.SaveVectorOptions()
+        opts.driverName = "GPKG"
+        opts.layerName  = src.stem
+        # Remplace la table homonyme si elle existe (n’efface pas le fichier)
+        opts.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
 
-    # Ajouter les couches au groupe
+        # -- Appel compatible multi-versions (2/3/1 valeurs) --
+        res = QgsVectorFileWriter.writeAsVectorFormatV3(
+            v, gpkg_posix, QgsProject.instance().transformContext(), opts
+        )
+        # Normaliser 'err' quel que soit le format renvoyé
+        if isinstance(res, tuple):
+            err = res[0]  # (error, ...) 2 ou 3 éléments
+        else:
+            err = res
 
+        if err != QgsVectorFileWriter.NoError:
+            QgsMessageLog.logMessage(f"Erreur export '{src.stem}' (code={err})", "Qsequoia2", Qgis.Critical)
+            continue
+
+        # Charger + styles
+        dest = f"{gpkg_posix}|layername={src.stem}"
+        load_vectors({src.stem: dest}, style_folder, project_folder, project_name, group_name, parent)
 
 # endregion

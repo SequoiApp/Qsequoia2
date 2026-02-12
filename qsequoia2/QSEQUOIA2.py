@@ -48,9 +48,6 @@ from .scripts.utils.watchdog_handler import DownloadEventHandler
 
 
 
-
-
-
 class QSEQUOIA2:
     """QGIS Plugin Implementation."""
 

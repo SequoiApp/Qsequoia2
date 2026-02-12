@@ -39,6 +39,7 @@ def load_vectors(layer_path, style_folder, project_folder, project_name, group_n
 
     Auteur : Alexandre Le Bars - Comité des Forêts
     """
+    print("load_vectors : layer_path =", layer_path)
 
     project = QgsProject.instance()
     root = project.layerTreeRoot()
@@ -80,10 +81,12 @@ def load_vectors(layer_path, style_folder, project_folder, project_name, group_n
 
         # --- Ajouter la couche au projet ---
         project.addMapLayer(layer, not bool(group))
+        print(f"Layer '{key}' added to project")
 
         # --- Ajouter dans le groupe si nécessaire ---
         if group:
             group.addLayer(layer)
+            print(f"Layer '{key}' added to group '{group_name}'")
 
         layer.triggerRepaint()
         loaded_keys.append(key)

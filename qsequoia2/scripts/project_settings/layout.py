@@ -1,5 +1,6 @@
 import os
 
+
 from qgis.core import (Qgis,QgsProject,QgsMessageLog,QgsLayerTreeGroup,QgsCoordinateReferenceSystem,QgsMapThemeCollection,)
 
 from qgis.utils import iface
@@ -123,11 +124,21 @@ class ProjectBuilder:
             "raster": load_rasters,
         }
 
+        project = QgsProject.instance()
+        root = project.layerTreeRoot()
+
+        # Groupe racine
+        root_group = root.findGroup(self.project_key) or root.addGroup(self.project_key)
+
+
         for group in self.canvas_cfg.groups:
 
             gtype = group.get("type")
             layers = group.get("layers") or []
-            group_name = group.get("name", "Sans nom")
+            canvas_group_name = group.get("name", "Sans nom")
+            subgroup = root_group.findGroup(canvas_group_name) or root_group.addGroup(canvas_group_name)
+
+
 
             loader = loaders.get(gtype)
             if not loader:
@@ -138,56 +149,58 @@ class ProjectBuilder:
             # WMTS : appeler une seule fois avec la liste
             # ======================================================
             if gtype == "wmts":
-                loader(layers, group_name=group_name)
+                loader(layers, group_name=canvas_group_name)
                 continue
 
             # ======================================================
-            # VECTOR / RASTER
+            # VECTOR
             # ======================================================
-            for layer_name in layers:
+            if gtype == "vector":
+                    
+                for layer_name in layers:
 
-                # Récupérer le chemin source original (SHP, GPKG, etc.)
-                layer_paths_dict = get_path(
-                    layer_name,
-                    project_name=self.project_name,
-                    project_folder=self.project_folder,
-                    style_folder=self.style_folder,
-                    parent=self
-                )
-
-                if not layer_paths_dict:
-                    print("Layer NOT found:", layer_name)
-                    continue
-
-                layer_name_key = list(layer_paths_dict.keys())[0]
-                source_path = layer_paths_dict[layer_name_key]
-
-                # Copier la couche si demandé
-                if self.copy_layers :
-                    vector_root = os.path.join(self.project_folder, "LAYOUT")
-                    project_vector_dir = os.path.join(vector_root, self.project_key)
-                    os.makedirs(project_vector_dir, exist_ok=True)
-
-                    geojson_path = os.path.join(self.project_folder, "LAYOUT", self.project_key, f"{layer_name_key}.geojson")
-
-                    export_to_geojson(layer_paths=[source_path],project_vector_dir=project_vector_dir,layer_name_override=layer_name_key)
-
-                    # Charger le GeoJSON généré
-                    load_vectors({layer_name_key: geojson_path},
-                                style_folder=self.style_folder,
-                                project_folder=self.project_folder,
-                                project_name=self.project_name,
-                                group_name=group_name,
-                                parent=self)
-
-                else:
-                    # Charger directement depuis le chemin source
-                    loader({layer_name_key: source_path},
-                        style_folder=self.style_folder,
-                        project_folder=self.project_folder,
+                    # Récupérer le chemin source original (SHP, GPKG, etc.)
+                    layer_paths_dict = get_path(
+                        layer_name,
                         project_name=self.project_name,
-                        group_name=group_name,
-                        parent=self)
+                        project_folder=self.project_folder,
+                        style_folder=self.style_folder,
+                        parent=self
+                    )
+
+                    if not layer_paths_dict:
+                        print("Layer NOT found:", layer_name)
+                        continue
+
+                    layer_name_key = list(layer_paths_dict.keys())[0]
+                    source_path = layer_paths_dict[layer_name_key]
+
+                    # Copier la couche si demandé
+                    if self.copy_layers :
+                        vector_root = os.path.join(self.project_folder, "LAYOUT")
+                        project_vector_dir = os.path.join(vector_root, self.project_key)
+                        os.makedirs(project_vector_dir, exist_ok=True)
+
+                        geojson_path = os.path.join(self.project_folder, "LAYOUT", self.project_key, f"{layer_name_key}.geojson")
+
+                        export_to_geojson(layer_paths=[source_path],project_vector_dir=project_vector_dir,layer_name_override=layer_name_key)
+
+                        # Charger le GeoJSON généré
+                        load_vectors({layer_name_key: geojson_path},
+                                    style_folder=self.style_folder,
+                                    project_folder=self.project_folder,
+                                    project_name=self.project_name,
+                                    group_name=canvas_group_name,
+                                    parent=self)
+
+                    else:
+                        # Charger directement depuis le chemin source
+                        loader({layer_name_key: source_path},
+                            style_folder=self.style_folder,
+                            project_folder=self.project_folder,
+                            project_name=self.project_name,
+                            group_name=canvas_group_name,
+                            parent=self)
 
 
 
@@ -268,3 +281,18 @@ class ProjectBuilder:
         self.apply_scan25_opacity()
 
         self.message("Projet chargé avec succès", "success")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

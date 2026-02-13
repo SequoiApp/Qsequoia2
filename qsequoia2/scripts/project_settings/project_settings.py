@@ -1,7 +1,8 @@
 import os
+import time
 import yaml
 
-from dataclasses import dataclass, field
+
 from pathlib import Path
 
 from qgis.PyQt.QtWidgets import QDialog, QMessageBox
@@ -9,7 +10,7 @@ from PyQt5.QtWidgets import (QDialog,QWidget,QVBoxLayout,QCheckBox,QLabel)
 from qgis.core import Qgis, QgsProject, QgsMessageLog, QgsLayerTreeGroup, QgsCoordinateReferenceSystem, QgsMapThemeCollection
 from qgis.utils import iface
 
-from qsequoia2.scripts.utils.layers import resolve_layer_name
+#from qsequoia2.scripts.utils.layers import resolve_layer_name
 
 
 from .project_settings_dialog import Ui_ProjectSettingsDialog
@@ -17,7 +18,7 @@ from .project_settings_dialog import Ui_ProjectSettingsDialog
 
 # Import from utils folder
 from .project_config import ProjectConfig
-from .project_settings_service import compute_layout_info, import_layout, configure_layout
+from .project_settings_service import LayoutService
 from ..utils.layers import configure_snapping 
 from .layout import ProjectBuilder
 from ..utils.variable import set_project_variable
@@ -60,6 +61,8 @@ class ProjectSettingsDialog(QDialog, Ui_ProjectSettingsDialog):
         self.comboBox_projects.currentTextChanged.connect(self.update_scale)
         self.layout.clicked.connect(self.accept)
 
+        # Connect composeur chekbox to occup percentage
+        self.cb_composeur.toggled.connect(self.dsb_occup.setEnabled)
 
         self.config = ProjectConfig(self.yaml_path)
 
@@ -98,6 +101,9 @@ class ProjectSettingsDialog(QDialog, Ui_ProjectSettingsDialog):
         if project_key:
             self._layers_tab()
 
+        # appel de update scale
+        self.update_scale(project_key)
+
     # ==========================================================
     # LAYERS TAB
     # ==========================================================
@@ -129,7 +135,7 @@ class ProjectSettingsDialog(QDialog, Ui_ProjectSettingsDialog):
         groups = canvas_cfg.get("groups", [])
 
         # ================================
-        # Layers cochés par défaut
+        # Layers par défaut
         # ================================
 
         default_layers = self.config.get_default_layers(project_type)
@@ -155,20 +161,13 @@ class ProjectSettingsDialog(QDialog, Ui_ProjectSettingsDialog):
             layout.addWidget(title)
 
             # ================================
-            # Checkboxes des layers du groupe
+            # affichage des layers du groupe
             # ================================
 
             for layer_name in layers:
 
-                cb = QCheckBox(layer_name)
-                cb.setObjectName(f"chk_{layer_name}")
-
-                # coche si layer dans thème par défaut
-                if layer_name in default_layers:
-                    cb.setChecked(True)
-
-                layout.addWidget(cb)
-
+                label = QLabel(layer_name)
+                layout.addWidget(label)
             layout.addStretch()
 
             # Ajout onglet
@@ -176,11 +175,13 @@ class ProjectSettingsDialog(QDialog, Ui_ProjectSettingsDialog):
 
 
     # ==========================================================
-    # SCALE UPDATE
+    # SCALE UPDATE (a voir car echelle peut être définit dans la scaleBox aussi)
     # ==========================================================
 
     def update_scale(self, project_name: str):
-        """Met à jour scaleBox selon project.yaml"""
+        """Met à jour scaleBox selon project.yaml
+        - posibilité de modifier sa valeur manuellement
+        - se reinitialise à chaque changement de projet"""
 
         if not project_name:
             return
@@ -189,7 +190,8 @@ class ProjectSettingsDialog(QDialog, Ui_ProjectSettingsDialog):
             canvas = self.config.get_project_canvas(project_name)
 
             if canvas.scale:
-                self.scaleBox.setValue(canvas.scale)
+                self.scaleBox.setText(f"1 / {canvas.scale}")
+            
 
         except Exception as e:
             print("Erreur update_scale :", e)
@@ -209,72 +211,102 @@ class ProjectSettingsDialog(QDialog, Ui_ProjectSettingsDialog):
         if not project_key:
             QMessageBox.warning(self, "Erreur", "Aucun projet sélectionné.")
             return
+        # pour le debug on sort du try catch, mais à terme il faudrait le remettre pour éviter les plantages
+        #try:
+        # ================================
+        # 1. Variable projet
+        # ================================
+        set_project_variable("forest_map_project", project_key)
 
-        try:
-            # ================================
-            # 1. Variable projet
-            # ================================
-            set_project_variable("forest_map_project", project_key)
+        # ================================
+        # 2. Construire projet via la classe
+        # ================================
 
-            # ================================
-            # 2. Construire projet via la classe
-            # ================================
+        if self.copy_layers.isChecked():
+            copy_layers = True
+        else:
+            copy_layers = False
 
-            if self.copy_layers.isChecked():
-                copy_layers = True
-            else:
-                copy_layers = False
-
-            builder = ProjectBuilder(copy_layers,current_project_name=self.current_project_name,current_style_folder=self.current_style_folder,downloads_path=self.downloads_path,current_project_folder=self.current_project_folder,project_key=project_key, yaml_path=self.yaml_path,iface=self.iface)
-            print(self.current_project_folder)
-            builder.build()
-
-
-            # ================================
-            # 3. Snapping
-            # ================================
-            configure_snapping()
-
-            # ================================
-            # 4. Layout composeur si demandé
-            # ================================
-            if self.cb_composeur.isChecked():
-
-                canvas_cfg = self.config.get_project_canvas(project_key)
-                layout_cfg = self.config.get_project_layout(project_key)
+        builder = ProjectBuilder(copy_layers,current_project_name=self.current_project_name,current_style_folder=self.current_style_folder,downloads_path=self.downloads_path,current_project_folder=self.current_project_folder,project_key=project_key, yaml_path=self.yaml_path,iface=self.iface)
+        print(self.current_project_folder)
+        builder.build()
 
 
-                builder = ProjectBuilder(self, project_key,canvas_cfg,layout_cfg,self.iface,self.current_project_name,self.current_style_folder,self.downloads_path,self.current_project_folder)
-                builder.build()
-                print(self.current_project_folder)
+        # ================================
+        # 3. Snapping
+        # ================================
+        configure_snapping()
 
-                info = compute_layout_info(scale=canvas_cfg.scale,coeff_cadre=self.dsb_occup.value() / 100)
+        # ================================
+        # 4. Layout composeur si demandé
+        # ================================
+        if self.cb_composeur.isChecked():
 
-                layout = import_layout(
-                    QgsProject.instance(),
-                    info.paper_format,
-                    info.orientation
-                )
+            canvas_cfg = self.config.get_project_canvas(project_key)
+            layout_cfg = self.config.get_project_layout(project_key)
 
-                if layout:
-                    configure_layout(
-                        QgsProject.instance(),
-                        self.iface,
-                        layout,
-                        layout_cfg.theme,
-                        canvas_cfg.scale,
-                        layout_cfg.legends
-                    )
+            # créer le service Layout
+            layout_service = LayoutService(
+                project=QgsProject.instance(),
+                project_name=self.current_project_name,
+                style_folder=self.current_style_folder,
+                downloads_path=self.downloads_path,
+                project_folder=self.current_project_folder,
+                iface=self.iface
+            )
 
-                    self.iface.openLayoutDesigner(layout)
+            # 1. Calcul format + orientation
+            info = layout_service.compute_layout_info(
+                scale=canvas_cfg.scale,
+                coeff_cadre=self.dsb_occup.value() / 100
+            )
 
-            # ================================
-            # 5. Fermer la fenêtre
-            # ================================
-            super().accept()
+            # 1. Import layout et conserver la référence
+            self.current_layout = layout_service.import_layout(fmt=info.paper_format, orient=info.orientation)
 
-        except Exception as e:
-            QMessageBox.critical(self, "Erreur", str(e))
+            # 2. Ajouter au layout manager (une seule fois)
+            lm = QgsProject.instance().layoutManager()
+
+            # (optionnel mais conseillé) éviter les collisions de nom
+            existing = lm.layoutByName(self.current_layout.name())
+            if existing:
+                lm.removeLayout(existing)
+
+            lm.addLayout(self.current_layout)
+
+            # 3. Configurer le layout
+            layout_service.configure_layout(
+                layout=self.current_layout,
+                theme=layout_cfg.theme,
+                scale=canvas_cfg.scale,
+                legends=layout_cfg.legends
+            )
+
+            # 4. Ouvrir le designer
+            self.iface.openLayoutDesigner(self.current_layout)
+
+
+            # mettre l'échelle de QGIS à la version du projet
+            self.iface.mapCanvas().zoomScale(canvas_cfg.scale)
+
+            #Mettre la loupe à 100%
+            self.iface.mapCanvas().setMapTool(self.iface.mapCanvas().mapTool())
+
+        
+        if self.cb_save_project.isChecked():
+            time.sleep(2)  # attendre que les changements soient appliqués
+            # Sauvegarder le projet
+            QgsProject.instance().write()
+
+
+
+
+
+
+        #except Exception as e:
+        
+            #print("Erreur lors de l'acceptation du projet :", e)
+            #QMessageBox.warning(self, "Erreur", f"Erreur lors de l'acceptation du projet : {e}")
 
 
 

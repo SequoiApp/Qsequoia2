@@ -347,8 +347,7 @@ class AddDataDialog(QDialog):
                     project_name=self.current_project_name,
                     project_folder=self.current_project_folder,
                     style_folder=self.current_style_folder,
-                    parent=self
-                )
+                    parent=self)
 
             if layer_paths:
                 load_rasters(
@@ -386,16 +385,15 @@ class AddDataDialog(QDialog):
                     project_name=self.current_project_name,
                     project_folder=self.current_project_folder,
                     style_folder=self.current_style_folder,
-                    parent=self
-                )
-
+                    parent=self)
+             
+            # TODO : ne pas lancer load_vectors si layer vient des dosssier de mises en pages "LAYOUT" (ex : SEQ_PF_poly) pour éviter les doublons
             if layer_paths:
                 load_vectors(
                     layer_paths,
                     project_name=self.current_project_name,
                     project_folder=self.current_project_folder,
                     style_folder=self.current_style_folder,
-                    parent=self
-                )
+                    parent=self)
 
 

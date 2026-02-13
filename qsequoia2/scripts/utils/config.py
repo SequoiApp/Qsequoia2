@@ -6,7 +6,6 @@ Module `config.py` : gestion des chemins, structure SIG, projets, styles et WMTS
 
 Ce module fournit des fonctions pour :
 - récupérer le dossier du plugin et des fichiers de configuration
-- lire la structure SIG (`sig_structure.yaml`)
 - rechercher des couches vecteur ou raster dans un dossier de projet
 - récupérer les styles (.qml)
 - accéder aux projets et layouts
@@ -51,52 +50,6 @@ def get_config_path(filename: str) -> Path:
         Path: chemin complet du fichier
     """
     return get_plugin_root() / ".." / "inst" / filename
-
-# endregion
-
-# region SIG_STRUCTURE
-
-_SIG_STRUCT: dict | None = None
-
-def _load_sig_structure() -> dict:
-    """
-    Charge le fichier sig_structure.yaml en mémoire et le met en cache.
-    
-    Returns:
-        dict: structure SIG
-    """
-
-    global _SIG_STRUCT
-    if _SIG_STRUCT is None:
-        cfg_path = get_config_path("sig_structure.yaml")
-        with open(cfg_path, encoding="utf-8") as f:
-            _SIG_STRUCT = yaml.safe_load(f)
-    return _SIG_STRUCT
-
-def _find_entry(logical_key):
-    """
-    Retourne l'entrée correspondante à une clé logique dans la structure SIG.
-
-    Args:
-        logical_key (str): clé logique à rechercher
-
-    Returns:
-        tuple: (entry_dict, folder_path_parts)
-    
-    Raises:
-        KeyError: si la clé n'existe pas
-    """
-
-    struct = _load_sig_structure()["structure"]
-    if logical_key in struct.keys():
-        path = struct[logical_key].get("path", [])
-        return False, path  
-    for folder in struct.values():
-        files = folder.get("files", {})
-        if logical_key in files:
-            return files[logical_key], folder.get("path", [])
-    raise KeyError(f"No entry for '{logical_key}' in sig_structure.yaml")
-
 
 # endregion
 
@@ -319,54 +272,6 @@ def get_style(layer_path, style_folder):
 
     return best_match
 
-
-    
-    
-
-#endregion
-
-
-
-
-
-
-
-
-
-def get_display_name(logical_key):
-    """
-    Retourne le nom d'affichage pour une clé logique SIG.
-
-    Args:
-        logical_key (str): clé logique
-
-    Returns:
-        str: nom d'affichage ou la clé elle-même si non défini
-    """
-    entry, _ = _find_entry(logical_key)
-    return entry.get("display_name")
-
-def get_project(folder: str = "output_folder"):
-
-    """
-    Retourne un dictionnaire des noms de projets disponibles pour un dossier donné.
-
-    Args:
-        folder (str): nom du dossier dans sig_structure.yaml
-
-    Returns:
-        dict: {clé: display_name}
-    """
-
-    structure = _load_sig_structure()["structure"]
-
-    if folder not in structure:
-        raise KeyError(f"Dossier '{folder}' non trouvé dans sig_structure.yaml")
-
-    files = structure[folder]["files"]
-    project_names = {key: get_display_name(key) for key in files.keys()}
-
-    return project_names
   
 # endregion
 

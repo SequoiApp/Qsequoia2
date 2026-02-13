@@ -9,8 +9,8 @@ from ..utils.add_vector_layers import load_vectors
 from ..utils.add_raster_layers import load_rasters
 from ..utils.add_wmts_layers import load_wmts
 
-from ..utils.layers import set_layers_readonly, resolve_layer_name
-from ..utils.config import get_display_name, get_path, get_wmts
+from ..utils.layers import set_layers_readonly, resolve_layer
+from ..utils.config import get_path, get_wmts
 from .project_config import ProjectConfig
 from ..utils.copy_to_gpkg import copy_to_gpkg
 from ..utils.export_to_geojson import export_to_geojson
@@ -34,6 +34,7 @@ class ProjectBuilder:
         self.project_key = project_key
         self.iface = iface
         self.project = QgsProject.instance()
+        self.parent = None
 
         # Variables projet
         self.project_name = current_project_name
@@ -67,41 +68,62 @@ class ProjectBuilder:
             print(text)
 
     # ==========================================================
-    # CLEAR PROJECT
+    # CLEAR PROJECT 
     # ==========================================================
 
-    def clear(self, default_crs=2154):
+    #def clear(self, default_crs=2154):
+        """supprime les couches et groupe du type de theme choisi uniquement"""
 
-        self.project.mapThemeCollection().clear()
-        self.project.layoutManager().clear()
-        self.project.layerTreeRoot().clear()
-        self.project.removeAllMapLayers()
+        #self.project.mapThemeCollection().clear()
+        #self.project.layoutManager().clear()
+        #self.project.layerTreeRoot().clear()
+        #self.project.removeAllMapLayers()
 
-        self.project.setCrs(QgsCoordinateReferenceSystem.fromEpsgId(default_crs))
+        #self.project.setCrs(QgsCoordinateReferenceSystem.fromEpsgId(default_crs))
 
     # ==========================================================
     # THEMES
     # ==========================================================
+    def create_theme(self, name: str, visible_keys: list):
+        """
+        Crée un thème de carte QGIS à partir de la liste de clés de layers.
+        Cette version aplatit les listes imbriquées et ignore les layers introuvables.
+        """
 
-    def create_theme(self, name: str, visible_keys: list[str]):
+        # Aplatir visible_keys si nécessaire
+        flat_keys = []
+        for k in visible_keys:
+            if isinstance(k, list):
+                flat_keys.extend(k)
+            else:
+                flat_keys.append(k)
 
-        resolved_names = {resolve_layer_name(k) for k in visible_keys}
+        # Résoudre les layers et garder les objets QgsMapLayer
+        resolved_layers = []
+        for key in flat_keys:
+            layer = resolve_layer(
+                key,
+                project=self.project,
+                project_name=self.project_name,
+                project_folder=self.project_folder,
+                style_folder=self.style_folder,
+                parent=None
+            )
+            if layer:  # ignorer les None
+                resolved_layers.append(layer)
 
+        # Créer le MapThemeRecord
         mtc = self.project.mapThemeCollection()
         record = QgsMapThemeCollection.MapThemeRecord()
 
-        # map name → layer
-        name_to_layer = {
-            layer.name(): layer
-            for layer in self.project.mapLayers().values()}
+        for layer in resolved_layers:
+            rec = QgsMapThemeCollection.MapThemeLayerRecord(layer)
+            record.addLayerRecord(rec)
 
-        for layer_name in resolved_names:
-            layer = name_to_layer.get(layer_name)
-            if layer:
-                rec = QgsMapThemeCollection.MapThemeLayerRecord(layer)
-                record.addLayerRecord(rec)
-
+        # Insérer le thème
         mtc.insert(name, record)
+
+
 
     def create_all_themes(self):
 
@@ -182,16 +204,20 @@ class ProjectBuilder:
                         os.makedirs(project_vector_dir, exist_ok=True)
 
                         geojson_path = os.path.join(self.project_folder, "LAYOUT", self.project_key, f"{layer_name_key}.geojson")
+                        
+                        if not os.path.exists(geojson_path):
 
-                        export_to_geojson(layer_paths=[source_path],project_vector_dir=project_vector_dir,layer_name_override=layer_name_key)
-
-                        # Charger le GeoJSON généré
-                        load_vectors({layer_name_key: geojson_path},
-                                    style_folder=self.style_folder,
-                                    project_folder=self.project_folder,
-                                    project_name=self.project_name,
-                                    group_name=canvas_group_name,
-                                    parent=self)
+                            export_to_geojson(layer_paths=[source_path],project_vector_dir=project_vector_dir,layer_name_override=layer_name_key)
+                        
+                            # Charger le GeoJSON généré
+                            load_vectors({layer_name_key: geojson_path},
+                                        style_folder=self.style_folder,
+                                        project_folder=self.project_folder,
+                                        project_name=self.project_name,
+                                        group_name=canvas_group_name,
+                                        parent=self)
+                        else :
+                            continue
 
                     else:
                         # Charger directement depuis le chemin source
@@ -211,9 +237,16 @@ class ProjectBuilder:
     # ==========================================================
 
     def apply_readonly(self):
-
         if self.canvas_cfg.readonly:
-            set_layers_readonly(*self.canvas_cfg.readonly)
+            set_layers_readonly(
+                self.canvas_cfg.readonly,
+                project=self.project,
+                project_name=self.project_name,
+                project_folder=self.project_folder,
+                style_folder=self.style_folder,
+                parent=self
+            )
+
 
     # ==========================================================
     # UI GROUP TREE
@@ -238,16 +271,21 @@ class ProjectBuilder:
     # ==========================================================
 
     def zoom_on_layer(self, key):
-
-        layers = self.project.mapLayersByName(get_display_name(key))
-        if not layers:
+        layer = resolve_layer(
+            key,
+            project=self.project,
+            project_name=self.project_name,
+            project_folder=self.project_folder,
+            style_folder=self.style_folder,
+            parent=self
+        )
+        if not layer:
             return
 
-        layer = layers[0]
         canvas = self.iface.mapCanvas()
-
         canvas.setExtent(layer.extent())
         canvas.refresh()
+
 
     # ==========================================================
     # OPACITY WMTS
@@ -269,7 +307,7 @@ class ProjectBuilder:
 
         self.message(f"Création du projet : {self.project_key}", "info")
 
-        self.clear()
+        #self.clear()
         self.load_groups()
         self.apply_readonly()
         self.create_all_themes()

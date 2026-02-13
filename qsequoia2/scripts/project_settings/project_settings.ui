@@ -33,6 +33,9 @@
      <property name="text">
       <string>Enregistrer automatiquement après création</string>
      </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
     </widget>
    </item>
    <item>
@@ -41,6 +44,9 @@
       <widget class="QCheckBox" name="cb_composeur">
        <property name="text">
         <string>Ouvrir le composeur</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
@@ -72,6 +78,11 @@
        <property name="enabled">
         <bool>false</bool>
        </property>
+       <property name="font">
+        <font>
+         <kerning>false</kerning>
+        </font>
+       </property>
        <property name="toolTip">
         <string>Occupation des entitées sur la mise en page</string>
        </property>
@@ -101,9 +112,9 @@
       </widget>
      </item>
      <item>
-      <widget class="QSpinBox" name="scaleBox">
-       <property name="maximum">
-        <number>1000000000</number>
+      <widget class="QLabel" name="scaleBox">
+       <property name="text">
+        <string>1</string>
        </property>
       </widget>
      </item>
@@ -160,7 +171,7 @@
         <x>0</x>
         <y>0</y>
         <width>425</width>
-        <height>337</height>
+        <height>345</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="scrollLayout">

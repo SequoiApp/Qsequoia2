@@ -205,10 +205,12 @@ class ProjectBuilder:
 
                         geojson_path = os.path.join(self.project_folder, "LAYOUT", self.project_key, f"{layer_name_key}.geojson")
                         
+                        # Si les geojson n'existent pas encore
+                        
                         if not os.path.exists(geojson_path):
 
                             export_to_geojson(layer_paths=[source_path],project_vector_dir=project_vector_dir,layer_name_override=layer_name_key)
-                        
+                            
                             # Charger le GeoJSON généré
                             load_vectors({layer_name_key: geojson_path},
                                         style_folder=self.style_folder,
@@ -216,8 +218,17 @@ class ProjectBuilder:
                                         project_name=self.project_name,
                                         group_name=canvas_group_name,
                                         parent=self)
-                        else :
-                            continue
+                            
+                        # SI les geojson existent 
+                            
+                        if os.path.exists(geojson_path) and not self.project.mapLayersByName(layer_name_key):
+                            # Charger le GeoJSON généré
+                            load_vectors({layer_name_key: geojson_path},
+                                        style_folder=self.style_folder,
+                                        project_folder=self.project_folder,
+                                        project_name=self.project_name,
+                                        group_name=canvas_group_name,
+                                        parent=self)
 
                     else:
                         # Charger directement depuis le chemin source

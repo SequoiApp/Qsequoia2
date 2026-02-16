@@ -7,6 +7,7 @@ from qgis.core import QgsApplication, Qgis
 from qgis.PyQt.QtWidgets import QMessageBox,QFileDialog
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import QTimer, QThread, QMetaObject, Qt, pyqtSlot
+from qgis.core import QgsProject
 
 import yaml, timer
 
@@ -409,10 +410,24 @@ class QSEQUOIA2:
 
             print(f"Project name => {self.current_project_name}")
         
+        # Vérifier si dossier contient un projet QGZ, si non, on le crée
+        project = QgsProject.instance()
+
+        if not f"{self.current_project_name}_SEQ_PROJECT.qgz" in os.listdir(self.current_project_folder):
+            project.write(os.path.join(self.current_project_folder, f"{self.current_project_name}_SEQ_PROJECT.qgz"))
+
+        # Si le projet existe, on le charge sauf si c'est deja le projet courant
+
+        if f"{self.current_project_name}_SEQ_PROJECT.qgz" in os.listdir(self.current_project_folder) and (project.fileName() == "" or not project.fileName().endswith(f"{self.current_project_name}_SEQ_PROJECT.qgz")):
+            project_path = os.path.join(self.current_project_folder, f"{self.current_project_name}_SEQ_PROJECT.qgz")
+            QgsProject.instance().read(project_path)
+            print(f"Projet QGZ chargé : {project_path}")
+        
         self.iface.messageBar().pushMessage(
             "Qsequoia2",
             f"Dossier {self.current_project_name} sélectionné avec succès : {self.current_project_folder}",
             level=Qgis.Success, duration=10)
+        
 
     
     def on_project_name_changed(self, text):

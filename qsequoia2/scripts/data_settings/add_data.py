@@ -357,6 +357,8 @@ class AddDataDialog(QDialog):
                     style_folder=self.current_style_folder,
                     parent=self
                 )
+            if not layer_paths:
+                QMessageBox.information(self,"Couche non trouvée",f"Aucune couche trouvée pour {label} dans le dossier de projet.")
 
 
         # Pour les vecteurs
@@ -395,5 +397,7 @@ class AddDataDialog(QDialog):
                     project_folder=self.current_project_folder,
                     style_folder=self.current_style_folder,
                     parent=self)
+            if not layer_paths:
+                QMessageBox.information(self,"Couche non trouvée",f"Aucune couche trouvée pour {label} dans le dossier de projet.")
 
 

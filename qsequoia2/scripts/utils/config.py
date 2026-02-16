@@ -13,7 +13,7 @@ Ce module fournit des fonctions pour :
 """
 
 from qgis.core import (QgsMessageLog,Qgis)
-import os
+import os, re
 import yaml
 from pathlib import Path
 from dataclasses import dataclass
@@ -95,7 +95,7 @@ def get_path(label, project_name, project_folder, style_folder, parent):
 
 # Fonction utilitaire de get_path pour trouver les couches
 
-def find_best_layer_qgis(project_folder, label, max_candidates=3):
+def find_best_layer_qgis(project_folder, label):
     """
     Recherche optimisée d'une couche vectorielle ou raster dans le dossier projet.
 
@@ -114,10 +114,15 @@ def find_best_layer_qgis(project_folder, label, max_candidates=3):
 
     label = label.lower()
     parts = label.split("_")
+    
+    print(parts)
 
     expected_geom = None
     if parts[-1] in ("poly", "line", "point"):
+
         expected_geom = parts[-1]
+        if expected_geom == "polygon":
+            expected_geom = "poly"
         parts = parts[:-1]
 
     expected_tokens = parts
@@ -133,61 +138,37 @@ def find_best_layer_qgis(project_folder, label, max_candidates=3):
             fname = f.lower()
             path = os.path.join(root, f)
 
-            score = 0
-
             # --- Détection vecteur
             if fname.endswith(vector_exts):
-                if expected_geom and expected_geom in fname:
-                    score += 50
-                for token in expected_tokens:
-                    if token in fname:
-                        score += 20
-                if score > 0:
-                    candidates.append((score, path))
 
+                stem = os.path.splitext(fname)[0]
+
+                file_tokens = stem.split("_")
+
+                if file_tokens[-1] == expected_geom:
+                    if all(t in file_tokens for t in expected_tokens):
+                        candidates.append(path)
+            
             # --- Détection raster
             elif fname.endswith(raster_exts):
-                # Pour raster, on ne teste pas la géométrie
-                # juste les tokens métier
-                for token in expected_tokens:
-                    if token in fname:
-                        score += 20
-                if score > 0:
-                    candidates.append((score, path))
+                stem = os.path.splitext(fname)[0]
+                file_tokens = stem.split("_")
+                if all(t in file_tokens for t in expected_tokens):
+                    candidates.append(path)
 
-    if not candidates:
-        return None
-
-    # On garde les N meilleurs
-    candidates.sort(reverse=True)
-    candidates = candidates[:max_candidates]
+    if candidates:
+        best = max(candidates, key=lambda p: len(os.path.splitext(os.path.basename(p))[0].split("_")))
+        return best
 
     # ----------------------------
     # Vérification finale
     # ----------------------------
-    for _, path in candidates:
+    for path in candidates:
         if path.lower().endswith(vector_exts):
-            # vecteur → vérification géométrie
             layer = QgsVectorLayer(path, "tmp", "ogr")
             if not layer.isValid():
                 continue
-            g = QgsWkbTypes.geometryType(layer.wkbType())
-            found_geom = None
-            if g == QgsWkbTypes.PolygonGeometry:
-                found_geom = "poly"
-            elif g == QgsWkbTypes.LineGeometry:
-                found_geom = "line"
-            elif g == QgsWkbTypes.PointGeometry:
-                found_geom = "point"
-            if expected_geom and found_geom != expected_geom:
-                continue
             return path
-
-        elif path.lower().endswith(raster_exts):
-            # raster → on accepte directement
-            return path
-
-    return None
 
 
 
@@ -219,58 +200,49 @@ def get_style(layer_path, style_folder):
     
     label, path = next(iter(layer_path.items()))
     label_lower = label.lower()
+    parts = label_lower.split("_")
 
-    # --- Extraire token métier + type de géométrie (vecteur)
-    parts = label.split("_")
-    geom = ""
+    geom = None
+    token = None
+
+    # --- Extraction token + geom
     if len(parts) >= 2 and parts[-1] in ("poly", "line", "point"):
         geom = parts[-1]
-        token = parts[1]
-        token_with_geom = f"{token}_{geom}"
+        token = parts[-2]   # <-- important : dernier mot métier
     elif len(parts) >= 2:
-        token = parts[1]
-        token_with_geom = token
+        token = parts[-1]
     else:
         token = label_lower
-        token_with_geom = token
 
-
-    token_with_geom = token_with_geom.lower()
-    token = token.lower()  # pour fallback
-
-    # --- Scan des fichiers QML
+    # --- Vérif dossier
     if not os.path.isdir(style_folder):
         return None
 
-    # --- Liste des fichiers QML
     qml_files = [f for f in os.listdir(style_folder) if f.lower().endswith(".qml")]
 
-    best_match = None
+    # --- Matching strict avec séparateurs
+    def strict(pattern, fname):
+        return re.search(rf"(^|[_\-]){pattern}($|[_\-])", fname)
 
-    # Cherche un match exact token + geom (vecteur)
+    # ==================================================
+    # 1. MATCH ULTRA PRIORITAIRE token + geom
+    # ==================================================
+    if geom:
+        target = f"{token}_{geom}"
+        for f in qml_files:
+            fname = os.path.splitext(f)[0].lower()
+            if strict(target, fname):
+                return os.path.join(style_folder, f)
+
+    # ==================================================
+    # 2. MATCH token seul (fallback)
+    # ==================================================
     for f in qml_files:
         fname = os.path.splitext(f)[0].lower()
-        if token_with_geom in fname:
-            best_match = os.path.join(style_folder, f)
-            break
+        if strict(token, fname):
+            return os.path.join(style_folder, f)
 
-    # Si pas trouvé, match sur token seul (vecteur ou raster)
-    if not best_match:
-        for f in qml_files:
-            fname = os.path.splitext(f)[0].lower()
-            if token in fname:
-                best_match = os.path.join(style_folder, f)
-                break
-
-    # Si toujours pas trouvé, pour raster on peut tester juste label complet
-    if not best_match and not geom:
-        for f in qml_files:
-            fname = os.path.splitext(f)[0].lower()
-            if label_lower in fname:
-                best_match = os.path.join(style_folder, f)
-                break
-
-    return best_match
+    return None
 
   
 # endregion

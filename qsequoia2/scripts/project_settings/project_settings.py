@@ -9,6 +9,7 @@ from qgis.PyQt.QtWidgets import QDialog, QMessageBox
 from PyQt5.QtWidgets import (QDialog,QWidget,QVBoxLayout,QCheckBox,QLabel)
 from qgis.core import Qgis, QgsProject, QgsMessageLog, QgsLayerTreeGroup, QgsCoordinateReferenceSystem, QgsMapThemeCollection
 from qgis.utils import iface
+from PyQt5.QtCore import QTimer
 
 #from qsequoia2.scripts.utils.layers import resolve_layer_name
 
@@ -98,84 +99,12 @@ class ProjectSettingsDialog(QDialog, Ui_ProjectSettingsDialog):
 
         project_key = self._get_project_key()
 
-        if project_key:
-            self._layers_tab()
-
         # appel de update scale
         self.update_scale(project_key)
 
-    # ==========================================================
-    # LAYERS TAB
-    # ==========================================================
-
-    def _layers_tab(self):
-        """
-        Affiche les couches définies dans project.yaml
-        en respectant les groupes (VECTEUR / SEQUOIA / WMTS)
-        et coche celles du thème par défaut.
-        """
-
-        project_type = self._get_project_key()
-        print("Chargement des couches depuis project.yaml :", project_type)
-
-        tab = self.layers_tab
-        tab.clear()
-
-        # ================================
-        # Charger la config du projet
-        # ================================
-
-        cfg = self.config._load_project().get(project_type)
-
-        if not cfg:
-            print("Projet introuvable dans project.yaml")
-            return
-
-        canvas_cfg = cfg.get("canvas", {})
-        groups = canvas_cfg.get("groups", [])
-
-        # ================================
-        # Layers par défaut
-        # ================================
-
-        default_layers = self.config.get_default_layers(project_type)
-
-
-        # ================================
-        # Création des onglets par groupe
-        # ================================
-
-        for group in groups:
-
-            group_name = group.get("name", "Sans nom")
-            layers = group.get("layers", [])
-
-            # aplatissement si anchors YAML
-            layers = self.config.flatten(layers)
-
-            # Widget onglet
-            tab_widget = QWidget()
-            layout = QVBoxLayout(tab_widget)
-
-            title = QLabel(f"<b>{group_name}</b>")
-            layout.addWidget(title)
-
-            # ================================
-            # affichage des layers du groupe
-            # ================================
-
-            for layer_name in layers:
-
-                label = QLabel(layer_name)
-                layout.addWidget(label)
-            layout.addStretch()
-
-            # Ajout onglet
-            tab.addTab(tab_widget, group_name)
-
 
     # ==========================================================
-    # SCALE UPDATE (a voir car echelle peut être définit dans la scaleBox aussi)
+    # SCALE UPDATE
     # ==========================================================
 
     def update_scale(self, project_name: str):
@@ -292,11 +221,14 @@ class ProjectSettingsDialog(QDialog, Ui_ProjectSettingsDialog):
             #Mettre la loupe à 100%
             self.iface.mapCanvas().setMapTool(self.iface.mapCanvas().mapTool())
 
-        
+        # Sauvegarde du projet courant
+
+        def save_project():
+            project = QgsProject.instance()
+            QgsProject.write(project, project.fileName())
+
         if self.cb_save_project.isChecked():
-            time.sleep(2)  # attendre que les changements soient appliqués
-            # Sauvegarder le projet
-            QgsProject.instance().write()
+            QTimer.singleShot(1300, save_project)  # délai pour laisser le temps à QGIS de tout configurer avant d'écrire le projet
 
 
 

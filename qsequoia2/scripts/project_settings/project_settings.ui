@@ -87,7 +87,7 @@
         <string>Occupation des entitées sur la mise en page</string>
        </property>
        <property name="suffix">
-        <string extracomment="%"/>
+        <string>%</string>
        </property>
        <property name="decimals">
         <number>0</number>
@@ -125,8 +125,8 @@
        </property>
        <property name="sizeHint" stdset="0">
         <size>
-         <width>10</width>
-         <height>10</height>
+         <width>0</width>
+         <height>0</height>
         </size>
        </property>
       </spacer>
@@ -161,41 +161,33 @@
     </layout>
    </item>
    <item>
-    <widget class="QScrollArea" name="scrollArea">
-     <property name="widgetResizable">
-      <bool>true</bool>
+    <widget class="QFrame" name="frame_3">
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
      </property>
-     <widget class="QWidget" name="scrollAreaWidgetContents">
-      <property name="geometry">
-       <rect>
-        <x>0</x>
-        <y>0</y>
-        <width>425</width>
-        <height>345</height>
-       </rect>
-      </property>
-      <layout class="QVBoxLayout" name="scrollLayout">
-       <item>
-        <widget class="QGroupBox" name="layers_box">
-         <property name="title">
-          <string>Couches incluses dans le composeur</string>
-         </property>
-         <layout class="QVBoxLayout" name="layersLayout">
-          <item>
-           <widget class="QTabWidget" name="layers_tab">
-            <property name="tabPosition">
-             <enum>QTabWidget::North</enum>
-            </property>
-            <property name="currentIndex">
-             <number>-1</number>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-      </layout>
-     </widget>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QFrame" name="frame_2">
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QFrame" name="frame">
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
     </widget>
    </item>
    <item>
@@ -222,6 +214,19 @@
         <string>Mise en page</string>
        </property>
       </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
      </item>
     </layout>
    </item>

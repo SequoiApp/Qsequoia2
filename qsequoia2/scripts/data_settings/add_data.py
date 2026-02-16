@@ -391,12 +391,17 @@ class AddDataDialog(QDialog):
              
             # TODO : ne pas lancer load_vectors si layer vient des dosssier de mises en pages "LAYOUT" (ex : SEQ_PF_poly) pour éviter les doublons
             if layer_paths:
-                load_vectors(
-                    layer_paths,
-                    project_name=self.current_project_name,
-                    project_folder=self.current_project_folder,
-                    style_folder=self.current_style_folder,
-                    parent=self)
+                for key, path in layer_paths.items():
+                    path_upper = path.upper()
+                    if "LAYOUT" not in path_upper:
+                        load_vectors(
+                            {key: path},
+                            project_name=self.current_project_name,
+                            project_folder=self.current_project_folder,
+                            style_folder=self.current_style_folder,
+                            parent=self)
+                    else:
+                        pass
             if not layer_paths:
                 QMessageBox.information(self,"Couche non trouvée",f"Aucune couche trouvée pour {label} dans le dossier de projet.")
 

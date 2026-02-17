@@ -7,13 +7,15 @@ from qgis.core import QgsApplication, Qgis
 from qgis.PyQt.QtWidgets import QMessageBox,QFileDialog
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import QTimer, QThread, QMetaObject, Qt, pyqtSlot
-from qgis.core import QgsProject
+from qgis.core import QgsProject, QgsCoordinateReferenceSystem
+
 
 import yaml, timer
 
 from qsequoia2.scripts.global_settings.global_settings import GlobalSettingsDialog
 from qsequoia2.scripts.utils.variable import get_global_variable
 from qsequoia2.scripts.watchdog.dogwatcher import DogWatcher
+from .scripts.utils.new_project import *
 
 
 
@@ -262,8 +264,6 @@ class QSEQUOIA2:
 
             # bouttons d'ajout de couches
 
-            self.dockwidget.add_on.clicked.connect(self.non_implemented_yet)
-            self.dockwidget.add_on.setIcon(QIcon(plugin_path + "/icons/add_data.svg"))
 
                                 
 
@@ -293,7 +293,9 @@ class QSEQUOIA2:
             self.dockwidget.setstyle.clicked.connect(self.open_global_settings)
             self.dockwidget.setstyle.setIcon(QIcon(plugin_path + "/icons/global_settings.svg"))
 
-            self.dockwidget.project_folder.clicked.connect(self.set_projectFolder)
+            self.dockwidget.project_folder.clicked.connect(lambda: self.set_projectFolder())
+
+            self.dockwidget.add_project.setEnabled(False)
 
 
 
@@ -303,6 +305,10 @@ class QSEQUOIA2:
 
             self.dockwidget.watchdog.clicked.connect(self.open_connect_label)
             self.dockwidget.watchdog.setIcon(QIcon(plugin_path + "/icons/watchdog_settings.svg"))
+
+            self.dockwidget.add_project.setIcon(QIcon(plugin_path + "/icons/add_data.svg"))
+
+            self.dockwidget.add_project.clicked.connect(self.add_project_clicked)
 
             self.dockwidget.reload.clicked.connect(self.cleanup)
 
@@ -337,17 +343,24 @@ class QSEQUOIA2:
         print("Traitement terminé")
 
 
-    def set_projectFolder(self):
-        path = QFileDialog.getExistingDirectory(self.dockwidget, "Select project Directory")
+    def set_projectFolder(self, path=None):
+        if path is None :
+            path = QFileDialog.getExistingDirectory(self.dockwidget, "Select project Directory")
 
-        if not path:
-            print("No directory selected")
-            self.current_project_folder = None
-            self.current_project_name = None
-            return
+            if not path:
+                print("No directory selected")
+                self.current_project_folder = None
+                self.current_project_name = None
+                return
 
         print("Selected directory:", path)
         self.current_project_folder = path
+
+        self.dockwidget.add_project.setEnabled(False)
+
+
+
+
 
         # extraction du nom du projet
 
@@ -369,7 +382,14 @@ class QSEQUOIA2:
 
         # fallback si rien trouvé
         if not project_name:
-            project_name = os.path.basename(self.current_project_folder).split("_SIG")[0]
+            folder_name = os.path.basename(self.current_project_folder)
+            if "_SIG" in folder_name:
+                project_name = folder_name.split("_SIG")[0]
+            if "_SEQ" in folder_name:
+                project_name = folder_name.split("_SEQ")[0]
+            if "SEQ_SIG" in folder_name:
+                project_name = folder_name.split("_SEQ_SIG")[0]
+                
 
 
         self.current_project_name = project_name
@@ -413,15 +433,16 @@ class QSEQUOIA2:
         # Vérifier si dossier contient un projet QGZ, si non, on le crée
         project = QgsProject.instance()
 
-        if not f"{self.current_project_name}_SEQ_PROJECT.qgz" in os.listdir(self.current_project_folder):
-            project.write(os.path.join(self.current_project_folder, f"{self.current_project_name}_SEQ_PROJECT.qgz"))
 
-        # Si le projet existe, on le charge sauf si c'est deja le projet courant
+        project_path = ensure_and_load_qgis_project(
+            project,
+            project_folder=self.current_project_folder,
+            project_name=self.current_project_name,
+            epsg="EPSG:2154"
+        )
 
-        if f"{self.current_project_name}_SEQ_PROJECT.qgz" in os.listdir(self.current_project_folder) and (project.fileName() == "" or not project.fileName().endswith(f"{self.current_project_name}_SEQ_PROJECT.qgz")):
-            project_path = os.path.join(self.current_project_folder, f"{self.current_project_name}_SEQ_PROJECT.qgz")
-            QgsProject.instance().read(project_path)
-            print(f"Projet QGZ chargé : {project_path}")
+        print(f"Projet QGZ chargé : {project_path}")
+
         
         self.iface.messageBar().pushMessage(
             "Qsequoia2",
@@ -440,6 +461,8 @@ class QSEQUOIA2:
         print(f"Nom du projet défini manuellement : {text}")
 
         self.current_project_name = text
+
+        self.dockwidget.add_project.setEnabled(True)
 
         # Propager au DockWidget
         if self.dockwidget:
@@ -462,6 +485,20 @@ class QSEQUOIA2:
 
             else:
                 print("Watcher non initialisé, rien à redémarrer.")
+
+    def add_project_clicked(self):
+
+        folder_path = create_new_folder(
+            project_name=self.current_project_name,
+            parent_widget=self.dockwidget,
+            log=None,
+            dockwidget=self.dockwidget,
+            iface=self.iface)
+
+        if folder_path and os.path.isdir(folder_path):
+            self.set_projectFolder(folder_path)
+        else:
+            print("Création du dossier annulée ou invalide.")
 
 
 

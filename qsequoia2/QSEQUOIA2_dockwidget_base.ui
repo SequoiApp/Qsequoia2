@@ -61,9 +61,9 @@
             </widget>
            </item>
            <item>
-            <widget class="QPushButton" name="add_on">
+            <widget class="QPushButton" name="add_project">
              <property name="toolTip">
-              <string>Création d'add-on</string>
+              <string>Créer un nouveau projet</string>
              </property>
             </widget>
            </item>

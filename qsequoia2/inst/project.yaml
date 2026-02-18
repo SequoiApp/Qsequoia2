@@ -4,9 +4,6 @@ assemblage:
     zoom_on: SEQ_PARCA_poly
     readonly: [SEQ_PARCA_poly]
     groups:
-      #- name: LEGEND
-        #type: vector
-        #layers: [SEQ_PARCA_poly_lgd_assemblage]
 
       - name: VECTEUR
         type: vector
@@ -38,20 +35,18 @@ assemblage:
           - wmts_irc
           - wmts_rgb
     themes:
-      - name: 1_VECTEUR+SEQUOIA
+      - name: assemblage
         show: [*assemblage_w_vect, *assemblage_w_seq]
-      - name: 2_VECTEUR+SEQUOIA+WMTS
+      - name: assemblage+WMTS
         show: [*assemblage_w_vect, *assemblage_w_seq, *assemblage_w_wmts]
-      - name: 3_SEQUOIA+WMTS
-        show: [*assemblage_w_vect, *assemblage_w_wmts]
+
   
   layout:
-    theme: '1_VECTEUR+SEQUOIA'
+    theme: 'assemblage'
     legends:
       - name: legend1
         layers: ['SEQ_PARCA_poly']
-      #- name: legend2
-        #layers: ['parca_polygon_occup', 'ua_polygon_occup']
+
 
 situation:
   canvas:
@@ -106,31 +101,34 @@ peuplements:
         layers: &peuplements_w_wmts ['wmts_scan25_grey', 'wmts_scan100', 'wmts_scan1000', 'wmts_pci', 'wmts_irc', 'wmts_rgb']
 
     themes:
-      - name: 1_VECTEUR+SEQUOIA
+      - name: peuplements
         show: [*peuplements_w_vect, *peuplements_w_seq]
-      - name: 2_VECTEUR+SEQUOIA+WMTS
+      - name: peuplements+WMTS
         show: [*peuplements_w_vect, *peuplements_w_seq, *peuplements_w_wmts]
-      - name: 3_SEQUOIA+WMTS
-        show: [*peuplements_w_vect, *peuplements_w_wmts]
+
 
   layout:
-    theme: '1_VECTEUR+SEQUOIA'
+    theme: 'peuplements'
     legends:
       - name: legend1
         layers: ['SEQ_SSPF_poly']
       - name: legend2
         layers: ['sspf_polygon_plt']
 
+
+
+
+
 enjeux_environnementaux:
   canvas:
     scale: 15000
-    zoom_on: 'parca_polygon_lgd_enjeux'
-    readonly: [parca_polygon_lgd_enjeux]
+    zoom_on: SEQ_PARCA_poly
+    readonly: [SEQ_PARCA_poly]
 
     groups:
       - name : LEGEND
         type : vector
-        layers : [parca_polygon_lgd_enjeux]
+        layers : [SEQ_PARCA_poly]
       - name : SEQUOIA
         type : vector
         layers : &enjeux_env_w_seq ['prop_line', 'pf_line', 'pf_polygon', 'pnr', 'znieff1', 'znieff2', 'zico', 'pn', 'sic', 'zps', 'ramsar', 'bios']
@@ -139,26 +137,26 @@ enjeux_environnementaux:
         layers : &enjeux_env_w_wmts ['wmts_scan25_grey']
 
     themes:
-      - name: 1_SEQUOIA+WMTS
+      - name: environnement
         show: [*enjeux_env_w_seq, *enjeux_env_w_wmts]
 
   layout:
-    theme: '1_SEQUOIA+WMTS'
+    theme: 'environnement'
     legends:
       - name: legend1
-        layers: ['parca_polygon_lgd_enjeux']
+        layers: ['SEQ_PARCA_poly']
       - name: legend2
         layers: ['prop_line', 'pf_line', 'pf_polygon', 'pnr', 'znieff1', 'znieff2', 'zico', 'pn', 'sic', 'zps', 'ramsar', 'bios']
 
 enjeux_sociaux:
   canvas:
     scale: 15000
-    zoom_on: 'parca_polygon_lgd_enjeux'
-    readonly: [parca_polygon_lgd_enjeux]
+    zoom_on: SEQ_PARCA_poly
+    readonly: [SEQ_PARCA_poly]
     groups:
       - name : LEGEND
         type : vector
-        layers : [parca_polygon_lgd_enjeux]
+        layers : [SEQ_PARCA_poly]
       - name : SEQUOIA
         type : vector
         layers : &enjeux_sociaux_w_seq ['prop_line', 'pf_line', 'pf_polygon', 'ppi', 'ppr', 'ppe']
@@ -167,27 +165,28 @@ enjeux_sociaux:
         layers : &enjeux_sociaux_w_wmts ['wmts_scan25_grey']
 
     themes:
-      - name: 1_SEQUOIA+WMTS
+      - name: social
         show: [*enjeux_sociaux_w_seq, *enjeux_sociaux_w_wmts]
 
   layout:
-    theme: '1_SEQUOIA+WMTS'
+    theme: 'social'
     legends:
       - name: legend1
-        layers: ['parca_polygon_lgd_enjeux']
+        layers: ['SEQ_PARCA_poly']
       - name: legend2
         layers: ['ppi', 'ppr', 'ppe']
+
 
 enjeux_patrimoniaux:
   canvas:
     scale: 15000
-    zoom_on: 'parca_polygon_lgd_enjeux'
-    readonly: [parca_polygon_lgd_enjeux]
+    zoom_on: SEQ_PARCA_poly
+    readonly: [SEQ_PARCA_poly]
 
     groups:
       - name : LEGEND
         type : vector
-        layers : ['parca_polygon_lgd_enjeux']
+        layers : ['SEQ_PARCA_poly']
       - name : SEQUOIA
         type : vector
         layers : &enjeux_pat_w_seq ['prop_line', 'pf_line', 'pf_polygon', 'mh', 'ppmh', 'site']
@@ -195,41 +194,42 @@ enjeux_patrimoniaux:
         type : wmts
         layers : &enjeux_pat_w_wmts ['wmts_scan25_grey']
     themes:
-      - name: 1_SEQUOIA+WMTS
+      - name: patrimoine
         show: [*enjeux_pat_w_seq, *enjeux_pat_w_wmts]
 
   layout:
-    theme: '1_SEQUOIA+WMTS'
+    theme: 'patrimoine'
     legends:
       - name: legend1
-        layers: ['parca_polygon_lgd_enjeux']
+        layers: ['SEQ_PARCA_poly']
       - name: legend2
         layers: ['mh', 'ppmh', 'site']
 
 geologie:
   canvas:
     scale: 15000
-    zoom_on: 'parca_polygon_lgd_enjeux'
-    readonly: [parca_polygon_lgd_enjeux]
+    zoom_on: SEQ_PARCA_poly
+    readonly: [SEQ_PARCA_poly]
 
     groups:
-      - name : LEGEND
-        type : vector
-        layers : ['parca_polygon_lgd_enjeux']
       - name : SEQUOIA
         type : vector
-        layers : &geol_w_seq ['prop_line', 'pf_line', 'pf_polygon', 'geol']
+        layers : &geol_w_seq ['SEQ_OWNER_line', 'SEQ_PF_line']
+        
+      - name : VECTOR-geol
+        type : vector
+        layers : &geol_w_vect ['CURVES_line','SOL_BDCHARM50_poly','SOL_CARHAB_poly']
       - name : WMTS
         type : wmts
         layers : &geol_w_wmts ['wmts_scan25_grey']
     themes:
-      - name: 1_SEQUOIA+WMTS
-        show: [*geol_w_seq, *geol_w_wmts]
+      - name: geologie
+        show: [*geol_w_seq, *geol_w_vect, *geol_w_wmts]
 
   layout:
-    theme: '1_SEQUOIA+WMTS'
+    theme: 'geologie'
     legends:
       - name: legend1
-        layers: ['parca_polygon_lgd_enjeux']
+        layers: ['SEQ_PARCA_poly']
       - name: legend2
-        layers: ['geol']
+        layers: ['SOL_BDCHARM50_poly', 'SOL_CARHAB_poly']

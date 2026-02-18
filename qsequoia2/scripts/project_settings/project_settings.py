@@ -177,6 +177,7 @@ class ProjectSettingsDialog(QDialog, Ui_ProjectSettingsDialog):
             # créer le service Layout
             layout_service = LayoutService(
                 project=QgsProject.instance(),
+                project_key = project_key,
                 project_name=self.current_project_name,
                 style_folder=self.current_style_folder,
                 downloads_path=self.downloads_path,
@@ -191,7 +192,7 @@ class ProjectSettingsDialog(QDialog, Ui_ProjectSettingsDialog):
             )
 
             # 1. Import layout et conserver la référence
-            self.current_layout = layout_service.import_layout(fmt=info.paper_format, orient=info.orientation)
+            self.current_layout = layout_service.import_layout(project_key=project_key, fmt=info.paper_format, orient=info.orientation)
 
             # 2. Ajouter au layout manager (une seule fois)
             lm = QgsProject.instance().layoutManager()

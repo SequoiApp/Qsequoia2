@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Tuple, Optional, List
 
-import os
+import os, datetime
 
 from qgis.core import (
     QgsVectorLayer,
@@ -14,6 +14,7 @@ from qgis.core import (
     QgsLayoutItemMap,
     QgsLayoutFrame,
     QgsLayoutItemAttributeTable,
+    QgsProject
 )
 
 from qgis.PyQt.QtXml import QDomDocument
@@ -22,6 +23,7 @@ from ..utils.variable import get_global_variable
 from ..utils.config import get_path
 from .processing import buffer, multipart_to_singleparts
 from ..utils.layers import resolve_layer
+from ..forest_settings.forest_stat import ForestStat
 
 
 # ============================================================
@@ -62,7 +64,7 @@ class LayoutService:
     # INIT
     # ------------------------------------------------------------
 
-    def __init__(self, project, project_name, style_folder, downloads_path, project_folder, iface):
+    def __init__(self, project,project_key, project_name, style_folder, downloads_path, project_folder, iface):
         self.project = project
         self.iface = iface
         self.project_name = project_name
@@ -198,9 +200,21 @@ class LayoutService:
         if qpt.exists():
             return qpt, other
 
+        base = Path(__file__).resolve()
+        QS_templates = base.parents[2] / "data" / "templates"
+
+        qpt = QS_templates / f"{fmt}_{orient}.qpt"
+        if qpt.exists():
+            return qpt, orient
+
+        qpt_other = QS_templates / f"{fmt}_{other}.qpt"
+        if qpt_other.exists():
+            return qpt_other, other
+
+
         raise FileNotFoundError(f"Template introuvable : {fmt}_{orient}")
 
-    def import_layout(self, fmt: str, orient: str) -> QgsPrintLayout:
+    def import_layout(self, project_key, fmt: str, orient: str) -> QgsPrintLayout:
 
         qpt, orient_used = self._find_template(fmt, orient)
 
@@ -214,7 +228,18 @@ class LayoutService:
             raise ValueError("QPT invalide")
 
         layout.loadFromTemplate(doc, QgsReadWriteContext())
-        layout.setName(f"{fmt}_{orient_used}")
+        #try :
+        # Nom de la carte courante 
+        # import de forest_stat pour les département
+        forest_stats = ForestStat(project=QgsProject.instance(),project_name=self.project_name,project_folder=self.project_folder,style_folder=self.style_folder,iface=self.iface)
+        departements = forest_stats.forest_departements(layers = 'SEQ_PARCA_poly',project_name=self.project_name,project_folder=self.project_folder,style_folder=self.style_folder)
+        # Année courante
+        years = datetime.datetime.now().year
+
+        # build des noms
+
+        deps = str(departements.replace(" ","").replace("&","-").replace(",","-"))
+        layout.setName(f"{deps}-{self.project_name.upper()}-{project_key}-{years}_{fmt}_{orient_used}")
 
         #self.project.layoutManager().addLayout(layout)
 

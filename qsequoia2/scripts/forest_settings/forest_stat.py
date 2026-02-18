@@ -24,6 +24,9 @@ import importlib
 from PyQt5.QtWidgets import QDialog, QMessageBox, QFileDialog
 from qgis.PyQt.QtWidgets import QWidget, QVBoxLayout, QTreeWidget, QTreeWidgetItem
 
+from ..utils.config import get_path
+from .forest_get_data import getForestdata
+
 import os
 import yaml
 
@@ -41,10 +44,11 @@ class ForestStat:
     """Classe ForestStat : Calcul des statistiques forestières
     chaques fonctions vise à remplir le json contenant les statistiques"""
 
-    def __init__(self, project_name, project_folder):
+    def __init__(self, project, project_name, project_folder, style_folder,iface):
 
         self.project_name = project_name
         self.project_folder = project_folder
+        self.style_folder = style_folder
 
         self.script_dir = os.path.dirname(os.path.abspath(__file__))
         self.json_path = os.path.join(self.script_dir, "forest_data.json")
@@ -53,6 +57,8 @@ class ForestStat:
 
         # remplir directement le nom
         self.forest_name()
+
+        self.forest_get_data = getForestdata(project_name, project_folder, style_folder,iface) 
 
 
     # -----------------------------
@@ -106,7 +112,32 @@ class ForestStat:
         self.update_json("forêt", "nom", self.project_name)
 
         print("Nom de la forêt enregistré :", self.project_name)
+
     
+
+    def forest_departements(self, layers, project_name, project_folder, style_folder):
+        """récupère les département de la propriété"""
+
+        base_layers = get_path(label=layers,project_name=self.project_name,project_folder=project_folder,style_folder=style_folder,parent=None)
+
+        deps = []
+        try:
+            if base_layers:
+
+                shapefile_path = list(base_layers.values())[0]
+
+                deps = self.forest_get_data.get_grouped_values_from_shapefile(
+                    shapefile_path=shapefile_path,
+                    value_field="DEP_CODE",
+                    filter_field=None,
+                    surface_field="SURF_CAD")
+
+        except Exception as e:
+            raise TypeError(f"erreur dans forest_departements{e}")
+
+        return deps
+
+
 
         
 # appel pour le dev : 

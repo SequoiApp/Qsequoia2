@@ -222,13 +222,27 @@ class ProjectBuilder:
                         # SI les geojson existent 
                             
                         if os.path.exists(geojson_path) and not self.project.mapLayersByName(layer_name_key):
-                            # Charger le GeoJSON généré
+                            # Charger les GeoJSON + les couches courantes du dossier de mise en page
+                            layout_folder = os.path.join(self.project_folder, "LAYOUT", self.project_key)
+                            
                             load_vectors({layer_name_key: geojson_path},
                                         style_folder=self.style_folder,
                                         project_folder=self.project_folder,
                                         project_name=self.project_name,
                                         group_name=canvas_group_name,
                                         parent=self)
+                            # recherche des autres couches dans le dossier de mise en page
+                            for files in os.listdir(layout_folder):
+                                other_files = os.path.join(layout_folder, files)
+                                if os.path.isfile(other_files) and other_files.endswith((".geojson", ".gpkg")):
+                                    layer_key = os.path.splitext(files)[0]
+
+                                    load_vectors({layer_name_key: other_files},
+                                        style_folder=self.style_folder,
+                                        project_folder=self.project_folder,
+                                        project_name=self.project_name,
+                                        group_name=canvas_group_name,
+                                        parent=self)  
 
                     else:
                         # Charger directement depuis le chemin source

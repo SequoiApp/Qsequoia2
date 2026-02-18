@@ -198,51 +198,59 @@ class ProjectBuilder:
                     source_path = layer_paths_dict[layer_name_key]
 
                     # Copier la couche si demandé
-                    if self.copy_layers :
+                    if self.copy_layers:
+
                         vector_root = os.path.join(self.project_folder, "LAYOUT")
                         project_vector_dir = os.path.join(vector_root, self.project_key)
                         os.makedirs(project_vector_dir, exist_ok=True)
 
-                        geojson_path = os.path.join(self.project_folder, "LAYOUT", self.project_key, f"{layer_name_key}.geojson")
-                        
-                        # Si les geojson n'existent pas encore
-                        
+                        geojson_path = os.path.join(project_vector_dir, f"{layer_name_key}.geojson")
+
+                        # 1. Export si nécessaire
                         if not os.path.exists(geojson_path):
+                            export_to_geojson(
+                                layer_paths=[source_path],
+                                project_vector_dir=project_vector_dir,
+                                layer_name_override=layer_name_key
+                            )
 
-                            export_to_geojson(layer_paths=[source_path],project_vector_dir=project_vector_dir,layer_name_override=layer_name_key)
-                            
-                            # Charger le GeoJSON généré
-                            load_vectors({layer_name_key: geojson_path},
-                                        style_folder=self.style_folder,
-                                        project_folder=self.project_folder,
-                                        project_name=self.project_name,
-                                        group_name=canvas_group_name,
-                                        parent=self)
-                            
-                        # SI les geojson existent 
-                            
-                        if os.path.exists(geojson_path) and not self.project.mapLayersByName(layer_name_key):
-                            # Charger les GeoJSON + les couches courantes du dossier de mise en page
-                            layout_folder = os.path.join(self.project_folder, "LAYOUT", self.project_key)
-                            
-                            load_vectors({layer_name_key: geojson_path},
-                                        style_folder=self.style_folder,
-                                        project_folder=self.project_folder,
-                                        project_name=self.project_name,
-                                        group_name=canvas_group_name,
-                                        parent=self)
-                            # recherche des autres couches dans le dossier de mise en page
-                            for files in os.listdir(layout_folder):
-                                other_files = os.path.join(layout_folder, files)
-                                if os.path.isfile(other_files) and other_files.endswith((".geojson", ".gpkg")):
-                                    layer_key = os.path.splitext(files)[0]
 
-                                    load_vectors({layer_name_key: other_files},
-                                        style_folder=self.style_folder,
-                                        project_folder=self.project_folder,
-                                        project_name=self.project_name,
-                                        group_name=canvas_group_name,
-                                        parent=self)  
+                        # Charger seulement si pas déjà dans le projet (par source)
+                        if not any(l.source() == geojson_path for l in self.project.mapLayers().values()):
+
+                            load_vectors(
+                                {layer_name_key: geojson_path},
+                                style_folder=self.style_folder,
+                                project_folder=self.project_folder,
+                                project_name=self.project_name,
+                                group_name=canvas_group_name,
+                                parent=self
+                            )
+
+
+                        # Charger les autres couches du dossier
+                        layout_folder = project_vector_dir
+                        for file in os.listdir(layout_folder):
+
+                            other_path = os.path.join(layout_folder, file)
+
+                            if not other_path.endswith((".geojson", ".gpkg")):
+                                continue
+
+                            layer_key = os.path.splitext(file)[0]
+
+                            # Skip déjà chargée
+                            if any(l.source() == other_path for l in self.project.mapLayers().values()):
+                                continue
+
+                            load_vectors(
+                                {layer_key: other_path},
+                                style_folder=self.style_folder,
+                                project_folder=self.project_folder,
+                                project_name=self.project_name,
+                                group_name=canvas_group_name,
+                                parent=self
+                            )
 
                     else:
                         # Charger directement depuis le chemin source

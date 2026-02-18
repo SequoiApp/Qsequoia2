@@ -5,7 +5,7 @@ assemblage:
     readonly: [SEQ_PARCA_poly]
     groups:
 
-      - name: VECTEUR
+      - name: VECTEUR-assemblage
         type: vector
         layers: &assemblage_w_vect 
           - COMS_TOPO_line
@@ -19,13 +19,13 @@ assemblage:
           - ROAD_GRAPH_line
           - ROAD_GRAPH_poly
           - CAD_PARCELLE_poly
-      - name: SEQUOIA
+      - name: SEQUOIA-assemblage
         type: vector
         layers: &assemblage_w_seq
           - SEQ_OWNER_line
           - SEQ_PARCA_poly
 
-      - name: WMTS
+      - name: WMTS-assemblage
         type: wmts
         layers: &assemblage_w_wmts
           - wmts_scan25_grey
@@ -212,14 +212,14 @@ geologie:
     readonly: [SEQ_PARCA_poly]
 
     groups:
-      - name : SEQUOIA
+      - name : SEQUOIA-géol
         type : vector
         layers : &geol_w_seq ['SEQ_OWNER_line', 'SEQ_PF_line']
-        
-      - name : VECTOR-geol
+
+      - name : VECTOR-géol
         type : vector
         layers : &geol_w_vect ['CURVES_line','SOL_BDCHARM50_poly','SOL_CARHAB_poly']
-      - name : WMTS
+      - name : WMTS-géol
         type : wmts
         layers : &geol_w_wmts ['wmts_scan25_grey']
     themes:

@@ -5,7 +5,7 @@ assemblage:
     readonly: [SEQ_PARCA_poly]
     groups:
 
-      - name: VECTEUR-assemblage
+      - name: VECTEUR
         type: vector
         layers: &assemblage_w_vect 
           - COMS_TOPO_line
@@ -19,13 +19,13 @@ assemblage:
           - ROAD_GRAPH_line
           - ROAD_GRAPH_poly
           - CAD_PARCELLE_poly
-      - name: SEQUOIA-assemblage
+      - name: SEQUOIA
         type: vector
         layers: &assemblage_w_seq
           - SEQ_OWNER_line
           - SEQ_PARCA_poly
 
-      - name: WMTS-assemblage
+      - name: WMTS
         type: wmts
         layers: &assemblage_w_wmts
           - wmts_scan25_grey
@@ -51,35 +51,54 @@ assemblage:
 situation:
   canvas:
     scale: 25000
-    zoom_on: 'parca_polygon_lgd_situation'
-    readonly: [parca_polygon_lgd_situation]
+    zoom_on: 'SEQ_PARCA_poly'
+    readonly: ['SEQ_PARCA_poly']
     groups: 
-      - name: LEGEND
-        type: vector
-        layers: ['parca_polygon_lgd_situation']
       - name: VECTEUR
         type: vector
-        layers: ['coms_point', 'coms_line', 'infra_point_situation']
+        layers: &situation_w_vect
+          - COMS_TOPO_line
+          - COMS_TOPO_line
+          - CURVES_line
+          - PRSF_point
+          - ACCESS_ENTRY_point
+          - ACCESS_PORTEUR_poly
+          - ACCESS_SKIDDER_poly
+          - INFRA_poly
+          - ROAD_TOPO_poly
+          - ROAD_TOPO_line
+          - TOPONYME_point
+          - HYDRO_poly
+          - HYDRO_line
+          - VEGE_poly
+
       - name: SEQUOIA
         type: vector
-        layers: ['prop_point', 'prop_line', 'ua_polygon_occup']
+        layers: &situation_w_seq
+          - SEQ_PF_point
+          - SEQ_PF_line
+          - SEQ_PF_poly
+          - SEQ_PROP_point
+
       - name: WMTS
         type: wmts
-        layers: ['wmts_scan25', 'wmts_scan1000']
+        layers: &situation_w_wmts
+          - 'wmts_scan25'
+          - 'wmts_scan1000'
 
     themes:
-      - name: 1_SCAN25
-        show: ['ua_polygon_occup', 'prop_line', 'infra_point_situation', 'coms_point', 'coms_line', 'wmts_scan25']
-      - name: 2_SCAN1000
-        show: ['prop_point', 'wmts_scan1000']
+      - name: situation1/25000
+        show: [*situation_w_vect, *situation_w_seq, *situation_w_wmts]
+      - name: situation1/100000
+        show: ['SEQ_PROP_point', 'wmts_scan1000']
 
   layout:
-    theme: '1_SCAN25'
+    theme: 'situation1/25000'
     legends:
       - name: legend1
-        layers: ['parca_polygon_lgd_situation']
+        layers: *situation_w_vect
       - name: legend2
-        layers: ['ua_polygon_occup']
+        layers: [*situation_w_seq,'wmts_scan1000']
 
 peuplements:
   canvas:
@@ -126,9 +145,6 @@ enjeux_environnementaux:
     readonly: [SEQ_PARCA_poly]
 
     groups:
-      - name : LEGEND
-        type : vector
-        layers : [SEQ_PARCA_poly]
       - name : SEQUOIA
         type : vector
         layers : &enjeux_env_w_seq ['prop_line', 'pf_line', 'pf_polygon', 'pnr', 'znieff1', 'znieff2', 'zico', 'pn', 'sic', 'zps', 'ramsar', 'bios']
@@ -212,14 +228,14 @@ geologie:
     readonly: [SEQ_PARCA_poly]
 
     groups:
-      - name : SEQUOIA-géol
+      - name : SEQUOIA
         type : vector
         layers : &geol_w_seq ['SEQ_OWNER_line', 'SEQ_PF_line']
 
-      - name : VECTOR-géol
+      - name : VECTOR
         type : vector
         layers : &geol_w_vect ['CURVES_line','SOL_BDCHARM50_poly','SOL_CARHAB_poly']
-      - name : WMTS-géol
+      - name : WMTS
         type : wmts
         layers : &geol_w_wmts ['wmts_scan25_grey']
     themes:

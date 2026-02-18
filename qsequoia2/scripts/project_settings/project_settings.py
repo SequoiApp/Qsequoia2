@@ -42,6 +42,7 @@ class ProjectSettingsDialog(QDialog, Ui_ProjectSettingsDialog):
         self.downloads_path = downloads_path
         self.current_project_folder = current_project_folder
 
+
         self.setupUi(self)
 
         # YAML principal
@@ -197,10 +198,13 @@ class ProjectSettingsDialog(QDialog, Ui_ProjectSettingsDialog):
             # 2. Ajouter au layout manager (une seule fois)
             lm = QgsProject.instance().layoutManager()
 
-            # (optionnel mais conseillé) éviter les collisions de nom
-            existing = lm.layoutByName(self.current_layout.name())
-            if existing:
-                lm.removeLayout(existing)
+            # éviter les collisions de nom, je le garde pour le dev je met une condition pour éviter erreur python si le projet existe déja
+            if self.current_layout is not None:
+                existing = lm.layoutByName(self.current_layout.name())
+                if existing:
+                    lm.removeLayout(existing)
+            else :
+                return
 
             lm.addLayout(self.current_layout)
 

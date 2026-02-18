@@ -224,33 +224,35 @@ class ProjectBuilder:
                                 project_folder=self.project_folder,
                                 project_name=self.project_name,
                                 group_name=canvas_group_name,
+                                parent_group=subgroup,
                                 parent=self
                             )
 
 
                         # Charger les autres couches du dossier
-                        layout_folder = project_vector_dir
-                        for file in os.listdir(layout_folder):
+                        if canvas_group_name.upper() == "VECTEUR":
+                            layout_folder = project_vector_dir
+                            for file in os.listdir(layout_folder):
 
-                            other_path = os.path.join(layout_folder, file)
+                                other_path = os.path.join(layout_folder, file)
 
-                            if not other_path.endswith((".geojson", ".gpkg")):
-                                continue
+                                if not other_path.endswith((".geojson", ".gpkg")):
+                                    continue
 
-                            layer_key = os.path.splitext(file)[0]
+                                layer_key = os.path.splitext(file)[0]
 
-                            # Skip déjà chargée
-                            if any(l.source() == other_path for l in self.project.mapLayers().values()):
-                                continue
+                                # Skip déjà chargée
+                                if any(l.source() == other_path for l in self.project.mapLayers().values()):
+                                    continue
 
-                            load_vectors(
-                                {layer_key: other_path},
-                                style_folder=self.style_folder,
-                                project_folder=self.project_folder,
-                                project_name=self.project_name,
-                                group_name=canvas_group_name,
-                                parent=self
-                            )
+                                load_vectors(
+                                    {layer_key: other_path},
+                                    style_folder=self.style_folder,
+                                    project_folder=self.project_folder,
+                                    project_name=self.project_name,
+                                    group_name=canvas_group_name,
+                                    parent_group=subgroup,
+                                    parent=self)
 
                     else:
                         # Charger directement depuis le chemin source
@@ -259,6 +261,7 @@ class ProjectBuilder:
                             project_folder=self.project_folder,
                             project_name=self.project_name,
                             group_name=canvas_group_name,
+                            parent_group=subgroup,
                             parent=self)
 
 

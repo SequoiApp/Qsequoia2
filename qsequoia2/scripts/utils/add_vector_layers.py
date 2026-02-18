@@ -16,7 +16,7 @@ from qgis.core import (
 from .config import get_style
 
 
-def load_vectors(layer_path, style_folder, project_folder, project_name, group_name=None, parent=None):
+def load_vectors(layer_path, style_folder, project_folder, project_name, group_name=None, parent_group=None,parent=None):
     """
     Charge des couches vecteur dans le projet QGIS.
 
@@ -62,6 +62,10 @@ def load_vectors(layer_path, style_folder, project_folder, project_name, group_n
             continue
 
         # Créer le groupe si nécessaire
+
+        if group_name is not None :
+            group = parent_group
+
         if group_name and group is None:
             group = root.findGroup(group_name) or root.addGroup(group_name)
 

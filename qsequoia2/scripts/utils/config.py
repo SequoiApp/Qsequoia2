@@ -75,6 +75,21 @@ def get_path(label, project_name, project_folder, style_folder, parent):
         dict: {label: chemin_complet} ou {} si non trouvé
     """
 
+    # ==========================================
+    # PATCH YAML anchors : label peut être une liste
+    # ==========================================
+    if isinstance(label, list):
+
+        label = flatten(label)
+
+        # flatten peut retourner une liste → on prend le premier élément
+        if isinstance(label, list):
+            label = label[0] if label else None
+
+    # Sécurité
+    if not isinstance(label, str):
+        return {}
+
     path = find_best_layer_qgis(project_folder, label)
 
     if path:
@@ -111,6 +126,11 @@ def find_best_layer_qgis(project_folder, label):
     Returns:
         str | None: chemin du fichier trouvé, ou None si aucun
     """
+
+
+    # ==========================================
+    # go trouver le chemin
+    # ==========================================
 
     label = label.lower()
     parts = label.split("_")
@@ -171,6 +191,21 @@ def find_best_layer_qgis(project_folder, label):
             return path
 
 
+# ==========================================================
+# HELPERS
+# ==========================================================
+
+def flatten(label):
+    """Transforme une liste imbriquée en liste simple"""
+    result = []
+    for x in label:
+        if isinstance(x, list):
+            result.extend(flatten(x))
+        else:
+            result.append(x)
+    return result
+
+
 
 # endregion
 
@@ -194,54 +229,56 @@ def get_style(layer_path, style_folder):
     Returns:
         str | None: chemin du fichier de style correspondant
     """
-
     if not style_folder:
         raise ValueError("Global 'styles_directory' is not set")
     
     label, path = next(iter(layer_path.items()))
     label_lower = label.lower()
-    parts = label_lower.split("_")
 
+    parts = label_lower.split("_")
     geom = None
     token = None
 
-    # --- Extraction token + geom
     if len(parts) >= 2 and parts[-1] in ("poly", "line", "point"):
         geom = parts[-1]
-        token = parts[-2]   # <-- important : dernier mot métier
+        token = "_".join(parts[:-1])
     elif len(parts) >= 2:
         token = parts[-1]
     else:
         token = label_lower
 
-    # --- Vérif dossier
     if not os.path.isdir(style_folder):
         return None
 
     qml_files = [f for f in os.listdir(style_folder) if f.lower().endswith(".qml")]
 
-    # --- Matching strict avec séparateurs
-    def strict(pattern, fname):
-        return re.search(rf"(^|[_\-]){pattern}($|[_\-])", fname)
+    # --- 0. Match exact label complet
+    for f in qml_files:
+        fname = os.path.splitext(f)[0].lower()
+        if fname == label_lower:
+            print("Style exact trouvé:", f)
+            return os.path.join(style_folder, f)
 
-    # ==================================================
-    # 1. MATCH ULTRA PRIORITAIRE token + geom
-    # ==================================================
+    # --- 1. Match token + geom
     if geom:
         target = f"{token}_{geom}"
         for f in qml_files:
             fname = os.path.splitext(f)[0].lower()
-            if strict(target, fname):
+            if fname == target:
+                print("Style token+geom trouvé:", f)
                 return os.path.join(style_folder, f)
 
-    # ==================================================
-    # 2. MATCH token seul (fallback)
-    # ==================================================
+    # --- 2. Match token seul (fallback)
+    def strict(pattern, fname):
+        return re.search(rf"(^|[_\-]){pattern}($|[_\-])", fname)
+
     for f in qml_files:
         fname = os.path.splitext(f)[0].lower()
         if strict(token, fname):
+            print("Style token seul trouvé:", f)
             return os.path.join(style_folder, f)
 
+    print("Aucun style trouvé pour", label_lower)
     return None
 
   

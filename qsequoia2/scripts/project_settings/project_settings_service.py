@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Tuple, Optional, List
 
 import os, datetime
+from qgis.PyQt.QtWidgets import QDialog, QMessageBox
 
 from qgis.core import (
     QgsVectorLayer,
@@ -71,6 +72,7 @@ class LayoutService:
         self.style_folder = style_folder
         self.downloads_path = downloads_path
         self.project_folder = project_folder
+
 
 
         self.models_dir = Path(get_global_variable("models_directory"))
@@ -228,18 +230,39 @@ class LayoutService:
             raise ValueError("QPT invalide")
 
         layout.loadFromTemplate(doc, QgsReadWriteContext())
-        #try :
+
         # Nom de la carte courante 
-        # import de forest_stat pour les département
-        forest_stats = ForestStat(project=QgsProject.instance(),project_name=self.project_name,project_folder=self.project_folder,style_folder=self.style_folder,iface=self.iface)
-        departements = forest_stats.forest_departements(layers = 'SEQ_PARCA_poly',project_name=self.project_name,project_folder=self.project_folder,style_folder=self.style_folder)
+
         # Année courante
         years = datetime.datetime.now().year
 
         # build des noms
+        try :
+            # import de forest_stat pour les département
+            forest_stats = ForestStat(project=QgsProject.instance(),project_name=self.project_name,project_folder=self.project_folder,style_folder=self.style_folder,iface=self.iface)
+            departements = forest_stats.forest_departements(layers = 'SEQ_PARCA_poly',project_name=self.project_name,project_folder=self.project_folder,style_folder=self.style_folder)
 
-        deps = str(departements.replace(" ","").replace("&","-").replace(",","-"))
-        layout.setName(f"{deps}-{self.project_name.upper()}-{project_key}-{years}_{fmt}_{orient_used}")
+            deps = str(departements.replace(" ","").replace("&","-").replace(",","-"))
+            layout.setName(f"{deps}-{self.project_name.upper()}-{project_key}-{years}_{fmt}_{orient_used}")
+        except:
+            layout.setName(f"{self.project_name.upper()}-{project_key}-{years}_{fmt}_{orient_used}")
+        
+        # Test si un projet du même nom existe deja
+        manager = QgsProject.instance().layoutManager()
+
+        if manager.layoutByName(layout.name()):
+
+            QMessageBox.critical(
+                self.iface.mainWindow(),
+                "Mise en page déjà existante",
+                f"Une mise en page nommée :\n\n"
+                f"{layout.name()}\n\n"
+                "existe déjà dans ce projet.\n\n"
+                "Veuillez supprimer ou renommer l'existante avant de continuer."
+            )
+
+            return
+
 
         #self.project.layoutManager().addLayout(layout)
 

@@ -187,7 +187,7 @@ class ProjectBuilder:
                         project_name=self.project_name,
                         project_folder=self.project_folder,
                         style_folder=self.style_folder,
-                        parent=self
+                        parent=self, layout_mode=1
                     )
 
                     if not layer_paths_dict:
@@ -204,7 +204,7 @@ class ProjectBuilder:
                         project_vector_dir = os.path.join(vector_root, self.project_key)
                         os.makedirs(project_vector_dir, exist_ok=True)
 
-                        geojson_path = os.path.join(project_vector_dir, f"{layer_name_key}.geojson")
+                        geojson_path = os.path.join(project_vector_dir, f"{self.project_key.upper()}_{layer_name_key}.geojson")
 
                         # 1. Export si nécessaire
                         if not os.path.exists(geojson_path):
@@ -216,18 +216,23 @@ class ProjectBuilder:
 
 
                         # Charger seulement si pas déjà dans le projet (par source)
-                        if not any(l.source() == geojson_path for l in self.project.mapLayers().values()):
+                        existing_layer = None
+                        for l in self.project.mapLayers().values():
+                            if l.source() == geojson_path:
+                                existing_layer = l
+                                break
 
-                            load_vectors(
+                        if existing_layer:
+                            continue
+
+                        load_vectors(
                                 {layer_name_key: geojson_path},
                                 style_folder=self.style_folder,
                                 project_folder=self.project_folder,
                                 project_name=self.project_name,
                                 group_name=canvas_group_name,
                                 parent_group=subgroup,
-                                parent=self
-                            )
-
+                                parent=self)
 
                         # Charger les autres couches du dossier
                         if canvas_group_name.upper() == "VECTEUR":
@@ -242,8 +247,20 @@ class ProjectBuilder:
                                 layer_key = os.path.splitext(file)[0]
 
                                 # Skip déjà chargée
-                                if any(l.source() == other_path for l in self.project.mapLayers().values()):
+                                existing_layer = None
+                                for l in self.project.mapLayers().values():
+                                    if l.source() == other_path:
+                                        existing_layer = l
+                                        break
+
+                                if existing_layer:
+                                    node = root.findLayer(existing_layer.id())
+                                    if node:
+                                        clone = node.clone()
+                                        node.parent().removeChildNode(node)
+                                        subgroup.addChildNode(clone)
                                     continue
+
 
                                 load_vectors(
                                     {layer_key: other_path},

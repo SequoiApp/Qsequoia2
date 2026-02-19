@@ -60,7 +60,7 @@ def get_config_path(filename: str) -> Path:
 # Fonction get_path modifiée pour rechercher la couche dans le dossier de projet
 # ----------------------------------------------------------------------------------
 
-def get_path(label, project_name, project_folder, style_folder, parent):
+def get_path(label, project_name, project_folder, style_folder, parent, layout_mode=None):
     """
     Recherche le chemin du fichier correspondant à un label YAML seq_layers dans le projet.
 
@@ -90,7 +90,7 @@ def get_path(label, project_name, project_folder, style_folder, parent):
     if not isinstance(label, str):
         return {}
 
-    path = find_best_layer_qgis(project_folder, label)
+    path = find_best_layer_qgis(project_folder, label,layout_mode=layout_mode)
 
     if path:
         QgsMessageLog.logMessage(
@@ -110,7 +110,7 @@ def get_path(label, project_name, project_folder, style_folder, parent):
 
 # Fonction utilitaire de get_path pour trouver les couches
 
-def find_best_layer_qgis(project_folder, label):
+def find_best_layer_qgis(project_folder, label, layout_mode=None):
     """
     Recherche optimisée d'une couche vectorielle ou raster dans le dossier projet.
 
@@ -154,6 +154,12 @@ def find_best_layer_qgis(project_folder, label):
     candidates = []
 
     for root, _, files in os.walk(project_folder):
+
+        root_upper = root.upper()
+        # Mode SIG : ignorer tout dossier LAYOUT
+        if layout_mode == 1 and "LAYOUT" in root_upper:
+            continue
+
         for f in files:
             fname = f.lower()
             path = os.path.join(root, f)
@@ -217,25 +223,160 @@ def flatten(label):
 # ----------------------------------------------------------------------------------
 
 
+# ---------------------------------------------------
+# Préfixes projet (robuste avec ton YAML)
+# ---------------------------------------------------
+def get_project_prefixes():
+    """
+    Retourne la liste des préfixes projets depuis project.yaml.
+    Supporte :
+      - projects: [..]
+      - OU projets = clés top-level (assemblage:, situation:, etc.)
+    """
+    yaml_path = os.path.join(os.path.dirname(__file__), "..", "..", "inst", "project.yaml")
+    with open(yaml_path, "r", encoding="utf-8") as f:
+        cfg = yaml.safe_load(f) or {}
 
+    projects = cfg.get("projects")
+    if isinstance(projects, list) and projects:
+        return [str(p).upper() for p in projects]
+
+    if isinstance(cfg, dict) and cfg:
+        return [str(k).upper() for k in cfg.keys()]
+
+    return []
+
+
+def extract_token(label, project_prefixes):
+    """Retire le préfixe projet pour obtenir le token métier"""
+    label_upper = label.upper()
+    for prefix in project_prefixes:
+        if label_upper.startswith(prefix + "_"):
+            return prefix, label_upper[len(prefix) + 1:]
+    return None, label_upper
+
+
+# ---------------------------------------------------
+# Index récursif des QML
+# ---------------------------------------------------
+def index_qml_files(style_folder: str):
+    """
+    Parcourt récursivement style_folder et construit :
+      - by_stem: dict { STEM_UPPER: [fullpath1, fullpath2, ...] }
+      - all_items: liste de tuples (STEM_UPPER, fullpath)
+    """
+    by_stem = {}
+    all_items = []
+
+    for root, _, files in os.walk(style_folder):
+        for fn in files:
+            if not fn.lower().endswith(".qml"):
+                continue
+            stem = os.path.splitext(fn)[0].upper()
+            full = os.path.join(root, fn)
+            by_stem.setdefault(stem, []).append(full)
+            all_items.append((stem, full))
+
+    return by_stem, all_items
+
+
+def choose_best(paths, prefer_under=None):
+    """
+    Choix déterministe si plusieurs fichiers matchent.
+    - Si prefer_under est fourni, on préfère les fichiers sous ce sous-dossier
+    - Ensuite : chemin le plus court, puis tri alpha
+    """
+    if not paths:
+        return None
+
+    if prefer_under:
+        prefer_under = os.path.normpath(prefer_under).lower()
+        preferred = [p for p in paths if os.path.normpath(p).lower().startswith(prefer_under)]
+        if preferred:
+            paths = preferred
+
+    paths = sorted(paths, key=lambda p: (len(os.path.normpath(p)), os.path.normpath(p).lower()))
+    return paths[0]
+
+
+def strict_token_match(pattern_upper: str, stem_upper: str):
+    """Match strict du token : délimiteurs '_' ou '-' ou début/fin"""
+    pat = re.escape(pattern_upper)
+    return re.search(rf"(^|[_\-]){pat}($|[_\-])", stem_upper) is not None
+
+
+# ---------------------------------------------------
+# Fonction principale : 100% récursive
+# ---------------------------------------------------
 def get_style(layer_path, style_folder):
     """
-    Sélectionne le fichier de style (.qml) le plus approprié pour une couche vecteur ou raster.
+    Sélectionne le fichier de style (.qml) le plus approprié.
+    Toutes les recherches sont récursives (dossier + sous-dossiers).
 
-    Args:
-        layer_path (dict): {label: path}
-        style_folder (str): dossier contenant les fichiers .qml
-
-    Returns:
-        str | None: chemin du fichier de style correspondant
+    Règle métier :
+      - si couche préfixée par un projet (ex: SITUATION_...) :
+          1) chercher style exact avec préfixe (SITUATION_X.qml) en récursif
+          2) sinon enlever le préfixe => chercher style exact (X.qml) en récursif
+      - sinon :
+          1) chercher style exact (LABEL.qml) en récursif
+      - puis fallback heuristiques en récursif :
+          token+geom, puis token seul (strict)
     """
     if not style_folder:
         raise ValueError("Global 'styles_directory' is not set")
-    
-    label, path = next(iter(layer_path.items()))
-    label_lower = label.lower()
+    if not os.path.isdir(style_folder):
+        return None
 
-    parts = label_lower.split("_")
+    label, _path = next(iter(layer_path.items()))
+    label_upper = label.upper()
+
+    project_prefixes = get_project_prefixes()
+    token_prefix, base_label = extract_token(label_upper, project_prefixes)
+
+    # Index récursif (1 seul walk)
+    by_stem, all_items = index_qml_files(style_folder)
+
+    # Optionnel : contexte (si tu veux préférer un sous-dossier du même nom que le 1er mot)
+    # Exemple : base_label = VEGE_poly -> contexte "VEGE" si styles/VEGE existe
+    prefer_under = None
+    first_word = base_label.split("_")[0]
+    candidate_folder = os.path.join(style_folder, first_word)
+    if os.path.isdir(candidate_folder):
+        prefer_under = candidate_folder  # on privilégie ce sous-arbre si plusieurs styles identiques existent
+
+    # -----------------------------
+    # 1) Cas préfixé projet : chercher exact préfixé
+    # -----------------------------
+    if token_prefix:
+        prefixed_paths = by_stem.get(label_upper, [])
+        hit = choose_best(prefixed_paths, prefer_under=prefer_under)
+        if hit:
+            print(f"Style trouvé (exact, récursif) avec préfixe projet '{token_prefix}': {hit}")
+            return hit
+
+        # -----------------------------
+        # 2) Fallback : enlever SITUATION_ et chercher exact
+        # -----------------------------
+        unprefixed_paths = by_stem.get(base_label, [])
+        hit = choose_best(unprefixed_paths, prefer_under=prefer_under)
+        if hit:
+            print(f"Style trouvé (exact, récursif) sans préfixe (fallback): {hit}")
+            return hit
+
+    else:
+        # -----------------------------
+        # Cas non préfixé : exact direct
+        # -----------------------------
+        exact_paths = by_stem.get(base_label, [])
+        hit = choose_best(exact_paths, prefer_under=prefer_under)
+        if hit:
+            print(f"Style trouvé (exact, récursif): {hit}")
+            return hit
+
+    # -----------------------------
+    # Fallback heuristiques (toujours récursif)
+    # -----------------------------
+    parts = base_label.split("_")
     geom = None
     token = None
 
@@ -245,40 +386,27 @@ def get_style(layer_path, style_folder):
     elif len(parts) >= 2:
         token = parts[-1]
     else:
-        token = label_lower
+        token = base_label
 
-    if not os.path.isdir(style_folder):
-        return None
-
-    qml_files = [f for f in os.listdir(style_folder) if f.lower().endswith(".qml")]
-
-    # --- 0. Match exact label complet
-    for f in qml_files:
-        fname = os.path.splitext(f)[0].lower()
-        if fname == label_lower:
-            print("Style exact trouvé:", f)
-            return os.path.join(style_folder, f)
-
-    # --- 1. Match token + geom
+    # A) token+geom exact
     if geom:
-        target = f"{token}_{geom}"
-        for f in qml_files:
-            fname = os.path.splitext(f)[0].lower()
-            if fname == target:
-                print("Style token+geom trouvé:", f)
-                return os.path.join(style_folder, f)
+        target = f"{token}_{geom}".upper()
+        paths = by_stem.get(target, [])
+        hit = choose_best(paths, prefer_under=prefer_under)
+        if hit:
+            print(f"Style trouvé (token+geom, récursif): {hit}")
+            return hit
 
-    # --- 2. Match token seul (fallback)
-    def strict(pattern, fname):
-        return re.search(rf"(^|[_\-]){pattern}($|[_\-])", fname)
+    # --- Fallback SAFE : token seul exact ---
+    token_only = token.upper()
+    paths = by_stem.get(token_only, [])
+    hit = choose_best(paths, prefer_under=prefer_under)
+    if hit:
+        print(f"Style trouvé (token exact, récursif): {hit}")
+        return hit
 
-    for f in qml_files:
-        fname = os.path.splitext(f)[0].lower()
-        if strict(token, fname):
-            print("Style token seul trouvé:", f)
-            return os.path.join(style_folder, f)
-
-    print("Aucun style trouvé pour", label_lower)
+    # PAS DE fallback cross-token
+    print(f"Aucun style métier trouvé pour {label_upper}")
     return None
 
   

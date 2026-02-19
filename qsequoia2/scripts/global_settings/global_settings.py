@@ -63,6 +63,14 @@ class GlobalSettingsDialog(QDialog):
 
         self.ui.open_maps.clicked.connect(lambda : open_maps(adress))
 
+        QS2_default_project_state = get_global_variable("QS2_default_project")
+
+        if not QS2_default_project_state:
+            self.ui.open_project.setChecked(False)
+        else:
+            self.ui.open_project.setChecked(True)
+
+
     def save_settings(self):
         # Récupère les paramètres
 
@@ -71,6 +79,7 @@ class GlobalSettingsDialog(QDialog):
         user = self.ui.userInput.text()
         adress = self.ui.adress.text()
         orga_name = self.ui.orga.text()
+        QS2_default_project = self.ui.open_project.isChecked()
         
 
         set_global_variable("styles_directory", styles_dir)
@@ -78,8 +87,9 @@ class GlobalSettingsDialog(QDialog):
         set_global_variable("user_full_name", user)
         set_global_variable("adress_organisation", adress)
         set_global_variable("organisation", orga_name)
+        set_global_variable("QS2_default_project", QS2_default_project)
         
-
+    #TODO lancement de la fonction de reload du plugin à l'acceptation des paramètres
 
     def select_styles_directory(self):
         modeles_path = QgsProject.instance().homePath() or str(Path.home())

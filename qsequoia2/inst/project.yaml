@@ -9,6 +9,7 @@ assemblage:
         type: vector
         layers: &assemblage_w_vect 
           - COMS_TOPO_line
+          - CURVES_line
           - COMS_TOPO_point
           - INFRA_point
           - INFRA_line
@@ -18,6 +19,9 @@ assemblage:
           - ROAD_TOPO_poly
           - ROAD_GRAPH_line
           - ROAD_GRAPH_poly
+          - HYDRO_poly
+          - HYDRO_line
+          - VEGE_poly
           - CAD_PARCELLE_poly
       - name: SEQUOIA
         type: vector
@@ -45,7 +49,9 @@ assemblage:
     theme: 'assemblage'
     legends:
       - name: legend1
-        layers: ['SEQ_PARCA_poly']
+        layers: [*assemblage_w_seq, *assemblage_w_wmts]
+      - name: 'legend2'
+        layers: *assemblage_w_vect
 
 
 situation:
@@ -57,7 +63,6 @@ situation:
       - name: VECTEUR
         type: vector
         layers: &situation_w_vect
-          - COMS_TOPO_line
           - COMS_TOPO_line
           - CURVES_line
           - PRSF_point
@@ -96,9 +101,9 @@ situation:
     theme: 'situation1/25000'
     legends:
       - name: legend1
-        layers: *situation_w_vect
-      - name: legend2
         layers: [*situation_w_seq,'wmts_scan1000']
+      - name: legend2
+        layers: *situation_w_vect
 
 peuplements:
   canvas:

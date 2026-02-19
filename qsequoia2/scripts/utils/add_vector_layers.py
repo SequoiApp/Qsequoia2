@@ -70,7 +70,7 @@ def load_vectors(layer_path, style_folder, project_folder, project_name, group_n
             group = root.findGroup(group_name) or root.addGroup(group_name)
 
         # --- Charger le style AVANT d'ajouter la couche ---
-        style = get_style(layer_path, style_folder)
+        style = get_style({key: path}, style_folder)
 
         if style:
             try:

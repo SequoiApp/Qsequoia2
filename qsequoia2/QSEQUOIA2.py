@@ -4,7 +4,7 @@ from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 from qgis.core import QgsApplication, Qgis
-from qgis.PyQt.QtWidgets import QMessageBox,QFileDialog
+from qgis.PyQt.QtWidgets import QMessageBox,QFileDialog, QInputDialog
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import QTimer, QThread, QMetaObject, Qt, pyqtSlot
 from qgis.core import QgsProject, QgsCoordinateReferenceSystem
@@ -116,6 +116,12 @@ class QSEQUOIA2:
         self.connect_dialog = None
 
         self.dogwatcher = DogWatcher(iface=self.iface, get_context_callback=self.get_watchdog_context, parent=None)
+
+
+        # Connaitre l'état des paramètres QS2
+
+        self.QSS2_default_project = get_global_variable("QS2_default_project")
+        print(f"default_projet vaut{self.QSS2_default_project}")
 
 
 
@@ -377,6 +383,9 @@ class QSEQUOIA2:
                     project_name = filename.split("_SEQ_PARCA_poly")[0]
                     break
 
+                if "_SEQ_PROJECT" in filename:
+                    project_name = filename.split("_SEQ_PROJECT")[0]
+
             if project_name:
                 break
 
@@ -389,8 +398,28 @@ class QSEQUOIA2:
                 project_name = folder_name.split("_SEQ")[0]
             if "SEQ_SIG" in folder_name:
                 project_name = folder_name.split("_SEQ_SIG")[0]
-                
 
+            # Pour les anciennes couches et anciens projets
+            if folder_name == "SIG":
+                for nom in os.listdir(self.current_project_folder):
+                    if "SEQ_PARCA_poly" in nom:
+                        continue
+                    if "PARCA" in nom:
+                        project_name = nom.split("_PARCA")[0]
+                        break
+
+        if not project_name:
+            project_name, ok = QInputDialog.getText(
+                None,
+                "Nom du projet",
+                "Impossible de déterminer le nom du projet.\nVeuillez saisir le nom du projet :")
+
+            if not ok or not project_name.strip():
+                self.current_project_folder = None
+                raise Exception("Nom du projet non fourni. Opération annulée.")
+
+
+                
 
         self.current_project_name = project_name
 
@@ -430,19 +459,18 @@ class QSEQUOIA2:
 
             print(f"Project name => {self.current_project_name}")
         
-        # Vérifier si dossier contient un projet QGZ, si non, on le crée
+        # Vérifier si dossier contient un projet QGZ, si non, on le crée, uniquement si variable utilisateur
         project = QgsProject.instance()
 
+        if self.QSS2_default_project is True:
+            project_path = ensure_and_load_qgis_project(
+                project,
+                project_folder=self.current_project_folder,
+                project_name=self.current_project_name,
+                epsg="EPSG:2154")
+            
 
-        project_path = ensure_and_load_qgis_project(
-            project,
-            project_folder=self.current_project_folder,
-            project_name=self.current_project_name,
-            epsg="EPSG:2154"
-        )
-
-        print(f"Projet QGZ chargé : {project_path}")
-
+            print(f"Projet QGZ chargé : {project_path}")
         
         self.iface.messageBar().pushMessage(
             "Qsequoia2",

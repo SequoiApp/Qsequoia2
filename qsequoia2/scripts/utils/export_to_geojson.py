@@ -36,10 +36,20 @@ def export_to_geojson(layer_paths, project_vector_dir, layer_name_override=None,
         # Nom du layer
         layer_name = layer_name_override or os.path.splitext(os.path.basename(layer_path))[0]
 
+        # Nom de la carte actuel
+
+        project_key = os.path.splitext(os.path.basename(project_vector_dir))[0].upper()
+
         # Chemin GeoJSON de sortie
-        gjs_path = os.path.join(project_vector_dir, f"{layer_name}.geojson")
+        gjs_path = os.path.join(project_vector_dir, f"{project_key}_{layer_name}.geojson")
 
         print(f"Copying layer {layer_path} to {gjs_path}...")
+
+        # retirer la couche de QGIS 
+
+        for lyr in list(QgsProject.instance().mapLayers().values()):
+            if lyr.source() == gjs_path:
+                QgsProject.instance().removeMapLayer(lyr.id())
 
         # Exporter via processing
         processing.run(

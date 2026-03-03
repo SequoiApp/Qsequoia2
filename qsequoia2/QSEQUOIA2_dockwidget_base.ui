@@ -45,6 +45,9 @@
           </layout>
          </item>
          <item>
+          <layout class="QHBoxLayout" name="project_suggest"/>
+         </item>
+         <item>
           <layout class="QHBoxLayout" name="horizontalLayout_2">
            <item>
             <widget class="QPushButton" name="setstyle">
@@ -115,13 +118,6 @@
          <widget class="QTabWidget" name="tabWidget">
           <property name="tabPosition">
            <enum>QTabWidget::West</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QProgressBar" name="progressBar">
-          <property name="value">
-           <number>24</number>
           </property>
          </widget>
         </item>

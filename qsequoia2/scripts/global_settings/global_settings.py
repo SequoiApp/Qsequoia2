@@ -2,7 +2,7 @@
 
 
 
-from qgis.PyQt.QtWidgets import QDialog, QFileDialog
+from qgis.PyQt.QtWidgets import QDialog, QFileDialog, QMessageBox
 
 from .global_settings_dialog import Ui_GlobalSettingsDialog
 from qgis.core import QgsProject
@@ -12,6 +12,7 @@ import yaml
 
 # Import from utils folder
 from ..utils.variable import get_global_variable, set_global_variable
+from ..utils.reloader import reloadQS2
 
 from .go_to_maps import open_maps
 
@@ -25,6 +26,7 @@ class GlobalSettingsDialog(QDialog):
         self.ui = Ui_GlobalSettingsDialog()
         self.ui.setupUi(self)
         self.plugin = plugin
+
         
         # Charger les paramètres existants
         self.load_settings()
@@ -35,6 +37,7 @@ class GlobalSettingsDialog(QDialog):
         self.ui.buttonBox.accepted.connect(self.save_settings)
         self.ui.stylesButton.clicked.connect(self.select_styles_directory)
         self.ui.modelsButton.clicked.connect(self.select_models_directory)
+        self.ui.folders_folder_button.clicked.connect(self.select_folders_folder)
 
 
     def load_settings(self):
@@ -70,6 +73,22 @@ class GlobalSettingsDialog(QDialog):
         else:
             self.ui.open_project.setChecked(True)
 
+        # Proposition des projets
+
+        folders_folder = get_global_variable("folders_folder")
+        self.ui.folders_folder.setText(folders_folder)
+
+        QS2_suggest_project_state = get_global_variable("QS2_suggest_project")
+        if not QS2_suggest_project_state :
+            self.ui.suggest_folder.setChecked(False)
+            self.ui.folders_folder.setEnabled(False)
+            self.ui.folders_folder_button.setEnabled(False)
+        else : 
+            self.ui.suggest_folder.setChecked(True)
+            self.ui.folders_folder.setEnabled(True)
+            self.ui.folders_folder_button.setEnabled(True)
+
+
 
     def save_settings(self):
         # Récupère les paramètres
@@ -80,6 +99,8 @@ class GlobalSettingsDialog(QDialog):
         adress = self.ui.adress.text()
         orga_name = self.ui.orga.text()
         QS2_default_project = self.ui.open_project.isChecked()
+        folders_folder = self.ui.folders_folder.text()
+        QS2_suggest_project = self.ui.suggest_folder.isChecked()
         
 
         set_global_variable("styles_directory", styles_dir)
@@ -88,8 +109,11 @@ class GlobalSettingsDialog(QDialog):
         set_global_variable("adress_organisation", adress)
         set_global_variable("organisation", orga_name)
         set_global_variable("QS2_default_project", QS2_default_project)
+        set_global_variable("folders_folder", folders_folder )
+        set_global_variable("QS2_suggest_project", QS2_suggest_project )
         
-    #TODO lancement de la fonction de reload du plugin à l'acceptation des paramètres
+    # lancement de la fonction de reload du plugin à l'acceptation des paramètres
+        reloadQS2(plugin=self.plugin, plug = "qsequoia2")
 
     def select_styles_directory(self):
         modeles_path = QgsProject.instance().homePath() or str(Path.home())
@@ -98,11 +122,35 @@ class GlobalSettingsDialog(QDialog):
         if dir_path:
             self.ui.stylesInput.setText(dir_path)
 
+        if not dir_path.exists() or not dir_path.is_dir():
+            QMessageBox.warning(
+                self.iface.mainWindow(),
+                "Dossier introuvable",
+                f"Le dossier indiqué n’existe pas :\n{dir_path}"
+            )
+            return False
+
+        if not any(dir_path.glob("*.qml")):
+            QMessageBox.warning(
+                self.iface.mainWindow(),
+                "Aucun style trouvé",
+                f"Le dossier sélectionné ne contient aucun fichier .qml :\n{dir_path}")
+            return False
+
+
     def select_models_directory(self):
         modeles_path = QgsProject.instance().homePath() or str(Path.home())
         dir_path = QFileDialog.getExistingDirectory(self, "Sélectionner le répertoire de travail", str(modeles_path))
         if dir_path:
             self.ui.modelsInput.setText(dir_path)
+    
+
+    def select_folders_folder(self):
+        work_path = QgsProject.instance().homePath() or str(Path.home())
+        dir_path = QFileDialog.getExistingDirectory(self, "Sélectionner le répertoire de travail", str(work_path))
+        if dir_path:
+            self.ui.folders_folder.setText(dir_path)
+    
 
 
 

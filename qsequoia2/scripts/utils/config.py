@@ -336,13 +336,15 @@ def get_style(layer_path, style_folder):
     # Index récursif (1 seul walk)
     by_stem, all_items = index_qml_files(style_folder)
 
-    # Optionnel : contexte (si tu veux préférer un sous-dossier du même nom que le 1er mot)
-    # Exemple : base_label = VEGE_poly -> contexte "VEGE" si styles/VEGE existe
+
+    # Exemple : base_label = ASSEMBLAGE_VEGE_poly -> contexte "ASSEMBLAGE" 
     prefer_under = None
-    first_word = base_label.split("_")[0]
-    candidate_folder = os.path.join(style_folder, first_word)
-    if os.path.isdir(candidate_folder):
-        prefer_under = candidate_folder  # on privilégie ce sous-arbre si plusieurs styles identiques existent
+    #first_word = base_label.split("_")[0]
+    #candidate_folder = os.path.join(style_folder, first_word)
+    if token_prefix:
+        project_folder = os.path.join(style_folder, token_prefix)
+        if os.path.isdir(project_folder):
+            prefer_under = project_folder
 
     # -----------------------------
     # 1) Cas préfixé projet : chercher exact préfixé
@@ -454,3 +456,47 @@ def get_wmts(logical_key):
 # endregion
 
 
+# region PARCA_index
+
+
+from pathlib import Path
+
+def build_parca_index(folders_folder):
+    """Fonction d’indexation pour recheche des dossier contenant une couche PARCA"""
+
+    if not folders_folder:
+        pass
+
+    project_root = Path(folders_folder)
+
+    index = []
+
+    for file in project_root.rglob("*"):
+
+        if not file.is_file():
+            continue
+
+        if file.suffix.lower() not in [".gpkg", ".shp", ".geojson"]:
+            continue
+
+        filename = file.stem.lower()
+
+        if "parca" in filename:
+
+            layer_name = file.stem
+
+            if "SEQ_PARCA_poly" in layer_name:
+                project_name = layer_name.split("_SEQ")[0]
+            elif "PARCA_polygon" in layer_name:
+                project_name = layer_name.split("_PARCA")[0]
+            else:
+                continue
+
+            index.append({
+                "project_name": project_name,
+                "folder": file.parent,
+                "file": file
+            })
+
+    print(f"Index PARCA construit : {len(index)} couches trouvées")
+    return index

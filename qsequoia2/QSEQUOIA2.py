@@ -2,9 +2,9 @@ import importlib
 import console
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QAction
+from qgis.PyQt.QtWidgets import QAction, QComboBox, QVBoxLayout, QFrame, QPushButton
 from qgis.core import QgsApplication, Qgis
-from qgis.PyQt.QtWidgets import QMessageBox,QFileDialog, QInputDialog
+from qgis.PyQt.QtWidgets import QMessageBox,QFileDialog, QInputDialog, QListWidget, QScrollArea
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import QTimer, QThread, QMetaObject, Qt, pyqtSlot
 from qgis.core import QgsProject, QgsCoordinateReferenceSystem
@@ -13,9 +13,11 @@ from qgis.core import QgsProject, QgsCoordinateReferenceSystem
 import yaml, timer
 
 from qsequoia2.scripts.global_settings.global_settings import GlobalSettingsDialog
-from qsequoia2.scripts.utils.variable import get_global_variable
+from qsequoia2.scripts.utils.variable import get_global_variable, set_global_variable
 from qsequoia2.scripts.watchdog.dogwatcher import DogWatcher
 from .scripts.utils.new_project import *
+from .scripts.utils.suggest_project_folder import *
+from.scripts.utils.config import *
 
 
 
@@ -123,9 +125,23 @@ class QSEQUOIA2:
         self.QSS2_default_project = get_global_variable("QS2_default_project")
         print(f"default_projet vaut{self.QSS2_default_project}")
 
+        self.folders_folder = get_global_variable("folders_folder") or None
+        print(f"répertoire des dossiers : {self.folders_folder}")
 
+        raw = get_global_variable("QS2_suggest_project")
 
-
+        if raw is None:
+            # valeur par défaut
+            self.QS2_suggest_project = False
+            set_global_variable("QS2_suggest_project", False)
+        else:
+            # normalisation
+            if isinstance(raw, str):
+                self.QS2_suggest_project = raw.strip().lower() == "true"
+            else:
+                self.QS2_suggest_project = bool(raw)
+        
+        self.parca_index = build_parca_index(self.folders_folder)
 
 
         # TODO: We are going to let the user set this up in a future iteration
@@ -278,18 +294,18 @@ class QSEQUOIA2:
 
             # show the dockwidget
 
-            self.dockwidget.progressBar.setValue(10)
-            print("Chargement… 10%")
+            #self.dockwidget.progressBar.setValue(10)
+            #print("Chargement… 10%")
 
-            self.dockwidget.progressBar.setValue(50)
-            print("Traitement… 50%")
+            #self.dockwidget.progressBar.setValue(50)
+            #print("Traitement… 50%")
 
-            self.dockwidget.progressBar.setValue(100)
-            print("Terminé !")
+            #self.dockwidget.progressBar.setValue(100)
+            #print("Terminé !")
 
             # nom du projet
 
-            self.dockwidget.name.setPlaceholderText("Nom du projet - ! idem Rsequoia2 !")
+            self.dockwidget.name.setPlaceholderText("Nom du projet")
             self.dockwidget.name.textChanged.connect(self.on_project_name_changed)
 
 
@@ -316,7 +332,21 @@ class QSEQUOIA2:
 
             self.dockwidget.add_project.clicked.connect(self.add_project_clicked)
 
-            self.dockwidget.reload.clicked.connect(self.cleanup)
+            # --- Zone de suggestions dans groupBox_3 ---
+            self.suggestion_list = QListWidget(self.dockwidget)
+            self.suggestion_list.setVisible(False)
+            self.suggestion_list.itemClicked.connect(self.on_suggestion_item_clicked)
+
+            # ScrollArea
+            self.suggestion_scroll = QScrollArea(self.dockwidget)
+            self.suggestion_scroll.setWidgetResizable(True)
+            self.suggestion_scroll.setVisible(False)
+            self.suggestion_scroll.setWidget(self.suggestion_list)
+
+            # Ajout dans groupBox_3
+            self.dockwidget.project_suggest.layout().addWidget(self.suggestion_scroll)
+
+
 
 
 
@@ -462,7 +492,7 @@ class QSEQUOIA2:
         # Vérifier si dossier contient un projet QGZ, si non, on le crée, uniquement si variable utilisateur
         project = QgsProject.instance()
 
-        if self.QSS2_default_project is True:
+        if self.QSS2_default_project == "true" or True :
             project_path = ensure_and_load_qgis_project(
                 project,
                 project_folder=self.current_project_folder,
@@ -490,6 +520,45 @@ class QSEQUOIA2:
 
         self.current_project_name = text
 
+        # Proposition des dossier de projets
+        if self.QS2_suggest_project:
+
+            project_folders, project_names = suggest_project_folder(text, self.parca_index)
+
+            print(f"dossiers trouvés :{project_folders}")
+
+            # Nettoyage
+            self.suggestion_list.clear()
+            self.suggestion_list.setVisible(False)
+            self.suggestion_scroll.setVisible(False)
+
+            # Aucune suggestion
+            if not project_names:
+                return
+
+
+            if len(text) == 0:
+                self.suggestion_list.clear()
+                self.suggestion_list.setVisible(False)
+                self.suggestion_scroll.setVisible(False)
+                return
+
+            if len(text) < 3:
+                return
+
+
+            # Plusieurs suggestions → affichage
+            self.current_suggested_folders = project_folders
+
+            for folder, name in zip(project_folders, project_names):
+                self.suggestion_list.addItem(f"{name} : {folder}")
+
+            self.suggestion_scroll.setVisible(True)
+            self.suggestion_list.setVisible(True)
+
+
+
+
         self.dockwidget.add_project.setEnabled(True)
 
         # Propager au DockWidget
@@ -513,6 +582,27 @@ class QSEQUOIA2:
 
             else:
                 print("Watcher non initialisé, rien à redémarrer.")
+
+    def on_suggestion_item_clicked(self, item):
+
+        selected_name = item.text()
+        index = self.suggestion_list.row(item)
+        selected_folder = self.current_suggested_folders[index]
+
+        # Mise à jour du QLineEdit
+        self.dockwidget.name.blockSignals(True)
+        self.dockwidget.name.setText(selected_name)
+        self.dockwidget.name.blockSignals(False)
+
+        # Cacher la zone de suggestions
+        self.suggestion_scroll.setVisible(False)
+
+        # Mise à jour interne
+        self.current_project_name = selected_name
+        self.current_project_folder = str(selected_folder)
+
+        # Lancer ton workflow existant
+        self.set_projectFolder(self.current_project_folder)
 
     def add_project_clicked(self):
 

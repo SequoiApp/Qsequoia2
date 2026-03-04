@@ -1,15 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>none</class>
-
  <widget class="QWidget" name="none">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>461</width>
+    <height>462</height>
+   </rect>
+  </property>
   <property name="windowTitle">
    <string>Création de projet</string>
   </property>
-
   <layout class="QVBoxLayout" name="rootLayout">
-
-   <!-- Sélection thème -->
    <item>
     <layout class="QHBoxLayout" name="projectLayout">
      <item>
@@ -24,8 +28,6 @@
      </item>
     </layout>
    </item>
-
-   <!-- SCROLL -->
    <item>
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
@@ -33,11 +35,16 @@
        <property name="widgetResizable">
         <bool>true</bool>
        </property>
-
        <widget class="QWidget" name="scrollAreaWidgetContents">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>435</width>
+          <height>405</height>
+         </rect>
+        </property>
         <layout class="QVBoxLayout" name="scrollMainLayout">
-
-         <!-- Paramètres de mise en page -->
          <item>
           <layout class="QVBoxLayout" name="verticalLayout_2">
            <item>
@@ -45,9 +52,7 @@
              <property name="title">
               <string>Paramètres de mise en page</string>
              </property>
-
              <layout class="QVBoxLayout">
-
               <item>
                <layout class="QHBoxLayout" name="optionsLayout">
                 <item>
@@ -65,11 +70,16 @@
                   <property name="orientation">
                    <enum>Qt::Horizontal</enum>
                   </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>0</width>
+                    <height>0</height>
+                   </size>
+                  </property>
                  </spacer>
                 </item>
                </layout>
               </item>
-
               <item>
                <layout class="QHBoxLayout" name="optionsLayout_2">
                 <item>
@@ -82,15 +92,19 @@
                   </property>
                  </widget>
                 </item>
-
                 <item>
                  <spacer name="optionsSpacer_2">
                   <property name="orientation">
                    <enum>Qt::Horizontal</enum>
                   </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>0</width>
+                    <height>0</height>
+                   </size>
+                  </property>
                  </spacer>
                 </item>
-
                 <item>
                  <widget class="QLabel" name="label_occup">
                   <property name="toolTip">
@@ -101,7 +115,6 @@
                   </property>
                  </widget>
                 </item>
-
                 <item>
                  <widget class="QgsDoubleSpinBox" name="dsb_occup">
                   <property name="enabled">
@@ -117,16 +130,15 @@
                    <number>0</number>
                   </property>
                   <property name="singleStep">
-                   <double>5</double>
+                   <double>5.000000000000000</double>
                   </property>
                   <property name="value">
-                   <double>90</double>
+                   <double>90.000000000000000</double>
                   </property>
                  </widget>
                 </item>
                </layout>
               </item>
-
               <item>
                <layout class="QHBoxLayout" name="scaleLayout">
                 <item>
@@ -148,18 +160,21 @@
                   <property name="orientation">
                    <enum>Qt::Horizontal</enum>
                   </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>0</width>
+                    <height>0</height>
+                   </size>
+                  </property>
                  </spacer>
                 </item>
                </layout>
               </item>
-
              </layout>
             </widget>
            </item>
           </layout>
          </item>
-
-         <!-- Cartouche -->
          <item>
           <layout class="QVBoxLayout" name="verticalLayout_4">
            <item>
@@ -167,9 +182,18 @@
              <property name="title">
               <string>Cartouche et données principales</string>
              </property>
-
              <layout class="QVBoxLayout" name="cartoucheLayout_2">
-
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout">
+                <item>
+                 <widget class="QLabel" name="forest_name">
+                  <property name="text">
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;-----&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
               <item>
                <layout class="QHBoxLayout" name="typeLayout_2">
                 <item>
@@ -179,20 +203,49 @@
                   </property>
                  </widget>
                 </item>
-                <item><widget class="QCheckBox" name="checkBox_massif_2"><property name="text"><string>Massif</string></property></widget></item>
-                <item><widget class="QCheckBox" name="checkBox_domaine_2"><property name="text"><string>Domaine</string></property></widget></item>
-                <item><widget class="QCheckBox" name="checkBox_foret_2"><property name="text"><string>Forêt</string></property></widget></item>
-                <item><widget class="QCheckBox" name="checkBox_bois_2"><property name="text"><string>Bois</string></property></widget></item>
+                <item>
+                 <widget class="QCheckBox" name="checkBox_massif">
+                  <property name="text">
+                   <string>Massif</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="checkBox_domaine">
+                  <property name="text">
+                   <string>Domaine</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="checkBox_foret">
+                  <property name="text">
+                   <string>Forêt</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="checkBox_bois">
+                  <property name="text">
+                   <string>Bois</string>
+                  </property>
+                 </widget>
+                </item>
                 <item>
                  <spacer name="horizontalSpacer_4">
                   <property name="orientation">
                    <enum>Qt::Horizontal</enum>
                   </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>0</width>
+                    <height>0</height>
+                   </size>
+                  </property>
                  </spacer>
                 </item>
                </layout>
               </item>
-
               <item>
                <layout class="QHBoxLayout" name="communeLayout_2">
                 <item>
@@ -203,7 +256,7 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QLineEdit" name="country_2">
+                 <widget class="QLineEdit" name="lineEdit_city">
                   <property name="enabled">
                    <bool>false</bool>
                   </property>
@@ -211,7 +264,6 @@
                 </item>
                </layout>
               </item>
-
               <item>
                <layout class="QHBoxLayout" name="ownerLayout_2">
                 <item>
@@ -222,24 +274,31 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QLineEdit" name="owner_2"/>
+                 <widget class="QLineEdit" name="lineEdit_owner">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                 </widget>
                 </item>
                </layout>
               </item>
-
              </layout>
             </widget>
            </item>
           </layout>
          </item>
-
-         <!-- Bouton -->
          <item>
           <layout class="QHBoxLayout" name="buttonsLayout">
            <item>
             <spacer name="buttonsSpacer">
              <property name="orientation">
               <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>0</width>
+               <height>0</height>
+              </size>
              </property>
             </spacer>
            </item>
@@ -258,21 +317,24 @@
              <property name="orientation">
               <enum>Qt::Horizontal</enum>
              </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>0</width>
+               <height>0</height>
+              </size>
+             </property>
             </spacer>
            </item>
           </layout>
          </item>
-
         </layout>
        </widget>
       </widget>
      </item>
     </layout>
    </item>
-
   </layout>
  </widget>
-
  <customwidgets>
   <customwidget>
    <class>QgsDoubleSpinBox</class>
@@ -280,7 +342,6 @@
    <header>qgsdoublespinbox.h</header>
   </customwidget>
  </customwidgets>
-
  <resources/>
  <connections/>
 </ui>

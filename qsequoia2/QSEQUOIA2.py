@@ -19,6 +19,7 @@ from .scripts.utils.new_project import *
 from .scripts.utils.suggest_project_folder import *
 from.scripts.utils.config import *
 from .scripts.forest_settings.forest_get_data import getForestdata
+from .scripts.project_settings.project_settings import ProjectSettingsDialog
 
 
 

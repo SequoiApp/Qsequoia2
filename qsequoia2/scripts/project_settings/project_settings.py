@@ -1,6 +1,6 @@
-import os
+import os,re
 import time
-import yaml
+import yaml, json
 
 
 from pathlib import Path
@@ -41,9 +41,23 @@ class ProjectSettingsDialog(QDialog, Ui_ProjectSettingsDialog):
         self.current_style_folder = current_style_folder
         self.downloads_path = downloads_path
         self.current_project_folder = current_project_folder
+        self.script_dir = os.path.dirname(os.path.abspath(__file__))
 
+        self.metadata_path = os.path.join(self.script_dir, "..","..","data","_metadata","currentFolder","forest_metadata.json")
 
         self.setupUi(self)
+
+        ## Connection des checkboxes
+        self.nom_checkbox = {
+            self.checkBox_domaine: "Domaine",
+            self.checkBox_massif: "Massif",
+            self.checkBox_foret: "Forêt",
+            self.checkBox_bois: "Bois",
+        }
+        for cb in self.nom_checkbox:
+            cb.toggled.connect(self.on_checkbox_toggled)
+
+
 
         # YAML principal
         self.yaml_path = os.path.abspath(
@@ -130,10 +144,127 @@ class ProjectSettingsDialog(QDialog, Ui_ProjectSettingsDialog):
     # =========================================================
     # Lecture et affichage des données sur la forêt
     # =========================================================
-    
 
 
-    
+    ### gestion des checkboxs
+
+    def on_checkbox_toggled(self, checked):
+        """
+        Déclenché quand l'utilisateur coche/décoche une checkbox.
+        - Si pas de projet, décocher toutes.
+        - Sinon, rendre les checkboxes mutuellement exclusives.
+        """
+        if not getattr(self, "current_project_name", None):
+            # Aucun projet => décocher toutes
+            for cb in self.nom_checkbox:
+                if cb.isChecked():
+                    cb.blockSignals(True)
+                    cb.setChecked(False)
+                    cb.blockSignals(False)
+            return
+
+        if checked:
+            # Une checkbox a été cochée, décocher toutes les autres
+            sender_cb = self.sender()
+            for cb in self.nom_checkbox:
+                if cb != sender_cb and cb.isChecked():
+                    cb.blockSignals(True)
+                    cb.setChecked(False)
+                    cb.blockSignals(False)
+
+        # Mettre à jour le nom de forêt si nécessaire
+        self.update_forest_name()
+
+
+    ### Mise à jour du nom de la forêt
+
+    def update_forest_name(self):
+
+        try:
+            # Charger le JSON existant
+            with open(self.metadata_path, 'r', encoding='utf-8') as f:
+                metadata = json.load(f)
+        except FileNotFoundError:
+            metadata = {}
+        
+        base = metadata.get("project_name")
+
+        if base != self.current_project_name:
+            QMessageBox.Error(self.iface.mainWindow(),"Erreur", "Crash général")
+
+        # find the first‐checked box (if any) and grab its label
+        prefix = next((label for cb, label in self.nom_checkbox.items() if cb.isChecked()), "")
+
+        # On met en forme la base
+        
+        # 1. Séparer ST collé
+        base = re.sub(r"^(ST|STE|SAINT)(.*)", r"\1 \2", base, flags=re.IGNORECASE)
+
+        # 2. Normalisation classique
+        base = (
+            base.lower().replace("_", " ").replace(".", " ").replace("-", " ").title().split())
+
+        co = ["De", "La", "D", "Le"]
+        ST = ["ST", "STE", "SAINT"]
+
+        # 3. Si c'est un préfixe ST alors minuscule
+        base = [elem.title() if elem in ST else elem for elem in base]
+
+        # 4. Articles en minuscule
+        base = [elem.lower() if elem in co else elem for elem in base]
+
+        # 5. Reconstruction
+        base = " ".join(base)
+        
+
+        if prefix and base:
+            # plural names take " des "
+            if base.lower().endswith("s"):
+                connector = " des "
+            # then vowel or mute-h → d'
+            elif base[0].lower() in ("a","e","i","o","u","h"):
+                connector = " d'"
+            # otherwise normal " de "
+            else:
+                connector = " de "
+            forest_name = f"{prefix}{connector}{base}"
+        else:
+            forest_name = base
+            
+        # --- Ajout dans le JSON existant ---
+
+        # Ajouter forest_name
+        metadata["metadata"]["forest_name"] = forest_name
+
+        # Réécrire le JSON
+        with open(self.metadata_path, 'w', encoding='utf-8') as f:
+            json.dump(metadata, f, indent=4, ensure_ascii=False)
+        
+        # afficher le nom du propriétaire
+        self.load_city_and_owner()
+
+    ### Affichage des communes et des propriétaire
+
+    def load_city_and_owner(self):
+        """Charge les propriétaire et communes depuis les metadata"""
+        try:
+            # Charger le JSON existant
+            with open(self.metadata_path, 'r', encoding='utf-8') as f:
+                metadata = json.load(f)
+        except FileNotFoundError:
+            metadata = {}
+
+        # On récupère les valeurs depuis le sous-dictionnaire "metadata" si existant
+        meta = metadata.get("metadata", {})
+
+        city_str = meta.get("city_str", "")
+        owner_str = meta.get("owner_str", "")
+        forest_name = meta.get("forest_name","")
+
+        self.lineEdit_city.setText(city_str)
+        self.lineEdit_owner.setText(owner_str)
+        self.forest_name.setText(forest_name)
+
 
     # ==========================================================
     # Prise en compte des paramètres et acceptation du projet

@@ -20,6 +20,7 @@ from .scripts.utils.suggest_project_folder import *
 from.scripts.utils.config import *
 from .scripts.forest_settings.forest_get_data import getForestdata
 from .scripts.project_settings.project_settings import ProjectSettingsDialog
+from .scripts.utils.reloader import reloadQS2
 
 
 
@@ -348,7 +349,14 @@ class QSEQUOIA2:
             self.dockwidget.project_suggest.layout().addWidget(self.suggestion_scroll)
 
 
+            # securité si le nom de projet est grisé
+            if not self.current_project_name :
+                self.dockwidget.name.setEnabled(True)
 
+
+            # Reload the plugin 
+
+            self.dockwidget.reload.clicked.connect(lambda: reloadQS2(plugin=self.iface))
 
 
             # TODO: fix to allow choice of dock location
@@ -466,6 +474,7 @@ class QSEQUOIA2:
             self.dockwidget.name.blockSignals(True)
             self.dockwidget.name.setText(self.current_project_name)
             self.dockwidget.name.blockSignals(False)
+            self.dockwidget.name.setEnabled(False)
 
             # Propager aux onglets
             if hasattr(self.dockwidget, "tools_tab"):
@@ -674,52 +683,6 @@ class QSEQUOIA2:
             "style_folder": self.current_style_folder,
             "watch_mode": self.watch_mode}
     
-
-    def cleanup(self):
-        """
-        Réinitialise le plugin sans fermer le dockwidget.
-        """
-        print("Cleaning up QSEQUOIA2 plugin...")
-
-        # 1. Réinitialiser les variables internes
-        self.current_project_name = None
-        self.current_project_folder = None
-
-
-        # 2. Réinitialiser les champs GUI si le dockwidget existe
-        if self.dockwidget:
-            # Champ nom du projet
-            self.dockwidget.name.blockSignals(True)
-            self.dockwidget.name.setText("")
-            self.dockwidget.name.blockSignals(False)
-
-            # Réinitialiser la progress bar
-            self.dockwidget.progressBar.setValue(0)
-
-            # Réinitialiser les onglets
-            if hasattr(self.dockwidget, "tools_tab"):
-                self.dockwidget.tools_tab.current_project_name = None
-                self.dockwidget.tools_tab.current_project_folder = None
-
-
-            if hasattr(self.dockwidget, "data_settings_tab"):
-                self.dockwidget.data_settings_tab.current_project_name = None
-                self.dockwidget.data_settings_tab.current_project_folder = None
-
-            # Déconnecter temporairement les boutons si nécessaire
-            # et reconnecter après reset
-            # (optionnel selon besoin)
-
-        # 3. Réinitialiser le watchdog
-        if self.dogwatcher:
-            self.dogwatcher.stop()
-            self.dogwatcher.start()
-
-        # 4. Mettre à jour le connect_dialog si présent
-        if self.connect_dialog:
-            self.connect_dialog.update_watch_path_label()
-
-        print("Plugin cleaned up, GUI intact")
 
 
 

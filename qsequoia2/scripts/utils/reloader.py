@@ -23,6 +23,14 @@ def reloadQS2(plugin, plug = "qsequoia2"):
     iface           : QGIS iface (self.iface)
     plug            : nom du plugin à recharger
     """
+    # Si plugin est l'interface QGIS → OK
+    if hasattr(plugin, "messageBar"):
+        iface = plugin
+
+    # Sinon plugin est ton plugin → on récupère self.iface
+    elif hasattr(plugin, "iface"):
+        iface = plugin.iface
+
 
     project = QgsProject.instance()
 
@@ -72,7 +80,7 @@ def reloadQS2(plugin, plug = "qsequoia2"):
     if pluginStarted:
         duration = int(round((endTime - startTime) * 1000))
         msg = plugin.tr('<b>{}</b> recharger en {} ms, veuillez fermer puis ouvrir de nouveau le plugin').format(plug,duration)
-        plugin.iface.messageBar().pushMessage(msg, Qgis.Success)
+        iface.messageBar().pushMessage(msg, Qgis.Success)
         # Actual name of the "Plugins" tab in the message log panel
         # is localized, so we need to find it in QGIS' translations.
         # Don't pass the string value directly to QObject().tr()

@@ -127,6 +127,12 @@ class ProjectSettingsDialog(QDialog, Ui_ProjectSettingsDialog):
             print("Erreur update_scale :", e)
 
 
+    # =========================================================
+    # Lecture et affichage des données sur la forêt
+    # =========================================================
+    
+
+
     
 
     # ==========================================================

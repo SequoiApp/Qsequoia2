@@ -188,8 +188,7 @@ class ProjectBuilder:
                         project_folder=self.project_folder,
                         style_folder=self.style_folder,
                         parent=self,
-                        layout_mode=1
-                    )
+                        layout_mode=1)
 
                     if not layer_paths_dict:
                         print("Layer NOT found:", layer_name)

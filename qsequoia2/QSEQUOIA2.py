@@ -18,7 +18,7 @@ from qsequoia2.scripts.watchdog.dogwatcher import DogWatcher
 from .scripts.utils.new_project import *
 from .scripts.utils.suggest_project_folder import *
 from.scripts.utils.config import *
-
+from .scripts.forest_settings.forest_get_data import getForestdata
 
 
 
@@ -507,6 +507,17 @@ class QSEQUOIA2:
             f"Dossier {self.current_project_name} sélectionné avec succès : {self.current_project_folder}",
             level=Qgis.Success, duration=10)
         
+        # Calcul des données en fonction de la couche PARCA
+
+        forest_data = getForestdata(
+            project_name=project_name,
+            project_folder=self.current_project_folder,
+            style_folder=self.current_style_folder,
+            iface=self.iface)
+        
+        forest_data.run_all_calculations()
+        print("Résultats calculés")
+        print("JSON exporté")
 
     
     def on_project_name_changed(self, text):

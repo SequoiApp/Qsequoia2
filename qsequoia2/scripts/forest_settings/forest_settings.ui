@@ -15,99 +15,6 @@
   </property>
   <layout class="QVBoxLayout" name="rootLayout">
    <item>
-    <widget class="QGroupBox" name="groupBox_2">
-     <property name="title">
-      <string>Cartouche et données principales</string>
-     </property>
-     <layout class="QVBoxLayout" name="cartoucheLayout">
-      <item>
-       <layout class="QHBoxLayout" name="typeLayout">
-        <item>
-         <widget class="QLabel" name="label_3">
-          <property name="text">
-           <string>Type de propriété</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QCheckBox" name="checkBox_massif">
-          <property name="text">
-           <string>Massif</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QCheckBox" name="checkBox_domaine">
-          <property name="text">
-           <string>Domaine</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QCheckBox" name="checkBox_foret">
-          <property name="text">
-           <string>Forêt</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QCheckBox" name="checkBox_bois">
-          <property name="text">
-           <string>Bois</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="horizontalSpacer">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>0</width>
-            <height>0</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="communeLayout">
-        <item>
-         <widget class="QLabel" name="label_4">
-          <property name="text">
-           <string>Commune(s)</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLineEdit" name="country">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="ownerLayout">
-        <item>
-         <widget class="QLabel" name="label_5">
-          <property name="text">
-           <string>Propriétaire(s)</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLineEdit" name="owner"/>
-        </item>
-       </layout>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
     <widget class="QScrollArea" name="scrollArea">
      <property name="widgetResizable">
       <bool>true</bool>
@@ -118,7 +25,7 @@
         <x>0</x>
         <y>0</y>
         <width>412</width>
-        <height>382</height>
+        <height>517</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="scrollLayout">

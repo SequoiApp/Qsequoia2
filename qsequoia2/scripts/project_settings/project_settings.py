@@ -79,6 +79,12 @@ class ProjectSettingsDialog(QDialog, Ui_ProjectSettingsDialog):
 
         # Connect composeur chekbox to occup percentage
         self.cb_composeur.toggled.connect(self.dsb_occup.setEnabled)
+        if self.cb_composeur.isChecked():
+            self.dsb_occup.setEnabled(True)
+
+        # Mettre le boutton de mise en page en gris si pas de paramètres
+
+        self.layout.setEnabled(False)
 
         self.config = ProjectConfig(self.yaml_path)
 
@@ -264,6 +270,7 @@ class ProjectSettingsDialog(QDialog, Ui_ProjectSettingsDialog):
         self.lineEdit_city.setText(city_str)
         self.lineEdit_owner.setText(owner_str)
         self.forest_name.setText(forest_name)
+        self.layout.setEnabled(True)
 
 
     # ==========================================================

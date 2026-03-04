@@ -120,7 +120,8 @@ class ProjectBuilder:
             rec = QgsMapThemeCollection.MapThemeLayerRecord(layer)
             record.addLayerRecord(rec)
 
-        # Insérer le thème
+        # Insérer le thème (écrase automatiquement s'il existe)
+        mtc = self.project.mapThemeCollection()
         mtc.insert(name, record)
 
 

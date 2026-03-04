@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Tuple, Optional, List
 
-import os, datetime
+import os, datetime,json
 from qgis.PyQt.QtWidgets import QDialog, QMessageBox
 
 from qgis.core import (
@@ -72,10 +72,34 @@ class LayoutService:
         self.style_folder = style_folder
         self.downloads_path = downloads_path
         self.project_folder = project_folder
+        self.project_key = project_key
 
 
 
         self.models_dir = Path(get_global_variable("models_directory"))
+
+        self.script_dir = os.path.dirname(os.path.abspath(__file__))
+
+        # Metadata
+
+        metadata_path = os.path.join(self.script_dir, "..","..","data","_metadata","currentFolder","forest_metadata.json")
+
+        with open(metadata_path, 'r', encoding='utf-8') as f:
+            data_json = json.load(f)
+
+        # Extraire proprement la clé "metadata"
+        self.metadata = data_json.get("metadata", {})
+
+        # Mapping config
+
+        mapping_json = os.path.join(self.script_dir,"mapping.json")
+
+        # Charger la config
+        with open(mapping_json, 'r', encoding='utf-8') as f:
+            mapping_config = json.load(f)
+
+        self.mapping_config = mapping_config
+
 
     # ============================================================
     # FORMAT + ORIENTATION
@@ -333,8 +357,10 @@ class LayoutService:
                     layer_key=layer_name,
                     fields=["N_PARFOR", "SURF_COR"],
                     map_id="map1",
-                    filter_expression='"N_PARFOR" <> \'00\'',
-                )
+                    filter_expression='"N_PARFOR" <> \'00\'',)
+                
+        # Import des metadata dans le layout
+        self.apply_metadata_to_layout(layout)
 
     # ============================================================
     # LEGEND
@@ -432,3 +458,69 @@ class LayoutService:
             table.setFilterFeatures(True)
 
         table.refresh()
+        
+    # ============================================================
+    # Ajout des metadata dans la layout et des variables
+    # ============================================================
+
+    def build_available_variables(self):
+
+        vars_dict = {}
+
+        # JSON racine
+        #vars_dict.update(self.root_data)
+
+        # metadata
+        vars_dict.update(self.metadata)
+
+        # variables internes Python
+        vars_dict["project_key"] = self.project_key
+        vars_dict["current_date"] = datetime.datetime.now().strftime("%m/%Y")
+        vars_dict["username"] = get_global_variable("user_full_name")
+        vars_dict["adress"] = get_global_variable("adress_organisation")  # si défini ailleurs
+
+        return vars_dict
+
+
+    def apply_metadata_to_layout(self, layout):
+        """
+        Assigne les valeurs du JSON data_json aux éléments de layout selon mapping_json
+        layout : QgsLayout
+        data_json : dictionnaire avec tes données (le JSON du projet)
+        mapping_json : dictionnaire {objectName_layout: variable_data_json}
+        """
+
+        all_vars = self.build_available_variables()
+
+        combined_mapping = {}
+        combined_mapping.update(self.mapping_config.get("metadata", {}))
+        combined_mapping.update(self.mapping_config.get("var", {}))
+
+        for obj_name, config in combined_mapping.items():
+
+            item = layout.itemById(obj_name)
+            if not item:
+                continue
+
+            # Si mapping simple
+            if isinstance(config, str):
+                value = all_vars.get(config, "")
+
+            # Si mapping avancé (avec prefix)
+            elif isinstance(config, dict):
+                var_name = config.get("var")
+                value = all_vars.get(var_name, "")
+
+                prefix = config.get("prefix", "")
+                suffix = config.get("suffix", "")
+
+                value = f"{prefix}{value}{suffix}"
+
+            else:
+                value = ""
+
+            if isinstance(value, float):
+                value = f"{value:.4f}"
+
+            item.setText(str(value))
+            

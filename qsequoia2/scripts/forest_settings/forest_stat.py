@@ -140,12 +140,7 @@ class ForestStat:
 
 
         
-# appel pour le dev : 
 
-if __name__ == "__main__":
-     project_name = "Forêt de GATINE"
-     project_folder = "E:\\GEO_DEV_SIG\\projet\\GATINE"
-     forest_stat = ForestStat(project_name, project_folder)
 
     
 

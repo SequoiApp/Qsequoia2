@@ -392,10 +392,13 @@ class QSEQUOIA2:
         print("Selected directory:", path)
         self.current_project_folder = path
 
+        if path:
+
+            self.suggestion_list.clear()
+            self.suggestion_list.setVisible(False)
+            self.suggestion_scroll.setVisible(False)
+
         self.dockwidget.add_project.setEnabled(False)
-
-
-
 
 
         # extraction du nom du projet
@@ -516,8 +519,6 @@ class QSEQUOIA2:
             iface=self.iface)
         
         forest_data.run_all_calculations()
-        print("Résultats calculés")
-        print("JSON exporté")
 
     
     def on_project_name_changed(self, text):

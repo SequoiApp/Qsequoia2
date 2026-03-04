@@ -135,8 +135,6 @@ def find_best_layer_qgis(project_folder, label, layout_mode=None):
     label = label.lower()
     parts = label.split("_")
     
-    print(parts)
-
     expected_geom = None
     if parts[-1] in ("poly", "line", "point"):
 

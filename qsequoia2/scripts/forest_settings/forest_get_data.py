@@ -1,4 +1,30 @@
-""""""
+"""
+Classe getForestdata
+
+Cette classe centralise la lecture, le traitement et l'agrégation
+des données forestières à partir des couches SIG (PARCA et UA)
+dans QGIS. 
+
+Fonctionnalités principales :
+- Résolution dynamique des champs via YAML et JSON (noms et alias)
+- Sélection intelligente de la couche et du champ surface (UA prioritaire)
+- Calcul des surfaces boisées et non boisées
+- Agrégation par commune et par propriétaire
+- Génération de chaînes formatées pour affichage
+- Export complet des résultats et métadonnées vers un fichier JSON
+
+Utilisation typique :
+1. Instanciation avec le projet QGIS et chemins des dossiers.
+2. Exécution de `run_all_calculations()` pour calculer et stocker toutes les valeurs.
+3. Récupération des résultats dans `self._calculated_values` ou export via JSON.
+
+
+Auteur : Alexandre Le Bars - Comité des Forêts, Paul Carteron - Racine experts forestiers associés
+
+alexlb329@gmail.com
+
+Ce programme est sous licence SequoiAPP l'utilisation hors Qsequoia2 est soumis à autorisation
+"""
 
 # region import
 #====================================================
@@ -23,6 +49,12 @@ class getForestdata:
         Paramètre lu depuis la table forest_setting_data.json"""
 
     def __init__(self, project_name, project_folder, style_folder, iface):
+        """Initialise l’objet getForestdata.
+            Charge la configuration JSON et YAML, résout les définitions de champs,
+            récupère les couches du projet et prépare la structure interne
+            pour stocker les valeurs calculées destinées à l’export JSON.
+        """
+
         self.iface = iface
         self.project_name = project_name
         self.project_folder = project_folder
@@ -56,6 +88,13 @@ class getForestdata:
             return json.load(f)
 
     def _resolve_field_name(self, layer, field_key, json_fallback_key=None):
+        """
+        Résout dynamiquement le nom réel d’un champ dans une couche.
+
+        Recherche d’abord via la définition YAML (nom + alias),
+        puis applique un fallback éventuel défini dans le JSON.
+        Lève une erreur si aucun champ valide n’est trouvé.
+        """
         field_names = [f.name() for f in layer.fields()]
         possible_names = self.field_definitions.get(field_key, [])
 
@@ -69,7 +108,7 @@ class getForestdata:
             if fallback_name in field_names:
                 return fallback_name
             else:
-                print(f" Champ '{json_fallback_key}' fallback JSON introuvable dans la couche.")
+                self.iface.messageBar().pushMessage(f" Champ '{json_fallback_key}' fallback JSON introuvable dans la couche.", Qgis.Warning)
                 return fallback_name
         raise ValueError(f"Aucun champ trouvé pour '{field_key}' dans la couche. Cherché: {possible_names}")
 
@@ -78,9 +117,10 @@ class getForestdata:
     # ---------------------------------------------------------
     def _find_layer(self, layer_type="PARCA"):
         """
-        Recherche la première couche existante pour le type demandé
-        ("PARCA" ou "UA") selon le JSON config.
-        Retourne un QgsVectorLayer valide ou None.
+        Recherche et charge la première couche valide correspondant
+        au type demandé (ex: PARCA ou UA) selon la configuration JSON.
+
+        Retourne un QgsVectorLayer valide ou None si introuvable.
         """
         from qgis.core import QgsVectorLayer
 
@@ -112,6 +152,13 @@ class getForestdata:
     # Résolution couche
     # ---------------------------------------------------------
     def _resolve_layer(self, shapefile_path):
+        """
+        Résout une couche à partir d’un QgsVectorLayer existant
+        ou d’un chemin vers un fichier.
+
+        Retourne un QgsVectorLayer valide.
+        Lève une erreur si la couche ne peut pas être chargée.
+        """
 
         if isinstance(shapefile_path, QgsVectorLayer):
             if shapefile_path.isValid():
@@ -135,50 +182,67 @@ class getForestdata:
     # Définition de la ville et du propriétaire
     # --------------------------------------------------------
 
-
     def _set_city_and_owner(self, parca_path):
         """
-        Calcul City & Owner et stocke dans self._calculated_values pour sauvegarde ultérieure.
+        Calcule les surfaces par commune et par propriétaire
+        à partir de la couche PARCA.
+
+        Produit :
+        - Une liste détaillée des communes et propriétaires (pour JSON)
+        - Une version formatée en chaîne pour affichage rapide
+
+        Les résultats sont stockés dans self._calculated_values.
         """
 
-        cfg = self.config["fields"]
+        if not parca_path.isValid():
+            return
 
-        city = owner = ""
-        if parca_path.isValid():
+        layer = self._resolve_layer(parca_path)
+        city_field = self._resolve_field_name(layer, "com_name", json_fallback_key="city_field")
+        owner_field = self._resolve_field_name(layer, "owner", json_fallback_key="owner_field")
+        surface_field = self._resolve_field_name(layer, "cad_area", json_fallback_key="surface_field_parca")
 
-            layer = self._resolve_layer(parca_path)
-            # --- Récupère le nom réel des champs ---
-            city_field = self._resolve_field_name(layer, "com_name", json_fallback_key="city_field")
-            city_filter = self._resolve_field_name(layer, "dep_code", json_fallback_key="city_filter")
-            owner_field = self._resolve_field_name(layer, "owner", json_fallback_key="owner_field")
-            surface_field = self._resolve_field_name(layer, "cad_area", json_fallback_key="surface_field_parca")
+        # dictionnaires intermédiaires
+        city_dict = defaultdict(float)
+        owner_dict = defaultdict(lambda: {"commune": "", "surface_ha": 0.0})
 
-            city = self.get_grouped_values_from_shapefile(
-                parca_path,
-                city_field,
-                city_filter,
-                surface_field
-            )
-            owner = self.get_grouped_values_from_shapefile(
-                parca_path,
-                owner_field,
-                None,
-                surface_field
-            )
+        for feat in layer.getFeatures():
+            commune = feat[city_field]
+            owner = feat[owner_field]
+            surface = float(feat[surface_field] or 0.0)
+
+            city_dict[commune] += surface
+            if owner:
+                owner_dict[(commune, owner)]["commune"] = commune
+                owner_dict[(commune, owner)]["surface_ha"] += surface
+
+        # --- Listes détaillées pour JSON ---
+        city_list = [{"commune": k, "surface_ha": v} for k, v in city_dict.items()]
+        owner_list = [{"commune": k[0], "owner": k[1], "surface_ha": v["surface_ha"]} for k, v in owner_dict.items()]
+
+        # --- Chaînes “mise en forme” ---
+        cfg_format = self.config["formatting"]
+
+        # City string
+        city_values = [f"{c['commune']} ({c['surface_ha']:.4f})" for c in city_list] #:.4f = 4 décimals
+        city_str = (
+            f"{cfg_format['separator'].join(city_values[:-1])}{cfg_format['last_separator']}{city_values[-1]}"
+            if len(city_values) > 1 else city_values[0])
+
+        # Owner string (concat par commune, si plusieurs)
+        owner_values = list(dict.fromkeys(o["owner"] for o in owner_list))
+
+        owner_str = (
+            f"{cfg_format['separator'].join(owner_values[:-1])}"
+            f"{cfg_format['last_separator']}{owner_values[-1]}"
+            if len(owner_values) > 1 else owner_values[0])
+
 
         # Stockage interne pour export JSON
-        if not hasattr(self, "_calculated_values"):
-            self._calculated_values = {}
-        self._calculated_values["city"] = city
-        self._calculated_values["owner"] = owner
-
-
-        if self._calculated_values:
-            print("--_set_city_and_owner execution was succesfully--!")
-
-        # Optionnel : garder les setters projet
-        #set_project_variable("forest_city", city)
-        #set_project_variable("forest_owner", owner)
+        self._calculated_values["city_list"] = city_list
+        self._calculated_values["owner_list"] = owner_list
+        self._calculated_values["city_str"] = city_str
+        self._calculated_values["owner_str"] = owner_str
 
 
     # --------------------------------------------------------
@@ -187,8 +251,13 @@ class getForestdata:
 
     def get_grouped_values_from_shapefile(self, shapefile_path, value_field, filter_field, surface_field, result_key=None):
         """
-        Calcule les valeurs groupées à partir d'un QgsVectorLayer ou chemin de couche,
-        stocke le résultat dans self._calculated_values pour JSON.
+        Agrège des valeurs par groupe à partir d’une couche.
+
+        Regroupe les surfaces selon un champ de valeur
+        et un éventuel champ de filtre.
+
+        Retourne une chaîne formatée et stocke le résultat
+        dans self._calculated_values pour export JSON.
         """
         from collections import defaultdict
         layer = self._resolve_layer(shapefile_path)
@@ -235,27 +304,25 @@ class getForestdata:
             self._calculated_values = {}
         self._calculated_values[result_key or "grouped_values"] = final_result
 
-        if self._calculated_values:
-            print("--get_grouped_values_from_shapefile execution was succesfully--!")
-
         return final_result
     
 
-    def sum_surface_from_shapefile(self, shapefile_path, surface_field, filter_field=None, filter_value=None, result_key=None):
+    def sum_surface_from_shapefile(self, shapefile_path, surface_field_key, filter_field_key=None, filter_value=None, result_key=None):
         """
-        Calcule la somme des surfaces à partir d'un QgsVectorLayer ou chemin de couche,
-        stocke le résultat dans self._calculated_values pour JSON.
+        Calcule la somme des surfaces d’une couche.
+
+        Peut appliquer un filtre facultatif sur un champ donné.
+        Résout dynamiquement les noms réels des champs.
+
+        Stocke le résultat dans self._calculated_values.
         """
         layer = self._resolve_layer(shapefile_path)
-        field_names = layer.fields().names()
 
-        if surface_field not in field_names:
-            raise ValueError(f"Champ introuvable : {surface_field}")
-        if filter_field and filter_field not in field_names:
-            filter_field = None
+        # résolution des noms réels
+        surface_field = self._resolve_field_name(layer, surface_field_key, json_fallback_key="surface_field_parca")
+        filter_field = self._resolve_field_name(layer, filter_field_key, json_fallback_key=None) if filter_field_key else None
 
         total_surface = 0.0
-
         for feat in layer.getFeatures():
             if filter_field and filter_value is not None:
                 if feat[filter_field] != filter_value:
@@ -266,53 +333,116 @@ class getForestdata:
             self._calculated_values = {}
         self._calculated_values[result_key or "total_surface"] = total_surface
 
-        if self._calculated_values:
-            print("--sum_surface_from_shapefile execution was succesfully--!")
-
         return total_surface
 
 
 
     def _set_surface(self, ua_path, parca_path):
         """
-        Calcul des surfaces et stockage dans self._calculated_values.
+        Calcule les surfaces boisée, non boisée et totale.
+
+        Sélectionne intelligemment la couche et le champ surface :
+        - Priorité à UA si SURF_COR est exploitable
+        - Sinon fallback automatique vers PARCA
+
+        Détermine le caractère boisé via configuration YAML/JSON.
+
+        Stocke les surfaces calculées et une version formatée
+        dans self._calculated_values.
         """
 
         cfg = self.config["fields"]
 
-        if not ua_path.isValid() and not parca_path.isValid():
-            raise FileNotFoundError(
-                self.config["messages"]["layers_missing"].format(directory=self.directory)
+        if not (ua_path and ua_path.isValid()) and not (parca_path and parca_path.isValid()):
+            return
+        
+        # ---------------------------------------------------------
+        # Choix intelligent de la couche et du champ surface
+        # ---------------------------------------------------------
+
+        layer = None
+        surface_field = None
+
+        # On teste d'abord UA avec SURF_COR
+        if ua_path and ua_path.isValid():
+
+            ua_field = cfg.get("surface_field_ua")  # SURF_COR
+
+            if ua_field in ua_path.fields().names():
+
+                surfaces = [float(feat[ua_field] or 0.0)for feat in ua_path.getFeatures() 
+                            if float(feat[ua_field] or 0.0) > 0]
+
+                total_ua = sum(surfaces)
+                unique_values = set(surfaces)
+
+                # Conditions d'acceptation UA SURF_COR n'est pas 0 et les surfaces ne sont pas identiques
+                if (total_ua > 0 and len(unique_values) > 1):
+                    layer = ua_path
+                    surface_field = ua_field
+
+        # Si UA non exploitable → PARCA
+        if layer is None and parca_path and parca_path.isValid():
+
+            for field_name in [
+                cfg.get("surface_field"),      # SURF_CAD
+                cfg.get("surface_fallback")    # SURF_CA
+            ]:
+                if field_name in parca_path.fields().names():
+
+                    total_parca = sum(
+                        float(feat[field_name] or 0.0)
+                        for feat in parca_path.getFeatures()
+                    )
+
+                    if total_parca > 0:
+                        layer = parca_path
+                        surface_field = field_name
+                        break
+
+        if layer is None or surface_field is None:
+            self.iface.messageBar().pushMessage(
+                "Attention : aucune surface exploitable trouvée",
+                Qgis.Warning
             )
+            return
 
-        surface_field = cfg["surface_field_ua"] if ua_path.isValid() else cfg["surface_field_parca"]
-        path = ua_path if ua_path.isValid() else parca_path
+        # Détermination du champ "boisé" avec fallback YAML -> JSON
+        try:
+            occup_field = self._resolve_field_name(layer, "is_wooded", json_fallback_key="occup_field")
+        except ValueError:
+            occup_field = None
 
-        surface_boisee = self.sum_surface_from_shapefile(
-            path, surface_field, cfg["occup_field"], cfg["surface_boisee"]
-        ) or 0
+        # Initialisation des surfaces
+        surface_boisee = 0.0
+        surface_non_boisee = 0.0
+        city_dict = defaultdict(lambda: {"boisee": 0.0, "non_boisee": 0.0})
 
-        surface_non_boisee = self.sum_surface_from_shapefile(
-            path, surface_field, cfg["occup_field"], cfg["surface_non_boisee"]
-        ) or 0
+        for feat in layer.getFeatures():
+            surface = float(feat[surface_field] or 0.0)
+            commune = feat[cfg["filter_field"]] if cfg["filter_field"] in layer.fields().names() else "No Filter"
+
+            if occup_field:
+                is_wooded_value = feat[occup_field]
+                if is_wooded_value in [True, 1, "1", "True", "true","vrai","BOISEE","NR","nr",""]:
+                    surface_boisee += surface
+                    city_dict[commune]["boisee"] += surface
+                else:
+                    surface_non_boisee += surface
+                    city_dict[commune]["non_boisee"] += surface
+            else:
+                surface_non_boisee += surface  # fallback
+                city_dict[commune]["non_boisee"] += surface
 
         surface_totale = surface_boisee + surface_non_boisee
 
-        # Stockage interne pour export JSON plus tard
-        if not hasattr(self, "_calculated_values"):
-            self._calculated_values = {}
-        self._calculated_values["surface_boisee_m2"] = surface_boisee
-        self._calculated_values["surface_non_boisee_m2"] = surface_non_boisee
-        self._calculated_values["surface_totale_m2"] = surface_totale
+        # Stockage interne pour export JSON
+        self._calculated_values["surface_boisee_ha"] = surface_boisee
+        self._calculated_values["surface_non_boisee_ha"] = surface_non_boisee
+        self._calculated_values["surface_totale_ha"] = surface_totale
 
-        # Optionnel : variables projet
-        #set_project_variable("forest_surface_boisee", surface_boisee)
-        #set_project_variable("forest_surface_non_boisee", surface_non_boisee)
-        #set_project_variable("forest_surface_totale", surface_totale)
-        if self._calculated_values:
-            print("--_set_surface execution was succesfully--!")
-
-
+        # Mise en forme rapide
+        self._calculated_values["surface_formatted"] = self.get_formated_surface(surface_boisee, surface_non_boisee)
 
 
     # ---------------------------------------------------------
@@ -320,8 +450,13 @@ class getForestdata:
     # ---------------------------------------------------------
     def get_grouped_values(self, shapefile_path=None):
         """
-        Retourne la surface totale par commune sous forme de chaîne formatée
-        respectant les séparateurs du JSON.
+        Calcule la somme des surfaces d’une couche.
+
+        Peut fonctionner :
+        - En somme globale
+        - Avec filtre sur un champ spécifique
+
+        Applique les fallbacks de champs définis dans la configuration.
         """
 
         if shapefile_path is None:
@@ -448,10 +583,17 @@ class getForestdata:
     # Formatage surface
     # ---------------------------------------------------------
     def get_formated_surface(self, surface_boisee, surface_non_boisee):
+        """
+        Formate les surfaces calculées selon les règles métier.
+
+        Deux formats possibles :
+        - Total + surface boisée si surface non boisée > 0
+        - Conversion détaillée en ha / ares / centiares sinon
+
+        Retourne une chaîne prête pour affichage.
+        """
 
         cfg = self.config["surface"]
-
-        divider = cfg["unit_divider"]
         decimals = cfg["round_decimals"]
 
         surface_totale = surface_boisee + surface_non_boisee
@@ -461,12 +603,9 @@ class getForestdata:
         # -------------------------------
         if surface_non_boisee > 0:
 
-            surface_totale_ha = round(surface_totale / divider, decimals)
-            surface_boisee_ha = round(surface_boisee / divider, decimals)
-
             formatted_surface = (
-                f"{cfg['text_total']} {surface_totale_ha:.{decimals}f} {cfg['ha_label']} | "
-                f"{cfg['text_boisee']} {surface_boisee_ha:.{decimals}f} {cfg['ha_label']}"
+                f"{cfg['text_total']} {surface_totale:.{decimals}f} {cfg['ha_label']} | "
+                f"{cfg['text_boisee']} {surface_boisee:.{decimals}f} {cfg['ha_label']}"
             )
 
         # -------------------------------
@@ -474,9 +613,9 @@ class getForestdata:
         # -------------------------------
         else:
 
-            hectares = int(surface_boisee // divider)
-            ares = int((surface_boisee % divider) // 100)
-            centiares = int(surface_boisee % 100)
+            hectares = int(surface_totale)
+            ares = int((surface_totale - hectares) * 100)
+            centiares = int(round((((surface_totale - hectares) * 100) - ares) * 100))
 
             formatted_surface = (
                 f"{cfg['text_total']} "
@@ -492,6 +631,17 @@ class getForestdata:
     # ---------------------------------------------------------
 
     def run_all_calculations(self):
+        """
+        Exécute l’ensemble des calculs métier.
+
+        Enchaîne :
+        - Ville et propriétaire
+        - Surfaces
+        - Regroupements
+        - Export final vers JSON
+
+        Centralise toute la logique de traitement.
+        """
         parca_layer = self._find_layer("PARCA")
         ua_layer = self._find_layer("UA")
 
@@ -505,22 +655,19 @@ class getForestdata:
         # Surfaces (UA si dispo, sinon fallback sur PARCA)
         if ua_layer or parca_layer:
             self._set_surface(ua_layer if ua_layer else None, parca_layer if parca_layer else None)
-            surface_boisee = self._calculated_values.get("surface_boisee_m2", 0.0)
-            surface_non_boisee = self._calculated_values.get("surface_non_boisee_m2", 0.0)
+            surface_boisee = self._calculated_values.get("surface_boisee_ha", 0.0)
+            surface_non_boisee = self._calculated_values.get("surface_non_boisee_ha", 0.0)
         else:
             surface_boisee = surface_non_boisee = 0.0
 
         # -------------------------------
         # 3. Regroupements et somme globale
         # -------------------------------
-        grouped_values = self.get_grouped_values()
-        total_surface = self.sum_surface()
+        grouped_values = self.get_grouped_values(ua_layer if ua_layer else parca_layer)
+        total_surface = self._calculated_values.get("surface_totale_ha", 0.0)
 
         self._calculated_values["grouped_values"] = grouped_values
-        self._calculated_values["total_surface_m2"] = total_surface
-        self._calculated_values["surface_formatted"] = self.get_formated_surface(
-            surface_boisee, surface_non_boisee
-        )
+        self._calculated_values["total_surface_ha"] = total_surface
 
         # -------------------------------
         # 4. Export JSON
@@ -531,8 +678,11 @@ class getForestdata:
 
     def export_all_to_json(self):
         """
-        Exporte tous les résultats calculés et la config complète dans un JSON.
+        Exporte l’ensemble des données calculées
+        dans le fichier forest_metadata.json.
+
         Écrase le fichier existant.
+        Inclut les métadonnées projet et les résultats calculés.
         """
 
         # Chemin par défaut si non fourni
@@ -551,6 +701,6 @@ class getForestdata:
         try:
             with open(file_path, "w", encoding="utf-8") as f:
                 json.dump(data_to_save, f, indent=4, ensure_ascii=False)
-            print(f"Données exportées dans {file_path}")
+                print(f"-- metadata build pour {self.project_folder} --!")
         except Exception as e:
-            print(f"Erreur lors de l'export JSON : {e}")
+            self.iface.messageBar().pushMessage(f"Erreur lors de l'export JSON : {e}", Qgis.Warning)

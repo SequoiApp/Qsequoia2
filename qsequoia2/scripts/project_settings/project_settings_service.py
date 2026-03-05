@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Tuple, Optional, List
 
-import os, datetime,json
+import os, datetime,json, yaml
 from qgis.PyQt.QtWidgets import QDialog, QMessageBox
 
 from qgis.core import (
@@ -25,6 +25,7 @@ from ..utils.config import get_path
 from .processing import buffer, multipart_to_singleparts
 from ..utils.layers import resolve_layer
 from ..forest_settings.forest_stat import ForestStat
+from .project_config import ProjectConfig
 
 
 # ============================================================
@@ -99,6 +100,29 @@ class LayoutService:
             mapping_config = json.load(f)
 
         self.mapping_config = mapping_config
+
+
+        # Project.yaml
+
+        project_yaml = os.path.join(
+            self.script_dir, "..", "..", "inst", "project.yaml")
+
+        with open(project_yaml, "r", encoding="utf-8") as f:
+            self.project_data_yaml = yaml.safe_load(f)
+
+        self.config = ProjectConfig(yaml_path=project_yaml)
+
+
+        # Chargement des alias de couches
+        self.script_dir = os.path.dirname(os.path.abspath(__file__))
+
+        alias_json_path = os.path.join(self.script_dir, "..","..","inst", "alias.json")
+        if os.path.exists(alias_json_path):
+            with open(alias_json_path, "r", encoding="utf-8") as f:
+                aliases_json = json.load(f)
+                self.layer_aliases = aliases_json.get("layer_aliases", {})
+        else:
+            self.layer_aliases = {}
 
 
     # ============================================================
@@ -334,7 +358,6 @@ class LayoutService:
                     layout=layout,
                     legend_id=l["name"],
                     layer_keys=l["layers"],
-                    hide_name=hide_legend_names,
                     map_id="map1",
                 )
 
@@ -365,16 +388,17 @@ class LayoutService:
     # ============================================================
     # LEGEND
     # ============================================================
-
     def add_layer_to_legend(
         self,
         layout,
         legend_id: str,
         layer_keys: list,
-        hide_name: bool = True,
         map_id: str = None,
     ):
-
+        """
+        Ajoute les layers à une légende QGIS et applique les alias.
+        Fonction compatible avec des listes imbriquées.
+        """
 
         legend = layout.itemById(legend_id)
         if not legend:
@@ -382,23 +406,58 @@ class LayoutService:
 
         root = legend.model().rootGroup()
 
-        for key in layer_keys:
+        # ---------------------------
+        # Aplatir layer_keys
+        # ---------------------------
+        if hasattr(self.config, "flatten"):
+            flat_keys = self.config.flatten(layer_keys)
+        else:
+            # fallback simple
+            flat_keys = []
+            for k in layer_keys:
+                if isinstance(k, list):
+                    flat_keys.extend(k)
+                else:
+                    flat_keys.append(k)
 
-            layer = resolve_layer(key, self.project, project_name=self.project_name, project_folder=self.project_folder, style_folder=self.style_folder, parent=None)
+        # ---------------------------
+        # Boucle sur chaque clé
+        # ---------------------------
+        for key in flat_keys:
+
+            # Résolution du layer
+            layer = resolve_layer(
+                key,
+                self.project,
+                project_name=self.project_name,
+                project_folder=self.project_folder,
+                style_folder=self.style_folder,
+                parent=None,
+            )
 
             if not layer:
-                continue   # ne stoppe pas tout
+                continue  # Skip if not found
 
-            # éviter doublon
+            # Eviter doublon
             if layer.id() in [n.layerId() for n in root.findLayers()]:
                 continue
 
+            # Ajouter layer dans la légende
             node = root.addLayer(layer)
 
-            if hide_name:
-                node.setName("")
+            # Appliquer alias si existant
+            alias = None
+            if isinstance(key, str):
+                alias = self.layer_aliases.get(key)
 
-        # Filtrage map
+            if alias:
+                node.setName(alias)
+            else:
+                node.setName(layer.name())  # fallback si pas d'alias
+
+        # ---------------------------
+        # Filtrage sur une map spécifique
+        # ---------------------------
         if map_id:
             map_item = layout.itemById(map_id)
             legend.setLinkedMap(map_item)
@@ -477,7 +536,8 @@ class LayoutService:
         vars_dict["project_key"] = self.project_key
         vars_dict["current_date"] = datetime.datetime.now().strftime("%m/%Y")
         vars_dict["username"] = get_global_variable("user_full_name")
-        vars_dict["adress"] = get_global_variable("adress_organisation")  # si défini ailleurs
+        vars_dict["adresse"] = get_global_variable("adress_organisation")
+        vars_dict["project_alias"] = self.get_project_alias()
 
         return vars_dict
 
@@ -523,4 +583,13 @@ class LayoutService:
                 value = f"{value:.4f}"
 
             item.setText(str(value))
+
+
+    ### Récupération des alias
+
+    def get_project_alias(self):
+
+        project_config = self.project_data_yaml.get(self.project_key, {})
+
+        return project_config.get("alias", self.project_key)
             

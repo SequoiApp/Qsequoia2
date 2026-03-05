@@ -224,7 +224,7 @@ class getForestdata:
         cfg_format = self.config["formatting"]
 
         # City string
-        city_values = [f"{c['commune']} ({c['surface_ha']:.4f})" for c in city_list] #:.4f = 4 décimals
+        city_values = [f"{c['commune']} ({c['surface_ha']:.4f} ha)" for c in city_list] #:.4f = 4 décimals
         city_str = (
             f"{cfg_format['separator'].join(city_values[:-1])}{cfg_format['last_separator']}{city_values[-1]}"
             if len(city_values) > 1 else city_values[0])

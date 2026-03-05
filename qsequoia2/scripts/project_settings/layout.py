@@ -1,6 +1,4 @@
-import os
-
-
+import os,json
 from qgis.core import (Qgis,QgsProject,QgsMessageLog,QgsLayerTreeGroup,QgsCoordinateReferenceSystem,QgsMapThemeCollection,)
 
 from qgis.utils import iface
@@ -47,9 +45,20 @@ class ProjectBuilder:
 
         self.canvas_cfg = self.config.get_project_canvas(project_key)
         self.layout_cfg = self.config.get_project_layout(project_key)
-        print(self.project_folder)
+        
         if not self.project_folder:
             raise ValueError("project_folder est None ! Tu dois passer un chemin valide.")
+        
+        # Chargement des alias de couches
+        self.script_dir = os.path.dirname(os.path.abspath(__file__))
+
+        alias_json_path = os.path.join(self.script_dir, "..","..","inst", "alias.json")
+        if os.path.exists(alias_json_path):
+            with open(alias_json_path, "r", encoding="utf-8") as f:
+                aliases_json = json.load(f)
+                self.layer_aliases = aliases_json.get("layer_aliases", {})
+        else:
+            self.layer_aliases = {}
 
 
     # ==========================================================

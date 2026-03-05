@@ -24,8 +24,8 @@
 
   "var": {
     "project_key": {
-      "var": "project_key",
-      "prefix": "Cartographie de "
+      "var": "project_alias",
+      "prefix": ""
     },
 
     "date": {
@@ -34,6 +34,6 @@
     },
 
     "username": "username",
-    "adresse": "adress"
+    "adresse": "adresse"
   }
 }

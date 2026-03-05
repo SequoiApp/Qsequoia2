@@ -1,4 +1,5 @@
 assemblage:
+  alias : "Plan d'assemblage cadastral"
   canvas:
     scale: 7500
     zoom_on: SEQ_PARCA_poly
@@ -55,6 +56,7 @@ assemblage:
 
 
 situation:
+  alias : "Cartographie de situation"
   canvas:
     scale: 25000
     zoom_on: 'SEQ_PARCA_poly'
@@ -66,9 +68,6 @@ situation:
           - COMS_TOPO_line
           - CURVES_line
           - PRSF_point
-          - ACCESS_ENTRY_point
-          - ACCESS_PORTEUR_poly
-          - ACCESS_SKIDDER_poly
           - INFRA_poly
           - ROAD_TOPO_poly
           - ROAD_TOPO_line
@@ -93,7 +92,9 @@ situation:
 
     themes:
       - name: situation1/25000
-        show: [*situation_w_vect, *situation_w_seq, *situation_w_wmts]
+        show: [*situation_w_vect, *situation_w_seq]
+      - name: situation1/25000+WMTS
+        show: [*situation_w_seq, *situation_w_wmts]
       - name: situation1/100000
         show: ['SEQ_PROP_point', 'wmts_scan1000']
 
@@ -106,6 +107,7 @@ situation:
         layers: *situation_w_vect
 
 peuplements:
+  alias : "Cartographie des peuplements forestiers"
   canvas:
     scale: 7500
     zoom_on: 'parca_polygon_lgd_peuplements'
@@ -144,6 +146,7 @@ peuplements:
 
 
 enjeux_environnementaux:
+  alias : "Cartographie des enjeux environnementaux"
   canvas:
     scale: 15000
     zoom_on: SEQ_PARCA_poly
@@ -170,6 +173,7 @@ enjeux_environnementaux:
         layers: ['prop_line', 'pf_line', 'pf_polygon', 'pnr', 'znieff1', 'znieff2', 'zico', 'pn', 'sic', 'zps', 'ramsar', 'bios']
 
 enjeux_sociaux:
+  alias : "Cartographie des enjeux sociaux"
   canvas:
     scale: 15000
     zoom_on: SEQ_PARCA_poly
@@ -199,6 +203,7 @@ enjeux_sociaux:
 
 
 enjeux_patrimoniaux:
+  alias : "Cartographie des enjeux patrimoniaux"
   canvas:
     scale: 15000
     zoom_on: SEQ_PARCA_poly
@@ -227,6 +232,7 @@ enjeux_patrimoniaux:
         layers: ['mh', 'ppmh', 'site']
 
 geologie:
+  alias : "Cartographie géologique et stationnelle"
   canvas:
     scale: 15000
     zoom_on: SEQ_PARCA_poly

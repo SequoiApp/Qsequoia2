@@ -99,8 +99,6 @@ class getForestdata:
         """
         field_names = [f.name() for f in layer.fields()]
         possible_names = self.field_definitions.get(field_key, [])
-        print("possible_names:", possible_names)
-        print("fields in layer:", [f.name() for f in layer.fields()])
 
         for name in possible_names:
             if name in field_names:

@@ -148,7 +148,7 @@ class ProjectBuilder:
     def load_groups(self):
 
         print("=== LOAD GROUPS START ===")
-        print("Canvas config groups:", self.canvas_cfg.groups)
+
 
         loaders = {
             "vector": load_vectors,

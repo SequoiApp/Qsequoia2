@@ -173,15 +173,13 @@ class LayoutService:
         if uri is None:
             layer_dict = get_path("SEQ_PARCA_poly", project_name=self.project_name, project_folder=self.project_folder, style_folder=self.style_folder, parent=None)
         
-        print("DEBUG: layer_dict =", layer_dict)
+
         if not layer_dict:
             raise ValueError(f"URI invalide : {uri}")
         uri = list(layer_dict.values())[0]
-        print("DEBUG: layer URI =", uri)  # <-- URI finale
 
 
         layer = QgsVectorLayer(uri, "tmp", provider)
-        print("DEBUG: layer isValid =", layer.isValid(), "featureCount =", layer.featureCount())  # <-- validité
 
 
         if not layer.isValid():
@@ -195,13 +193,13 @@ class LayoutService:
 
         # --- PROCESS ---
         buffered = buffer(layer, distance=snap_distance / 2, dissolve=True)
-        print("DEBUG: buffered featureCount =", buffered.featureCount() if buffered else None)  # <-- buffer
+
 
         dissolved = buffer(buffered, distance=-snap_distance / 2)
-        print("DEBUG: dissolved featureCount =", dissolved.featureCount() if dissolved else None)  # <-- dissolve
+
 
         single_parts = multipart_to_singleparts(dissolved)
-        print("DEBUG: single_parts featureCount =", single_parts.featureCount())  # <-- single parts
+
 
         feat = max(
             single_parts.getFeatures(),
@@ -214,12 +212,11 @@ class LayoutService:
 
         geom = feat.geometry()
         bbox = geom.boundingBox()
-        print("DEBUG: bbox =", bbox.toString(), "width/height =", bbox.width(), bbox.height())
 
 
         fmt = self._pick_format(scale, bbox, coeff_cadre)
         orient = self._pick_orientation(bbox)
-        print("DEBUG: picked format =", fmt, "orientation =", orient)
+
 
 
         return MapInfo(

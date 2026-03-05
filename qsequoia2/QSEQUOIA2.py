@@ -125,10 +125,8 @@ class QSEQUOIA2:
         # Connaitre l'état des paramètres QS2
 
         self.QSS2_default_project = get_global_variable("QS2_default_project")
-        print(f"default_projet vaut{self.QSS2_default_project}")
 
         self.folders_folder = get_global_variable("folders_folder") or None
-        print(f"répertoire des dossiers : {self.folders_folder}")
 
         raw = get_global_variable("QS2_suggest_project")
 
@@ -289,22 +287,6 @@ class QSEQUOIA2:
             # bouttons d'ajout de couches
 
 
-                                
-
-
-
-
-            # show the dockwidget
-
-            #self.dockwidget.progressBar.setValue(10)
-            #print("Chargement… 10%")
-
-            #self.dockwidget.progressBar.setValue(50)
-            #print("Traitement… 50%")
-
-            #self.dockwidget.progressBar.setValue(100)
-            #print("Terminé !")
-
             # nom du projet
 
             self.dockwidget.name.setPlaceholderText("Nom du projet")
@@ -369,23 +351,6 @@ class QSEQUOIA2:
             "Non implémenté",
             "Cette fonctionnalité n'est pas encore implémentée."
         )
-
-
-    def run_process(self):
-        print("Démarrage du traitement…")
-        self.dockwidget.progress_bar.setValue(0)
-
-        # étape 1
-        self.dockwidget.progress_bar.setValue(20)
-        print("Étape 1 terminée")
-
-        # étape 2
-        self.dockwidget.progress_bar.setValue(60)
-        print("Étape 2 terminée")
-
-        # étape 3
-        self.dockwidget.progress_bar.setValue(100)
-        print("Traitement terminé")
 
 
     def set_projectFolder(self, path=None):
@@ -545,7 +510,6 @@ class QSEQUOIA2:
             return
 
         self.current_project_name = text
-        print(f"Nom du projet défini manuellement : {text}")
 
         self.current_project_name = text
 
@@ -554,7 +518,6 @@ class QSEQUOIA2:
 
             project_folders, project_names = suggest_project_folder(text, self.parca_index)
 
-            print(f"dossiers trouvés :{project_folders}")
 
             # Nettoyage
             self.suggestion_list.clear()

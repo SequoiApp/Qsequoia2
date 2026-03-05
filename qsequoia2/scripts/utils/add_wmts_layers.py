@@ -58,7 +58,6 @@ def load_wmts(label, group_name = None):
             QgsMessageLog.logMessage(f"Failed to load WMTS '{key}' from {base_url}", "Qsequoia2", Qgis.Warning)
             continue
 
-        print("Ajout de ", layer)
         # add to project, optionally hide it from the legend
         project.addMapLayer(layer, not bool(group))
 

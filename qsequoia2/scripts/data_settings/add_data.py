@@ -259,11 +259,7 @@ class AddDataDialog(QDialog):
         """
         tree = self.sender()  # QTreeWidget qui a émis le signal
         label = item.text(0)
-
-        print(f"Clic sur '{label}' depuis l’arbre : {tree.objectName()}")
-
         self.whats_layers(item, label, column)
-
 
     def whats_layers(self, item, label, column):
         """
@@ -286,7 +282,6 @@ class AddDataDialog(QDialog):
         current_tab = self.ui.tabWidget.tabText(self.ui.tabWidget.currentIndex())
         # --- Détection automatique des sections (items parents) ---
         if item is not None and item.parent() is None:
-            print(f"\n[add_data] => Clique sur une section : {label}")
             return
 
 

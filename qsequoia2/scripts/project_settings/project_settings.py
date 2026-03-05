@@ -302,7 +302,7 @@ class ProjectSettingsDialog(QDialog, Ui_ProjectSettingsDialog):
         copy_layers = False # Désactivé pour le moment pas stable et pas voulu dans la BETA 1
 
         builder = ProjectBuilder(copy_layers,current_project_name=self.current_project_name,current_style_folder=self.current_style_folder,downloads_path=self.downloads_path,current_project_folder=self.current_project_folder,project_key=project_key, yaml_path=self.yaml_path,iface=self.iface)
-        print(self.current_project_folder)
+
         builder.build()
 
 

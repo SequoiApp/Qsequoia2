@@ -360,7 +360,6 @@ def get_style(layer_path, style_folder):
         unprefixed_paths = by_stem.get(base_label, [])
         hit = choose_best(unprefixed_paths, prefer_under=prefer_under)
         if hit:
-            print(f"Style trouvé (exact, récursif) sans préfixe (fallback): {hit}")
             return hit
 
     else:
@@ -370,7 +369,6 @@ def get_style(layer_path, style_folder):
         exact_paths = by_stem.get(base_label, [])
         hit = choose_best(exact_paths, prefer_under=prefer_under)
         if hit:
-            print(f"Style trouvé (exact, récursif): {hit}")
             return hit
 
     # -----------------------------
@@ -394,7 +392,6 @@ def get_style(layer_path, style_folder):
         paths = by_stem.get(target, [])
         hit = choose_best(paths, prefer_under=prefer_under)
         if hit:
-            print(f"Style trouvé (token+geom, récursif): {hit}")
             return hit
 
     # --- Fallback SAFE : token seul exact ---
@@ -402,7 +399,6 @@ def get_style(layer_path, style_folder):
     paths = by_stem.get(token_only, [])
     hit = choose_best(paths, prefer_under=prefer_under)
     if hit:
-        print(f"Style trouvé (token exact, récursif): {hit}")
         return hit
 
     # PAS DE fallback cross-token

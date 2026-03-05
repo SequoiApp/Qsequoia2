@@ -48,7 +48,8 @@ def create_new_folder(project_name, parent_widget=None,log=None,dockwidget=None,
     # --- Structure des sous-dossiers ---
     structure = [
         "DIVERS",
-        "TABLEAUX"]
+        "TABLEAUX",
+        "MATRICES"]
 
     for dossier in structure :
         project_folder = os.path.join(chemin_complet, dossier)

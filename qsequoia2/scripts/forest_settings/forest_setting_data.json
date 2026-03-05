@@ -12,9 +12,12 @@
     "owner_field": "PROP",
     "surface_field_ua": "SURF_COR",
     "surface_field_parca": "SURF_CA",
+    "surface_SIG":"SURF_SIG",
     "surface_boisee": "BOISEE",
     "surface_non_boisee": "NON BOISEE",
-    "occup_field": "OCCUP_SOL"},
+    "occup_field": "OCCUP_SOL",
+    "QSURF_COR": "QSURF_COR",
+    "id_field": "IDU"},
 
   "ui": {
     "city": "lineEdit_city",

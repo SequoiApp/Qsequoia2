@@ -33,9 +33,11 @@ Ce programme est sous licence SequoiAPP l'utilisation hors Qsequoia2 est soumis 
 
 import os, yaml, glob, json
 from collections import defaultdict
-from qgis.core import QgsVectorLayer, QgsProject
+from qgis.core import QgsVectorLayer, QgsProject, QgsField
+from PyQt5.QtCore import QVariant
 from ..utils.config import *
 from datetime import datetime
+from qgis.PyQt.QtWidgets import QMessageBox,QFileDialog, QInputDialog, QListWidget, QScrollArea
 
 # endregion
 
@@ -97,6 +99,8 @@ class getForestdata:
         """
         field_names = [f.name() for f in layer.fields()]
         possible_names = self.field_definitions.get(field_key, [])
+        print("possible_names:", possible_names)
+        print("fields in layer:", [f.name() for f in layer.fields()])
 
         for name in possible_names:
             if name in field_names:
@@ -336,67 +340,42 @@ class getForestdata:
         return total_surface
 
 
-
-    def _set_surface(self, ua_path, parca_path):
+    def _set_surface(self, ua_layer, parca_layer):
         """
         Calcule les surfaces boisée, non boisée et totale.
 
-        Sélectionne intelligemment la couche et le champ surface :
         - Priorité à UA si SURF_COR est exploitable
         - Sinon fallback automatique vers PARCA
-
-        Détermine le caractère boisé via configuration YAML/JSON.
-
-        Stocke les surfaces calculées et une version formatée
-        dans self._calculated_values.
+        - Détermine le caractère boisé via configuration YAML/JSON
+        - Stocke les surfaces calculées et formatées dans self._calculated_values
         """
 
         cfg = self.config["fields"]
 
-        if not (ua_path and ua_path.isValid()) and not (parca_path and parca_path.isValid()):
-            return
-        
         # ---------------------------------------------------------
         # Choix intelligent de la couche et du champ surface
         # ---------------------------------------------------------
-
         layer = None
         surface_field = None
 
-        # On teste d'abord UA avec SURF_COR
-        if ua_path and ua_path.isValid():
-
-            ua_field = cfg.get("surface_field_ua")  # SURF_COR
-
-            if ua_field in ua_path.fields().names():
-
-                surfaces = [float(feat[ua_field] or 0.0)for feat in ua_path.getFeatures() 
-                            if float(feat[ua_field] or 0.0) > 0]
-
+        # Test UA avec SURF_COR
+        if ua_layer and ua_layer.isValid():
+            ua_field = cfg.get("surface_field_ua")
+            if ua_field in ua_layer.fields().names():
+                surfaces = [float(feat[ua_field] or 0.0) for feat in ua_layer.getFeatures()]
                 total_ua = sum(surfaces)
                 unique_values = set(surfaces)
-
-                # Conditions d'acceptation UA SURF_COR n'est pas 0 et les surfaces ne sont pas identiques
-                if (total_ua > 0 and len(unique_values) > 1):
-                    layer = ua_path
+                if total_ua > 0 and len(unique_values) > 1:
+                    layer = ua_layer
                     surface_field = ua_field
 
-        # Si UA non exploitable → PARCA
-        if layer is None and parca_path and parca_path.isValid():
-
-            for field_name in [
-                cfg.get("surface_field"),      # SURF_CAD
-                cfg.get("surface_fallback")    # SURF_CA
-            ]:
-                if field_name in parca_path.fields().names():
-
-                    total_parca = sum(
-                        float(feat[field_name] or 0.0)
-                        for feat in parca_path.getFeatures()
-                    )
-
+        # Fallback PARCA
+        if layer is None and parca_layer and parca_layer.isValid():
+            for field_name in [cfg.get("surface_field"), cfg.get("surface_fallback")]:
+                if field_name in parca_layer.fields().names():
+                    total_parca = sum(float(feat[field_name] or 0.0) for feat in parca_layer.getFeatures())
                     if total_parca > 0:
-                        layer = parca_path
+                        layer = parca_layer
                         surface_field = field_name
                         break
 
@@ -407,22 +386,47 @@ class getForestdata:
             )
             return
 
-        # Détermination du champ "boisé" avec fallback YAML -> JSON
-        try:
-            occup_field = self._resolve_field_name(layer, "is_wooded", json_fallback_key="occup_field")
-        except ValueError:
-            occup_field = None
+        # ---------------------------------------------------------
+        # Détermination du champ "boisé"
+        # ---------------------------------------------------------
+        occup_field = None
+        if layer == ua_layer:
+            try:
+                occup_field = self._resolve_field_name(layer, "is_wooded", json_fallback_key="occup_field")
+            except ValueError:
+                # UA mais absent → création temporaire
+                temp_field_name = "OCCUP_SOL"
+                if temp_field_name not in [f.name() for f in layer.fields()]:
+                    layer.startEditing()
+                    layer.dataProvider().addAttributes([QgsField(temp_field_name, QVariant.Bool)])
+                    layer.updateFields()
+                    layer.commitChanges()
+                occup_field = temp_field_name
+                self.iface.messageBar().pushMessage(
+                    "Champ boisé temporaire créé pour UA, toutes les entités considérées comme boisées.",
+                    level=Qgis.Success,
+                    duration=10
+                )
 
-        # Initialisation des surfaces
+            # Remplir le champ temporaire
+            layer.startEditing()
+            for feat in layer.getFeatures():
+                feat[occup_field] = True
+                layer.updateFeature(feat)
+            layer.commitChanges()
+
+        # ---------------------------------------------------------
+        # Calcul des surfaces
+        # ---------------------------------------------------------
         surface_boisee = 0.0
         surface_non_boisee = 0.0
         city_dict = defaultdict(lambda: {"boisee": 0.0, "non_boisee": 0.0})
 
         for feat in layer.getFeatures():
             surface = float(feat[surface_field] or 0.0)
-            commune = feat[cfg["filter_field"]] if cfg["filter_field"] in layer.fields().names() else "No Filter"
+            commune = feat[cfg.get("filter_field")] if cfg.get("filter_field") in layer.fields().names() else "No Filter"
 
-            if occup_field:
+            if layer == ua_layer and occup_field:
                 is_wooded_value = feat[occup_field]
                 if is_wooded_value in [True, 1, "1", "True", "true","vrai","BOISEE","NR","nr",""]:
                     surface_boisee += surface
@@ -431,19 +435,19 @@ class getForestdata:
                     surface_non_boisee += surface
                     city_dict[commune]["non_boisee"] += surface
             else:
-                surface_non_boisee += surface  # fallback
-                city_dict[commune]["non_boisee"] += surface
+                # PARCA ou UA sans champ → tout boisé
+                surface_boisee += surface
+                city_dict[commune]["boisee"] += surface
 
         surface_totale = surface_boisee + surface_non_boisee
 
+        # ---------------------------------------------------------
         # Stockage interne pour export JSON
+        # ---------------------------------------------------------
         self._calculated_values["surface_boisee_ha"] = surface_boisee
         self._calculated_values["surface_non_boisee_ha"] = surface_non_boisee
         self._calculated_values["surface_totale_ha"] = surface_totale
-
-        # Mise en forme rapide
         self._calculated_values["surface_formatted"] = self.get_formated_surface(surface_boisee, surface_non_boisee)
-
 
     # ---------------------------------------------------------
     # Agrégation dynamique

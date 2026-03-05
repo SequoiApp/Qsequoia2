@@ -521,7 +521,7 @@ class QSEQUOIA2:
             level=Qgis.Success, duration=10)
         
         # Vérifier s'il y a une couche PARCA dans le dossier projet
-        parca_files = [f for f in os.listdir(self.current_project_folder) if "PARCA" in f]
+        parca_files = any("PARCA" in name.upper()for root, dirs, files in os.walk(self.current_project_folder)for name in dirs + files)
 
         if not parca_files:
             print("Aucune couche PARCA trouvée dans le dossier du projet. Calcul forestier annulé.")

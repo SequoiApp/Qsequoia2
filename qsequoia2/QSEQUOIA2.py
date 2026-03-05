@@ -520,15 +520,22 @@ class QSEQUOIA2:
             f"Dossier {self.current_project_name} sélectionné avec succès : {self.current_project_folder}",
             level=Qgis.Success, duration=10)
         
-        # Calcul des données en fonction de la couche PARCA
+        # Vérifier s'il y a une couche PARCA dans le dossier projet
+        parca_files = [f for f in os.listdir(self.current_project_folder) if "PARCA" in f]
 
-        forest_data = getForestdata(
-            project_name=project_name,
-            project_folder=self.current_project_folder,
-            style_folder=self.current_style_folder,
-            iface=self.iface)
-        
-        forest_data.run_all_calculations()
+        if not parca_files:
+            print("Aucune couche PARCA trouvée dans le dossier du projet. Calcul forestier annulé.")
+        else:
+            try:
+                forest_data = getForestdata(
+                    project_name=project_name,
+                    project_folder=self.current_project_folder,
+                    style_folder=self.current_style_folder,
+                    iface=self.iface
+                )
+                forest_data.run_all_calculations()
+            except Exception as e:
+                print(f"Erreur lors du calcul forestier : {e}")
 
     
     def on_project_name_changed(self, text):
@@ -563,25 +570,24 @@ class QSEQUOIA2:
                 self.suggestion_list.clear()
                 self.suggestion_list.setVisible(False)
                 self.suggestion_scroll.setVisible(False)
-                return
 
-            if len(text) < 3:
-                return
+            # Affichage des suggestions uniquement si texte long ou suggestions existantes
+            if project_names and len(text.strip()) >= 3:
+                self.current_suggested_folders = project_folders
+                for folder, name in zip(project_folders, project_names):
+                    self.suggestion_list.addItem(f"{name} : {folder}")
+                self.suggestion_scroll.setVisible(True)
+                self.suggestion_list.setVisible(True)
 
+        # Activation du bouton
+        text_clean = text.strip()
+        text_valid = bool(text_clean)  # vrai uniquement si texte non vide
+        has_suggestions = self.QS2_suggest_project and bool(project_folders)
 
-            # Plusieurs suggestions → affichage
-            self.current_suggested_folders = project_folders
+        # Si le texte est vide → bouton désactivé, même s'il y a des suggestions
+        enable_add_project = text_valid or (text_valid and has_suggestions)
 
-            for folder, name in zip(project_folders, project_names):
-                self.suggestion_list.addItem(f"{name} : {folder}")
-
-            self.suggestion_scroll.setVisible(True)
-            self.suggestion_list.setVisible(True)
-
-
-
-
-        self.dockwidget.add_project.setEnabled(True)
+        self.dockwidget.add_project.setEnabled(enable_add_project)
 
         # Propager au DockWidget
         if self.dockwidget:

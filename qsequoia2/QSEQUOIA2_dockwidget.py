@@ -27,8 +27,6 @@ import os
 from qgis.PyQt import QtGui, QtWidgets, uic
 from PyQt5.QtWidgets import QWidget
 from qgis.PyQt.QtCore import pyqtSignal
-from qgis.PyQt.QtWidgets import QFileDialog
-from qgis.PyQt.QtWidgets import QTreeWidgetItem
 from PyQt5.QtGui import QIcon
 
 from qsequoia2.scripts.data_settings.add_data import AddDataDialog
@@ -97,13 +95,14 @@ class QSEQUOIA2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         plugin_path = os.path.dirname(__file__)
         self.tabWidget.addTab(self.project_settings_tab, QIcon(plugin_path + "/icons/project_settings.svg"),"")
-        self.tabWidget.setTabToolTip(1, "Cartographie")
+        self.tabWidget.setTabToolTip(1, "Cartographie thématiques")
         self.tabWidget.addTab(forest_settings_tab, QIcon(plugin_path + "/icons/forest_settings.svg"),"")
-        self.tabWidget.setTabToolTip(2, "Paramètre de la propriété")
+        self.tabWidget.setTabToolTip(2, "Metadata sur la propriété")
         self.tabWidget.addTab(self.data_settings_tab, QIcon(plugin_path + "/icons/add_data.svg"),"")
+        self.tabWidget.setTabToolTip(3, "Ajout de données")
         self.tabWidget.addTab(self.tools_tab, QIcon(plugin_path + "/icons/tools_settings.svg"),"")
         self.tabWidget.setTabToolTip(0, "Outils et fonctions")
-        self.tabWidget.setTabToolTip(3, "Ajout de données")
+
 
 
 

@@ -21,13 +21,22 @@
  *                                                                         *
  ***************************************************************************/
 """
+# ==========================================================================
+# region import
+# ==========================================================================
+
+# python 
 
 import os
+
+# Qgis
 
 from qgis.PyQt import QtGui, QtWidgets, uic
 from PyQt5.QtWidgets import QWidget
 from qgis.PyQt.QtCore import pyqtSignal
 from PyQt5.QtGui import QIcon
+
+# QSEQUOIA2
 
 from qsequoia2.scripts.data_settings.add_data import AddDataDialog
 from qsequoia2.scripts.forest_settings.forest_settings_dialog import Ui_ForestSettingsDialog
@@ -37,9 +46,16 @@ from qsequoia2.scripts.data_settings.add_data_dialog import Ui_AddDataDialog
 from qsequoia2.scripts.tools_settings.tools_settings_dialog import Ui_ToolsSettingsDialog
 from qsequoia2.scripts.tools_settings.tools_settings import ToolsSettingsDialog
 
+# import de l'UI
+
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'QSEQUOIA2_dockwidget_base.ui'))
 
+# endregion
+
+# ==========================================================================
+# Définition de la classe
+# ==========================================================================
 
 class QSEQUOIA2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 

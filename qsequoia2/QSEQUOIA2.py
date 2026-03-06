@@ -361,7 +361,6 @@ class QSEQUOIA2:
             # Ajout dans groupBox_3
             self.dockwidget.project_suggest.layout().addWidget(self.suggestion_scroll)
 
-
             # securité si le nom de projet est grisé
             if not self.current_project_name :
                 self.dockwidget.name.setEnabled(True)

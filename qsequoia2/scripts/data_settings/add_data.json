@@ -1,0 +1,31 @@
+{
+  "add_tree_tab": {
+    "tree_name":{
+        "vect":"treeVECTOR",
+        "rast": "treeRASTER",
+        "wmts": "treeWMTS"
+    },
+    "tabs": {
+      "vectors": "VECTEURS",
+      "rasters": "RASTERS",
+      "services": "WMS/WFS",
+      "databases": "BASES DE DONNÉES"
+    },
+    "headers": {
+      "vectors": "Vecteurs disponibles",
+      "rasters": "Rasters disponibles",
+      "wmts": "WMTS disponibles"
+    },
+    "vector_extensions": [
+      "geojson",
+      "gpkg",
+      "shp",
+      "kml"
+    ],
+    "raster_extensions": [
+        "tiff",
+        "tif",
+        "png"
+    ]
+  }
+}

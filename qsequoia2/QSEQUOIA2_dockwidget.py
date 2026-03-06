@@ -71,6 +71,17 @@ class QSEQUOIA2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         # ---------------------------------------------------------------
 
 
+
+
+        # -- Import du module project_settings --
+        self.project_settings_tab = QWidget()
+        self.project_settings_tab = ProjectSettingsDialog(current_project_name=self.project_name, current_style_folder=self.current_style_folder, downloads_path=self.downloads_path, current_project_folder=self.current_project_folder, iface = self.iface)
+
+        # -- Import du Module add_data --
+        self.data_settings_tab = QWidget()
+        self.data_settings_tab = AddDataDialog(current_project_name=self.project_name, current_style_folder=self.current_style_folder, downloads_path=self.downloads_path, current_project_folder=self.current_project_folder, parent=self, iface=self.iface)
+
+
         # -- Import du module Tools_box --
         self.tools_tab = QWidget()
         self.tools_ui = Ui_ToolsSettingsDialog()
@@ -82,25 +93,16 @@ class QSEQUOIA2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.forest_settings_ui = Ui_ForestSettingsDialog()
         self.forest_settings_ui.setupUi(forest_settings_tab)
 
-        # -- Import du module project_settings --
-        self.project_settings_tab = QWidget()
-        self.project_settings_tab = ProjectSettingsDialog(current_project_name=self.project_name, current_style_folder=self.current_style_folder, downloads_path=self.downloads_path, current_project_folder=self.current_project_folder, iface = self.iface)
-
-        # -- Import du Module add_data --
-        self.data_settings_tab = QWidget()
-        self.data_settings_tab = AddDataDialog(current_project_name=self.project_name, current_style_folder=self.current_style_folder, downloads_path=self.downloads_path, current_project_folder=self.current_project_folder, parent=self, iface=self.iface)
-
-
         # Ajoute des icons au QTabWidget
 
         plugin_path = os.path.dirname(__file__)
-        self.tabWidget.addTab(self.tools_tab, QIcon(plugin_path + "/icons/tools_settings.svg"),"")
-        self.tabWidget.setTabToolTip(0, "Outils et fonctions")
         self.tabWidget.addTab(self.project_settings_tab, QIcon(plugin_path + "/icons/project_settings.svg"),"")
         self.tabWidget.setTabToolTip(1, "Cartographie")
         self.tabWidget.addTab(forest_settings_tab, QIcon(plugin_path + "/icons/forest_settings.svg"),"")
         self.tabWidget.setTabToolTip(2, "Paramètre de la propriété")
         self.tabWidget.addTab(self.data_settings_tab, QIcon(plugin_path + "/icons/add_data.svg"),"")
+        self.tabWidget.addTab(self.tools_tab, QIcon(plugin_path + "/icons/tools_settings.svg"),"")
+        self.tabWidget.setTabToolTip(0, "Outils et fonctions")
         self.tabWidget.setTabToolTip(3, "Ajout de données")
 
 

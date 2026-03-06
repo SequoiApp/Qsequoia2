@@ -34,6 +34,7 @@ from PyQt5.QtGui import QIcon
 from qsequoia2.scripts.data_settings.add_data import AddDataDialog
 from qsequoia2.scripts.forest_settings.forest_settings_dialog import Ui_ForestSettingsDialog
 from qsequoia2.scripts.project_settings.project_settings_dialog import Ui_ProjectSettingsDialog
+from qsequoia2.scripts.project_settings.project_settings import ProjectSettingsDialog
 from qsequoia2.scripts.data_settings.add_data_dialog import Ui_AddDataDialog
 from qsequoia2.scripts.tools_settings.tools_settings_dialog import Ui_ToolsSettingsDialog
 from qsequoia2.scripts.tools_settings.tools_settings import ToolsSettingsDialog
@@ -58,45 +59,44 @@ class QSEQUOIA2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
 
 
-        # chemin vers ton logo
+        # chemin vers logo 
         plugin_dir = os.path.dirname(__file__)
         logo_path = os.path.join(plugin_dir, "icon.png")
 
         # définit l’icône du dockwidget
         self.setWindowIcon(QIcon(logo_path))
 
+        # ---------------------------------------------------------------
+        # import dans l'UI principale des différents modules de Qsequoia2
+        # ---------------------------------------------------------------
 
-        # Créer les widgets pour les onglets existants
+
+        # -- Import du module Tools_box --
         self.tools_tab = QWidget()
         self.tools_ui = Ui_ToolsSettingsDialog()
         self.tools_ui.setupUi(self.tools_tab)
         self.tools_tab = ToolsSettingsDialog(current_project_name=self.project_name, current_style_folder=self.current_style_folder, downloads_path=self.downloads_path, current_project_folder=self.current_project_folder, iface = self.iface)
 
-        project_settings_tab = QWidget()
-        self.project_settings_ui = Ui_ProjectSettingsDialog()
-        self.project_settings_ui.setupUi(project_settings_tab)
-
+        # -- Import du module forest_settings --
         forest_settings_tab = QWidget()
         self.forest_settings_ui = Ui_ForestSettingsDialog()
         self.forest_settings_ui.setupUi(forest_settings_tab)
 
+        # -- Import du module project_settings --
+        self.project_settings_tab = QWidget()
+        self.project_settings_tab = ProjectSettingsDialog(current_project_name=self.project_name, current_style_folder=self.current_style_folder, downloads_path=self.downloads_path, current_project_folder=self.current_project_folder, iface = self.iface)
+
+        # -- Import du Module add_data --
         self.data_settings_tab = QWidget()
-
-        self.data_settings_tab = AddDataDialog(
-            current_project_name=self.project_name,
-            current_style_folder=self.current_style_folder,
-            downloads_path=self.downloads_path,
-            current_project_folder=self.current_project_folder,
-            parent=self,
-            iface=self.iface)
+        self.data_settings_tab = AddDataDialog(current_project_name=self.project_name, current_style_folder=self.current_style_folder, downloads_path=self.downloads_path, current_project_folder=self.current_project_folder, parent=self, iface=self.iface)
 
 
-        # Ajouter les onglets + icons au QTabWidget
+        # Ajoute des icons au QTabWidget
 
         plugin_path = os.path.dirname(__file__)
         self.tabWidget.addTab(self.tools_tab, QIcon(plugin_path + "/icons/tools_settings.svg"),"")
         self.tabWidget.setTabToolTip(0, "Outils et fonctions")
-        self.tabWidget.addTab(project_settings_tab, QIcon(plugin_path + "/icons/project_settings.svg"),"")
+        self.tabWidget.addTab(self.project_settings_tab, QIcon(plugin_path + "/icons/project_settings.svg"),"")
         self.tabWidget.setTabToolTip(1, "Cartographie")
         self.tabWidget.addTab(forest_settings_tab, QIcon(plugin_path + "/icons/forest_settings.svg"),"")
         self.tabWidget.setTabToolTip(2, "Paramètre de la propriété")

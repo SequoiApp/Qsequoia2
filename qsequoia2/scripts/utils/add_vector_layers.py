@@ -16,7 +16,7 @@ from qgis.core import (
 from .config import get_style
 
 
-def load_vectors(layer_path, style_folder, project_folder, project_name, group_name=None, parent=None):
+def load_vectors(layer_path, style_folder, project_folder, project_name, group_name=None, parent_group=None,parent=None):
     """
     Charge des couches vecteur dans le projet QGIS.
 
@@ -40,6 +40,7 @@ def load_vectors(layer_path, style_folder, project_folder, project_name, group_n
     Auteur : Alexandre Le Bars - Comité des Forêts
     """
 
+
     project = QgsProject.instance()
     root = project.layerTreeRoot()
     group = None
@@ -61,11 +62,15 @@ def load_vectors(layer_path, style_folder, project_folder, project_name, group_n
             continue
 
         # Créer le groupe si nécessaire
+
+        if group_name is not None :
+            group = parent_group
+
         if group_name and group is None:
             group = root.findGroup(group_name) or root.addGroup(group_name)
 
         # --- Charger le style AVANT d'ajouter la couche ---
-        style = get_style(layer_path, style_folder)
+        style = get_style({key: path}, style_folder)
 
         if style:
             try:
@@ -81,9 +86,11 @@ def load_vectors(layer_path, style_folder, project_folder, project_name, group_n
         # --- Ajouter la couche au projet ---
         project.addMapLayer(layer, not bool(group))
 
+
         # --- Ajouter dans le groupe si nécessaire ---
         if group:
             group.addLayer(layer)
+
 
         layer.triggerRepaint()
         loaded_keys.append(key)

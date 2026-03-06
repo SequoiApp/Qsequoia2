@@ -2,18 +2,25 @@ import importlib
 import console
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QAction
+from qgis.PyQt.QtWidgets import QAction, QComboBox, QVBoxLayout, QFrame, QPushButton
 from qgis.core import QgsApplication, Qgis
-from qgis.PyQt.QtWidgets import QMessageBox,QFileDialog
+from qgis.PyQt.QtWidgets import QMessageBox,QFileDialog, QInputDialog, QListWidget, QScrollArea
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import QTimer, QThread, QMetaObject, Qt, pyqtSlot
+from qgis.core import QgsProject, QgsCoordinateReferenceSystem
+
 
 import yaml, timer
 
 from qsequoia2.scripts.global_settings.global_settings import GlobalSettingsDialog
-from qsequoia2.scripts.utils.variable import get_global_variable
+from qsequoia2.scripts.utils.variable import get_global_variable, set_global_variable
 from qsequoia2.scripts.watchdog.dogwatcher import DogWatcher
-
+from .scripts.utils.new_project import *
+from .scripts.utils.suggest_project_folder import *
+from.scripts.utils.config import *
+from .scripts.forest_settings.forest_get_data import getForestdata
+from .scripts.project_settings.project_settings import ProjectSettingsDialog
+from .scripts.utils.reloader import reloadQS2
 
 
 
@@ -37,7 +44,7 @@ from .scripts.utils.add_seq_config import add_seq_config
 import sys
 
 plugin_path = os.path.dirname(__file__)
-watchdog_path = os.path.join(plugin_path, "watchdog_lib")
+watchdog_path = os.path.join(plugin_path, "inst", "lib")
 
 if watchdog_path not in sys.path:
     sys.path.insert(0, watchdog_path)
@@ -45,9 +52,6 @@ if watchdog_path not in sys.path:
 from watchdog.observers import Observer
 
 from .scripts.utils.watchdog_handler import DownloadEventHandler
-
-
-
 
 
 
@@ -118,8 +122,26 @@ class QSEQUOIA2:
         self.dogwatcher = DogWatcher(iface=self.iface, get_context_callback=self.get_watchdog_context, parent=None)
 
 
+        # Connaitre l'état des paramètres QS2
 
+        self.QSS2_default_project = get_global_variable("QS2_default_project")
 
+        self.folders_folder = get_global_variable("folders_folder") or None
+
+        raw = get_global_variable("QS2_suggest_project")
+
+        if raw is None:
+            # valeur par défaut
+            self.QS2_suggest_project = False
+            set_global_variable("QS2_suggest_project", False)
+        else:
+            # normalisation
+            if isinstance(raw, str):
+                self.QS2_suggest_project = raw.strip().lower() == "true"
+            else:
+                self.QS2_suggest_project = bool(raw)
+        
+        self.parca_index = build_parca_index(self.folders_folder)
 
 
         # TODO: We are going to let the user set this up in a future iteration
@@ -264,28 +286,10 @@ class QSEQUOIA2:
 
             # bouttons d'ajout de couches
 
-            self.dockwidget.add_layers.clicked.connect(self.non_implemented_yet)
-            self.dockwidget.add_layers.setIcon(QIcon(plugin_path + "/icons/add_data.svg"))
-
-                                
-
-
-
-
-            # show the dockwidget
-
-            self.dockwidget.progressBar.setValue(10)
-            print("Chargement… 10%")
-
-            self.dockwidget.progressBar.setValue(50)
-            print("Traitement… 50%")
-
-            self.dockwidget.progressBar.setValue(100)
-            print("Terminé !")
 
             # nom du projet
 
-            self.dockwidget.name.setPlaceholderText("Nom du projet - ! idem Rsequoia2 !")
+            self.dockwidget.name.setPlaceholderText("Nom du projet")
             self.dockwidget.name.textChanged.connect(self.on_project_name_changed)
 
 
@@ -295,7 +299,9 @@ class QSEQUOIA2:
             self.dockwidget.setstyle.clicked.connect(self.open_global_settings)
             self.dockwidget.setstyle.setIcon(QIcon(plugin_path + "/icons/global_settings.svg"))
 
-            self.dockwidget.project_folder.clicked.connect(self.set_projectFolder)
+            self.dockwidget.project_folder.clicked.connect(lambda: self.set_projectFolder())
+
+            self.dockwidget.add_project.setEnabled(False)
 
 
 
@@ -306,8 +312,33 @@ class QSEQUOIA2:
             self.dockwidget.watchdog.clicked.connect(self.open_connect_label)
             self.dockwidget.watchdog.setIcon(QIcon(plugin_path + "/icons/watchdog_settings.svg"))
 
-            self.dockwidget.reload.clicked.connect(self.cleanup)
+            self.dockwidget.add_project.setIcon(QIcon(plugin_path + "/icons/add_data.svg"))
 
+            self.dockwidget.add_project.clicked.connect(self.add_project_clicked)
+
+            # --- Zone de suggestions dans groupBox_3 ---
+            self.suggestion_list = QListWidget(self.dockwidget)
+            self.suggestion_list.setVisible(False)
+            self.suggestion_list.itemClicked.connect(self.on_suggestion_item_clicked)
+
+            # ScrollArea
+            self.suggestion_scroll = QScrollArea(self.dockwidget)
+            self.suggestion_scroll.setWidgetResizable(True)
+            self.suggestion_scroll.setVisible(False)
+            self.suggestion_scroll.setWidget(self.suggestion_list)
+
+            # Ajout dans groupBox_3
+            self.dockwidget.project_suggest.layout().addWidget(self.suggestion_scroll)
+
+
+            # securité si le nom de projet est grisé
+            if not self.current_project_name :
+                self.dockwidget.name.setEnabled(True)
+
+
+            # Reload the plugin 
+
+            self.dockwidget.reload.clicked.connect(lambda: reloadQS2(plugin=self.iface))
 
 
             # TODO: fix to allow choice of dock location
@@ -322,34 +353,27 @@ class QSEQUOIA2:
         )
 
 
-    def run_process(self):
-        print("Démarrage du traitement…")
-        self.dockwidget.progress_bar.setValue(0)
+    def set_projectFolder(self, path=None):
+        if path is None :
+            path = QFileDialog.getExistingDirectory(self.dockwidget, "Select project Directory")
 
-        # étape 1
-        self.dockwidget.progress_bar.setValue(20)
-        print("Étape 1 terminée")
-
-        # étape 2
-        self.dockwidget.progress_bar.setValue(60)
-        print("Étape 2 terminée")
-
-        # étape 3
-        self.dockwidget.progress_bar.setValue(100)
-        print("Traitement terminé")
-
-
-    def set_projectFolder(self):
-        path = QFileDialog.getExistingDirectory(self.dockwidget, "Select project Directory")
-
-        if not path:
-            print("No directory selected")
-            self.current_project_folder = None
-            self.current_project_name = None
-            return
+            if not path:
+                print("No directory selected")
+                self.current_project_folder = None
+                self.current_project_name = None
+                return
 
         print("Selected directory:", path)
         self.current_project_folder = path
+
+        if path:
+
+            self.suggestion_list.clear()
+            self.suggestion_list.setVisible(False)
+            self.suggestion_scroll.setVisible(False)
+
+        self.dockwidget.add_project.setEnabled(False)
+
 
         # extraction du nom du projet
 
@@ -366,13 +390,43 @@ class QSEQUOIA2:
                     project_name = filename.split("_SEQ_PARCA_poly")[0]
                     break
 
+                if "_SEQ_PROJECT" in filename:
+                    project_name = filename.split("_SEQ_PROJECT")[0]
+
             if project_name:
                 break
 
         # fallback si rien trouvé
         if not project_name:
-            project_name = os.path.basename(self.current_project_folder).split("_SIG")[0]
+            folder_name = os.path.basename(self.current_project_folder)
+            if "_SIG" in folder_name:
+                project_name = folder_name.split("_SIG")[0]
+            if "_SEQ" in folder_name:
+                project_name = folder_name.split("_SEQ")[0]
+            if "SEQ_SIG" in folder_name:
+                project_name = folder_name.split("_SEQ_SIG")[0]
 
+            # Pour les anciennes couches et anciens projets
+            if folder_name == "SIG":
+                for nom in os.listdir(self.current_project_folder):
+                    if "SEQ_PARCA_poly" in nom:
+                        continue
+                    if "PARCA" in nom:
+                        project_name = nom.split("_PARCA")[0]
+                        break
+
+        if not project_name:
+            project_name, ok = QInputDialog.getText(
+                None,
+                "Nom du projet",
+                "Impossible de déterminer le nom du projet.\nVeuillez saisir le nom du projet :")
+
+            if not ok or not project_name.strip():
+                self.current_project_folder = None
+                raise Exception("Nom du projet non fourni. Opération annulée.")
+
+
+                
 
         self.current_project_name = project_name
 
@@ -385,6 +439,7 @@ class QSEQUOIA2:
             self.dockwidget.name.blockSignals(True)
             self.dockwidget.name.setText(self.current_project_name)
             self.dockwidget.name.blockSignals(False)
+            self.dockwidget.name.setEnabled(False)
 
             # Propager aux onglets
             if hasattr(self.dockwidget, "tools_tab"):
@@ -394,6 +449,10 @@ class QSEQUOIA2:
             if hasattr(self.dockwidget, "data_settings_tab"):
                 self.dockwidget.data_settings_tab.current_project_name = self.current_project_name
                 self.dockwidget.data_settings_tab.current_project_folder = self.current_project_folder
+            
+            if hasattr(self.dockwidget, "project_settings_tab"):
+                self.dockwidget.project_settings_tab.current_project_name = self.current_project_name
+                self.dockwidget.project_settings_tab.current_project_folder = self.current_project_folder
 
         # Mise à jour éventuelle du connect_dialog
         if self.connect_dialog:
@@ -407,6 +466,41 @@ class QSEQUOIA2:
 
 
             print(f"Project name => {self.current_project_name}")
+        
+        # Vérifier si dossier contient un projet QGZ, si non, on le crée, uniquement si variable utilisateur
+        project = QgsProject.instance()
+
+        if self.QSS2_default_project == "true" or True :
+            project_path = ensure_and_load_qgis_project(
+                project,
+                project_folder=self.current_project_folder,
+                project_name=self.current_project_name,
+                epsg="EPSG:2154")
+            
+
+            print(f"Projet QGZ chargé : {project_path}")
+        
+        self.iface.messageBar().pushMessage(
+            "Qsequoia2",
+            f"Dossier {self.current_project_name} sélectionné avec succès : {self.current_project_folder}",
+            level=Qgis.Success, duration=10)
+        
+        # Vérifier s'il y a une couche PARCA dans le dossier projet
+        parca_files = any("PARCA" in name.upper()for root, dirs, files in os.walk(self.current_project_folder)for name in dirs + files)
+
+        if not parca_files:
+            print("Aucune couche PARCA trouvée dans le dossier du projet. Calcul forestier annulé.")
+        else:
+            try:
+                forest_data = getForestdata(
+                    project_name=project_name,
+                    project_folder=self.current_project_folder,
+                    style_folder=self.current_style_folder,
+                    iface=self.iface
+                )
+                forest_data.run_all_calculations()
+            except Exception as e:
+                print(f"Erreur lors du calcul forestier : {e}")
 
     
     def on_project_name_changed(self, text):
@@ -416,9 +510,47 @@ class QSEQUOIA2:
             return
 
         self.current_project_name = text
-        print(f"Nom du projet défini manuellement : {text}")
 
         self.current_project_name = text
+
+        # Proposition des dossier de projets
+        if self.QS2_suggest_project:
+
+            project_folders, project_names = suggest_project_folder(text, self.parca_index)
+
+
+            # Nettoyage
+            self.suggestion_list.clear()
+            self.suggestion_list.setVisible(False)
+            self.suggestion_scroll.setVisible(False)
+
+            # Aucune suggestion
+            if not project_names:
+                return
+
+
+            if len(text) == 0:
+                self.suggestion_list.clear()
+                self.suggestion_list.setVisible(False)
+                self.suggestion_scroll.setVisible(False)
+
+            # Affichage des suggestions uniquement si texte long ou suggestions existantes
+            if project_names and len(text.strip()) >= 3:
+                self.current_suggested_folders = project_folders
+                for folder, name in zip(project_folders, project_names):
+                    self.suggestion_list.addItem(f"{name} : {folder}")
+                self.suggestion_scroll.setVisible(True)
+                self.suggestion_list.setVisible(True)
+
+        # Activation du bouton
+        text_clean = text.strip()
+        text_valid = bool(text_clean)  # vrai uniquement si texte non vide
+        has_suggestions = self.QS2_suggest_project and bool(project_folders)
+
+        # Si le texte est vide → bouton désactivé, même s'il y a des suggestions
+        enable_add_project = text_valid or (text_valid and has_suggestions)
+
+        self.dockwidget.add_project.setEnabled(enable_add_project)
 
         # Propager au DockWidget
         if self.dockwidget:
@@ -441,6 +573,41 @@ class QSEQUOIA2:
 
             else:
                 print("Watcher non initialisé, rien à redémarrer.")
+
+    def on_suggestion_item_clicked(self, item):
+
+        selected_name = item.text()
+        index = self.suggestion_list.row(item)
+        selected_folder = self.current_suggested_folders[index]
+
+        # Mise à jour du QLineEdit
+        self.dockwidget.name.blockSignals(True)
+        self.dockwidget.name.setText(selected_name)
+        self.dockwidget.name.blockSignals(False)
+
+        # Cacher la zone de suggestions
+        self.suggestion_scroll.setVisible(False)
+
+        # Mise à jour interne
+        self.current_project_name = selected_name
+        self.current_project_folder = str(selected_folder)
+
+        # Lancer ton workflow existant
+        self.set_projectFolder(self.current_project_folder)
+
+    def add_project_clicked(self):
+
+        folder_path = create_new_folder(
+            project_name=self.current_project_name,
+            parent_widget=self.dockwidget,
+            log=None,
+            dockwidget=self.dockwidget,
+            iface=self.iface)
+
+        if folder_path and os.path.isdir(folder_path):
+            self.set_projectFolder(folder_path)
+        else:
+            print("Création du dossier annulée ou invalide.")
 
 
 
@@ -485,52 +652,6 @@ class QSEQUOIA2:
             "style_folder": self.current_style_folder,
             "watch_mode": self.watch_mode}
     
-
-    def cleanup(self):
-        """
-        Réinitialise le plugin sans fermer le dockwidget.
-        """
-        print("Cleaning up QSEQUOIA2 plugin...")
-
-        # 1. Réinitialiser les variables internes
-        self.current_project_name = None
-        self.current_project_folder = None
-
-
-        # 2. Réinitialiser les champs GUI si le dockwidget existe
-        if self.dockwidget:
-            # Champ nom du projet
-            self.dockwidget.name.blockSignals(True)
-            self.dockwidget.name.setText("")
-            self.dockwidget.name.blockSignals(False)
-
-            # Réinitialiser la progress bar
-            self.dockwidget.progressBar.setValue(0)
-
-            # Réinitialiser les onglets
-            if hasattr(self.dockwidget, "tools_tab"):
-                self.dockwidget.tools_tab.current_project_name = None
-                self.dockwidget.tools_tab.current_project_folder = None
-
-
-            if hasattr(self.dockwidget, "data_settings_tab"):
-                self.dockwidget.data_settings_tab.current_project_name = None
-                self.dockwidget.data_settings_tab.current_project_folder = None
-
-            # Déconnecter temporairement les boutons si nécessaire
-            # et reconnecter après reset
-            # (optionnel selon besoin)
-
-        # 3. Réinitialiser le watchdog
-        if self.dogwatcher:
-            self.dogwatcher.stop()
-            self.dogwatcher.start()
-
-        # 4. Mettre à jour le connect_dialog si présent
-        if self.connect_dialog:
-            self.connect_dialog.update_watch_path_label()
-
-        print("Plugin cleaned up, GUI intact")
 
 
 

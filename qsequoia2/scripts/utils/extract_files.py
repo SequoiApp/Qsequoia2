@@ -155,7 +155,9 @@ def real_extract_files(downloads_path, project_name, style_folder, project_folde
     # Afficher
     bar.pushWidget(message, Qgis.Success)
 
+    #Supprime le ZIP initial
 
+    os.remove(_zip_path)
 
 
 

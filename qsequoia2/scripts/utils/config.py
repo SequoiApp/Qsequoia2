@@ -1,12 +1,11 @@
 # region IMPORT
 
-# region IMPORT
+
 """
 Module `config.py` : gestion des chemins, structure SIG, projets, styles et WMTS.
 
 Ce module fournit des fonctions pour :
 - récupérer le dossier du plugin et des fichiers de configuration
-- lire la structure SIG (`sig_structure.yaml`)
 - rechercher des couches vecteur ou raster dans un dossier de projet
 - récupérer les styles (.qml)
 - accéder aux projets et layouts
@@ -14,7 +13,7 @@ Ce module fournit des fonctions pour :
 """
 
 from qgis.core import (QgsMessageLog,Qgis)
-import os
+import os, re
 import yaml
 from pathlib import Path
 from dataclasses import dataclass
@@ -54,52 +53,6 @@ def get_config_path(filename: str) -> Path:
 
 # endregion
 
-# region SIG_STRUCTURE
-
-_SIG_STRUCT: dict | None = None
-
-def _load_sig_structure() -> dict:
-    """
-    Charge le fichier sig_structure.yaml en mémoire et le met en cache.
-    
-    Returns:
-        dict: structure SIG
-    """
-
-    global _SIG_STRUCT
-    if _SIG_STRUCT is None:
-        cfg_path = get_config_path("sig_structure.yaml")
-        with open(cfg_path, encoding="utf-8") as f:
-            _SIG_STRUCT = yaml.safe_load(f)
-    return _SIG_STRUCT
-
-def _find_entry(logical_key):
-    """
-    Retourne l'entrée correspondante à une clé logique dans la structure SIG.
-
-    Args:
-        logical_key (str): clé logique à rechercher
-
-    Returns:
-        tuple: (entry_dict, folder_path_parts)
-    
-    Raises:
-        KeyError: si la clé n'existe pas
-    """
-
-    struct = _load_sig_structure()["structure"]
-    if logical_key in struct.keys():
-        path = struct[logical_key].get("path", [])
-        return False, path  
-    for folder in struct.values():
-        files = folder.get("files", {})
-        if logical_key in files:
-            return files[logical_key], folder.get("path", [])
-    raise KeyError(f"No entry for '{logical_key}' in sig_structure.yaml")
-
-
-# endregion
-
 # region GET PATH
 
 
@@ -107,7 +60,7 @@ def _find_entry(logical_key):
 # Fonction get_path modifiée pour rechercher la couche dans le dossier de projet
 # ----------------------------------------------------------------------------------
 
-def get_path(label, project_name, project_folder, style_folder, parent):
+def get_path(label, project_name, project_folder, style_folder, parent, layout_mode=None):
     """
     Recherche le chemin du fichier correspondant à un label YAML seq_layers dans le projet.
 
@@ -122,7 +75,22 @@ def get_path(label, project_name, project_folder, style_folder, parent):
         dict: {label: chemin_complet} ou {} si non trouvé
     """
 
-    path = find_best_layer_qgis(project_folder, label)
+    # ==========================================
+    # PATCH YAML anchors : label peut être une liste
+    # ==========================================
+    if isinstance(label, list):
+
+        label = flatten(label)
+
+        # flatten peut retourner une liste → on prend le premier élément
+        if isinstance(label, list):
+            label = label[0] if label else None
+
+    # Sécurité
+    if not isinstance(label, str):
+        return {}
+
+    path = find_best_layer_qgis(project_folder, label,layout_mode=layout_mode)
 
     if path:
         QgsMessageLog.logMessage(
@@ -142,7 +110,7 @@ def get_path(label, project_name, project_folder, style_folder, parent):
 
 # Fonction utilitaire de get_path pour trouver les couches
 
-def find_best_layer_qgis(project_folder, label, max_candidates=3):
+def find_best_layer_qgis(project_folder, label, layout_mode=None):
     """
     Recherche optimisée d'une couche vectorielle ou raster dans le dossier projet.
 
@@ -159,12 +127,20 @@ def find_best_layer_qgis(project_folder, label, max_candidates=3):
         str | None: chemin du fichier trouvé, ou None si aucun
     """
 
+
+    # ==========================================
+    # go trouver le chemin
+    # ==========================================
+
     label = label.lower()
     parts = label.split("_")
-
+    
     expected_geom = None
     if parts[-1] in ("poly", "line", "point"):
+
         expected_geom = parts[-1]
+        if expected_geom == "polygon":
+            expected_geom = "poly"
         parts = parts[:-1]
 
     expected_tokens = parts
@@ -176,65 +152,62 @@ def find_best_layer_qgis(project_folder, label, max_candidates=3):
     candidates = []
 
     for root, _, files in os.walk(project_folder):
+
+        root_upper = root.upper()
+        # Mode SIG : ignorer tout dossier LAYOUT
+        if layout_mode == 1 and "LAYOUT" in root_upper:
+            continue
+
         for f in files:
             fname = f.lower()
             path = os.path.join(root, f)
 
-            score = 0
-
             # --- Détection vecteur
             if fname.endswith(vector_exts):
-                if expected_geom and expected_geom in fname:
-                    score += 50
-                for token in expected_tokens:
-                    if token in fname:
-                        score += 20
-                if score > 0:
-                    candidates.append((score, path))
 
+                stem = os.path.splitext(fname)[0]
+
+                file_tokens = stem.split("_")
+
+                if file_tokens[-1] == expected_geom:
+                    if all(t in file_tokens for t in expected_tokens):
+                        candidates.append(path)
+            
             # --- Détection raster
             elif fname.endswith(raster_exts):
-                # Pour raster, on ne teste pas la géométrie
-                # juste les tokens métier
-                for token in expected_tokens:
-                    if token in fname:
-                        score += 20
-                if score > 0:
-                    candidates.append((score, path))
+                stem = os.path.splitext(fname)[0]
+                file_tokens = stem.split("_")
+                if all(t in file_tokens for t in expected_tokens):
+                    candidates.append(path)
 
-    if not candidates:
-        return None
-
-    # On garde les N meilleurs
-    candidates.sort(reverse=True)
-    candidates = candidates[:max_candidates]
+    if candidates:
+        best = max(candidates, key=lambda p: len(os.path.splitext(os.path.basename(p))[0].split("_")))
+        return best
 
     # ----------------------------
     # Vérification finale
     # ----------------------------
-    for _, path in candidates:
+    for path in candidates:
         if path.lower().endswith(vector_exts):
-            # vecteur → vérification géométrie
             layer = QgsVectorLayer(path, "tmp", "ogr")
             if not layer.isValid():
                 continue
-            g = QgsWkbTypes.geometryType(layer.wkbType())
-            found_geom = None
-            if g == QgsWkbTypes.PolygonGeometry:
-                found_geom = "poly"
-            elif g == QgsWkbTypes.LineGeometry:
-                found_geom = "line"
-            elif g == QgsWkbTypes.PointGeometry:
-                found_geom = "point"
-            if expected_geom and found_geom != expected_geom:
-                continue
             return path
 
-        elif path.lower().endswith(raster_exts):
-            # raster → on accepte directement
-            return path
 
-    return None
+# ==========================================================
+# HELPERS
+# ==========================================================
+
+def flatten(label):
+    """Transforme une liste imbriquée en liste simple"""
+    result = []
+    for x in label:
+        if isinstance(x, list):
+            result.extend(flatten(x))
+        else:
+            result.append(x)
+    return result
 
 
 
@@ -248,125 +221,190 @@ def find_best_layer_qgis(project_folder, label, max_candidates=3):
 # ----------------------------------------------------------------------------------
 
 
+# ---------------------------------------------------
+# Préfixes projet (robuste avec ton YAML)
+# ---------------------------------------------------
+def get_project_prefixes():
+    """
+    Retourne la liste des préfixes projets depuis project.yaml.
+    Supporte :
+      - projects: [..]
+      - OU projets = clés top-level (assemblage:, situation:, etc.)
+    """
+    yaml_path = os.path.join(os.path.dirname(__file__), "..", "..", "inst", "project.yaml")
+    with open(yaml_path, "r", encoding="utf-8") as f:
+        cfg = yaml.safe_load(f) or {}
 
+    projects = cfg.get("projects")
+    if isinstance(projects, list) and projects:
+        return [str(p).upper() for p in projects]
+
+    if isinstance(cfg, dict) and cfg:
+        return [str(k).upper() for k in cfg.keys()]
+
+    return []
+
+
+def extract_token(label, project_prefixes):
+    """Retire le préfixe projet pour obtenir le token métier"""
+    label_upper = label.upper()
+    for prefix in project_prefixes:
+        if label_upper.startswith(prefix + "_"):
+            return prefix, label_upper[len(prefix) + 1:]
+    return None, label_upper
+
+
+# ---------------------------------------------------
+# Index récursif des QML
+# ---------------------------------------------------
+def index_qml_files(style_folder: str):
+    """
+    Parcourt récursivement style_folder et construit :
+      - by_stem: dict { STEM_UPPER: [fullpath1, fullpath2, ...] }
+      - all_items: liste de tuples (STEM_UPPER, fullpath)
+    """
+    by_stem = {}
+    all_items = []
+
+    for root, _, files in os.walk(style_folder):
+        for fn in files:
+            if not fn.lower().endswith(".qml"):
+                continue
+            stem = os.path.splitext(fn)[0].upper()
+            full = os.path.join(root, fn)
+            by_stem.setdefault(stem, []).append(full)
+            all_items.append((stem, full))
+
+    return by_stem, all_items
+
+
+def choose_best(paths, prefer_under=None):
+    """
+    Choix déterministe si plusieurs fichiers matchent.
+    - Si prefer_under est fourni, on préfère les fichiers sous ce sous-dossier
+    - Ensuite : chemin le plus court, puis tri alpha
+    """
+    if not paths:
+        return None
+
+    if prefer_under:
+        prefer_under = os.path.normpath(prefer_under).lower()
+        preferred = [p for p in paths if os.path.normpath(p).lower().startswith(prefer_under)]
+        if preferred:
+            paths = preferred
+
+    paths = sorted(paths, key=lambda p: (len(os.path.normpath(p)), os.path.normpath(p).lower()))
+    return paths[0]
+
+
+def strict_token_match(pattern_upper: str, stem_upper: str):
+    """Match strict du token : délimiteurs '_' ou '-' ou début/fin"""
+    pat = re.escape(pattern_upper)
+    return re.search(rf"(^|[_\-]){pat}($|[_\-])", stem_upper) is not None
+
+
+# ---------------------------------------------------
+# Fonction principale : 100% récursive
+# ---------------------------------------------------
 def get_style(layer_path, style_folder):
     """
-    Sélectionne le fichier de style (.qml) le plus approprié pour une couche vecteur ou raster.
+    Sélectionne le fichier de style (.qml) le plus approprié.
+    Toutes les recherches sont récursives (dossier + sous-dossiers).
 
-    Args:
-        layer_path (dict): {label: path}
-        style_folder (str): dossier contenant les fichiers .qml
-
-    Returns:
-        str | None: chemin du fichier de style correspondant
+    Règle métier :
+      - si couche préfixée par un projet (ex: SITUATION_...) :
+          1) chercher style exact avec préfixe (SITUATION_X.qml) en récursif
+          2) sinon enlever le préfixe => chercher style exact (X.qml) en récursif
+      - sinon :
+          1) chercher style exact (LABEL.qml) en récursif
+      - puis fallback heuristiques en récursif :
+          token+geom, puis token seul (strict)
     """
-
     if not style_folder:
         raise ValueError("Global 'styles_directory' is not set")
-    
-    label, path = next(iter(layer_path.items()))
-    label_lower = label.lower()
-
-    # --- Extraire token métier + type de géométrie (vecteur)
-    parts = label.split("_")
-    geom = ""
-    if len(parts) >= 2 and parts[-1] in ("poly", "line", "point"):
-        geom = parts[-1]
-        token = parts[1]
-        token_with_geom = f"{token}_{geom}"
-    elif len(parts) >= 2:
-        token = parts[1]
-        token_with_geom = token
-    else:
-        token = label_lower
-        token_with_geom = token
-
-
-    token_with_geom = token_with_geom.lower()
-    token = token.lower()  # pour fallback
-
-    # --- Scan des fichiers QML
     if not os.path.isdir(style_folder):
         return None
 
-    # --- Liste des fichiers QML
-    qml_files = [f for f in os.listdir(style_folder) if f.lower().endswith(".qml")]
+    label, _path = next(iter(layer_path.items()))
+    label_upper = label.upper()
 
-    best_match = None
+    project_prefixes = get_project_prefixes()
+    token_prefix, base_label = extract_token(label_upper, project_prefixes)
 
-    # Cherche un match exact token + geom (vecteur)
-    for f in qml_files:
-        fname = os.path.splitext(f)[0].lower()
-        if token_with_geom in fname:
-            best_match = os.path.join(style_folder, f)
-            break
-
-    # Si pas trouvé, match sur token seul (vecteur ou raster)
-    if not best_match:
-        for f in qml_files:
-            fname = os.path.splitext(f)[0].lower()
-            if token in fname:
-                best_match = os.path.join(style_folder, f)
-                break
-
-    # Si toujours pas trouvé, pour raster on peut tester juste label complet
-    if not best_match and not geom:
-        for f in qml_files:
-            fname = os.path.splitext(f)[0].lower()
-            if label_lower in fname:
-                best_match = os.path.join(style_folder, f)
-                break
-
-    return best_match
+    # Index récursif (1 seul walk)
+    by_stem, all_items = index_qml_files(style_folder)
 
 
-    
-    
+    # Exemple : base_label = ASSEMBLAGE_VEGE_poly -> contexte "ASSEMBLAGE" 
+    prefer_under = None
+    #first_word = base_label.split("_")[0]
+    #candidate_folder = os.path.join(style_folder, first_word)
+    if token_prefix:
+        project_folder = os.path.join(style_folder, token_prefix)
+        if os.path.isdir(project_folder):
+            prefer_under = project_folder
 
-    
+    # -----------------------------
+    # 1) Cas préfixé projet : chercher exact préfixé
+    # -----------------------------
+    if token_prefix:
+        prefixed_paths = by_stem.get(label_upper, [])
+        hit = choose_best(prefixed_paths, prefer_under=prefer_under)
+        if hit:
+            print(f"Style trouvé (exact, récursif) avec préfixe projet '{token_prefix}': {hit}")
+            return hit
 
+        # -----------------------------
+        # 2) Fallback : enlever SITUATION_ et chercher exact
+        # -----------------------------
+        unprefixed_paths = by_stem.get(base_label, [])
+        hit = choose_best(unprefixed_paths, prefer_under=prefer_under)
+        if hit:
+            return hit
 
+    else:
+        # -----------------------------
+        # Cas non préfixé : exact direct
+        # -----------------------------
+        exact_paths = by_stem.get(base_label, [])
+        hit = choose_best(exact_paths, prefer_under=prefer_under)
+        if hit:
+            return hit
 
+    # -----------------------------
+    # Fallback heuristiques (toujours récursif)
+    # -----------------------------
+    parts = base_label.split("_")
+    geom = None
+    token = None
 
+    if len(parts) >= 2 and parts[-1] in ("poly", "line", "point"):
+        geom = parts[-1]
+        token = "_".join(parts[:-1])
+    elif len(parts) >= 2:
+        token = parts[-1]
+    else:
+        token = base_label
 
+    # A) token+geom exact
+    if geom:
+        target = f"{token}_{geom}".upper()
+        paths = by_stem.get(target, [])
+        hit = choose_best(paths, prefer_under=prefer_under)
+        if hit:
+            return hit
 
+    # --- Fallback SAFE : token seul exact ---
+    token_only = token.upper()
+    paths = by_stem.get(token_only, [])
+    hit = choose_best(paths, prefer_under=prefer_under)
+    if hit:
+        return hit
 
+    # PAS DE fallback cross-token
+    print(f"Aucun style métier trouvé pour {label_upper}")
+    return None
 
-
-def get_display_name(logical_key):
-    """
-    Retourne le nom d'affichage pour une clé logique SIG.
-
-    Args:
-        logical_key (str): clé logique
-
-    Returns:
-        str: nom d'affichage ou la clé elle-même si non défini
-    """
-    entry, _ = _find_entry(logical_key)
-    return entry.get("display_name")
-
-def get_project(folder: str = "output_folder"):
-
-    """
-    Retourne un dictionnaire des noms de projets disponibles pour un dossier donné.
-
-    Args:
-        folder (str): nom du dossier dans sig_structure.yaml
-
-    Returns:
-        dict: {clé: display_name}
-    """
-
-    structure = _load_sig_structure()["structure"]
-
-    if folder not in structure:
-        raise KeyError(f"Dossier '{folder}' non trouvé dans sig_structure.yaml")
-
-    files = structure[folder]["files"]
-    project_names = {key: get_display_name(key) for key in files.keys()}
-
-    return project_names
   
 # endregion
 
@@ -409,92 +447,50 @@ def get_wmts(logical_key):
     # 3) Rien trouvé → erreur propre
     raise KeyError(f"No WMTS config for key or display_name '{logical_key}'")
 
-
-
 # endregion
 
-# region PROJECT
 
-_PROJECT: dict | None = None
+# region PARCA_index
 
-def _load_project() -> dict:
-    global _PROJECT
-    if _PROJECT is None:
-        cfg_path = get_config_path("project.yaml")
-        with open(cfg_path, encoding="utf-8") as f:
-            _PROJECT = yaml.safe_load(f)
-    return _PROJECT
 
-@dataclass
-class ProjectCanvas:
-    """
-    Classe représentant la configuration du canvas d'un projet.
-    
-    Attributes:
-        scale (int): échelle par défaut
-        zoom_on (str): couche ou objet sur lequel zoomer
-        readonly (list | None): liste des éléments en lecture seule
-        groups (list): groupes affichés
-        themes (list): thèmes disponibles
-    """
-    scale: int
-    zoom_on: str
-    readonly: list | None
-    groups: list 
-    themes: list 
+from pathlib import Path
 
-@dataclass
-class ProjectLayout:
-    """
-    Classe représentant la configuration du layout d'un projet.
-    
-    Attributes:
-        theme (str): thème appliqué
-        legends (list): légendes à afficher
-    """
+def build_parca_index(folders_folder):
+    """Fonction d’indexation pour recheche des dossier contenant une couche PARCA"""
 
-    theme: str
-    legends: list
+    if not folders_folder:
+        pass
 
-def _flatten(seq):
-    for x in seq:
-        if isinstance(x, (list, tuple)):
-            yield from _flatten(x)
-        else:
-            yield x
+    project_root = Path(folders_folder)
 
-def get_project_canvas(name: str) -> ProjectCanvas:
-    """
-    Retourne la configuration canvas pour un projet donné.
+    index = []
 
-    Args:
-        name (str): nom du projet
+    for file in project_root.rglob("*"):
 
-    Returns:
-        ProjectCanvas
-    """
+        if not file.is_file():
+            continue
 
-    raw = _load_project().get(name, {}).get("canvas", {})
-    if "themes" in raw:
-        for t in raw["themes"]:
-            if isinstance(t, dict) and "show" in t:
-                t["show"] = list(_flatten(t["show"]))
+        if file.suffix.lower() not in [".gpkg", ".shp", ".geojson"]:
+            continue
 
-    raw.setdefault("readonly", None)      
+        filename = file.stem.lower()
 
-    return ProjectCanvas(**raw)
+        if "parca" in filename:
 
-def get_project_layout(name: str) -> ProjectLayout:
-    """
-    Retourne la configuration layout pour un projet donné.
+            layer_name = file.stem
 
-    Args:
-        name (str): nom du projet
+            if "SEQ_PARCA_poly" in layer_name:
+                project_name = layer_name.split("_SEQ")[0]
+            elif "PARCA_polygon" in layer_name:
+                project_name = layer_name.split("_PARCA")[0]
+            else:
+                continue
 
-    Returns:
-        ProjectLayout
-    """
-    raw = _load_project().get(name, {}).get("layout", {})
-    return ProjectLayout(**raw)
+            index.append({
+                "project_name": project_name,
+                "folder": file.parent,
+                "file": file
+            })
 
-# endregion
+    print(f"Index PARCA construit : {len(index)} couches trouvées")
+    return index

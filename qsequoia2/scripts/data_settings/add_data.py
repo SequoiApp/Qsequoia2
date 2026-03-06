@@ -34,7 +34,7 @@ from qsequoia2.scripts.tools_settings.PY.unload import unknown_data
 
 
 from .add_data_dialog import Ui_AddDataDialog
-from itertools import chain
+
 
 
 # Import from utils folder
@@ -145,8 +145,8 @@ class AddDataDialog(QDialog):
                 name = entry.get('name', "")
                 ext = entry.get('ext', "")
 
-                # On ne garde que geojson
-                if ext != "geojson":
+                # On ne garde que geojson ou gpkg
+                if ext not in ["geojson","gpkg","shp","kml"]:
                     continue
 
                 category_name = name.split("_")[0] if "_" in name else name
@@ -259,11 +259,7 @@ class AddDataDialog(QDialog):
         """
         tree = self.sender()  # QTreeWidget qui a émis le signal
         label = item.text(0)
-
-        print(f"Clic sur '{label}' depuis l’arbre : {tree.objectName()}")
-
         self.whats_layers(item, label, column)
-
 
     def whats_layers(self, item, label, column):
         """
@@ -283,18 +279,19 @@ class AddDataDialog(QDialog):
         print(f"\n[add_data] => Clic sur l'item : {label}")
 
 
-
+        current_tab = self.ui.tabWidget.tabText(self.ui.tabWidget.currentIndex())
         # --- Détection automatique des sections (items parents) ---
         if item is not None and item.parent() is None:
-            print(f"\n[add_data] => Clique sur une section : {label}")
             return
 
 
         # --- Vérifications projet ---
-        if not self.current_project_name or self.current_project_name in [
+        if current_tab =="WMS/WFS":
+            pass
+
+        elif not self.current_project_name or self.current_project_name in [
             "Nom du projet - doit être le même que CARTO FUTAIE ou RSEQUOIA",
-            "DefaultProject"
-        ]:
+            "DefaultProject"]:
             QMessageBox.information(
                 self,
                 "Nom absent",
@@ -310,25 +307,27 @@ class AddDataDialog(QDialog):
             )
             return
 
-        current_tab = self.ui.tabWidget.tabText(self.ui.tabWidget.currentIndex())
+
 
         # --- Appel dynamique ---
 
         # Pour les WMTS
 
-        if current_tab == "WMS/WFS":  # index de l'onglet "Paramètres de données"
+        if current_tab == "WMS/WFS":
             load_wmts([label])
 
         # Pour les Rasters
 
-        if current_tab == "RASTERS":
+        elif current_tab == "RASTERS":
+            if current_tab == "WMS/WFS":
+                pass
             if self.current_project_folder is None:
 
                 layer_paths = {}
 
                 files, _ = QFileDialog.getOpenFileNames(
                     parent=self,
-                    caption="Sélectionner une couche",
+                    caption="Pas de dossier de projet, sélectionnez une couche",
                     directory="",
                     filter="Couches raster (*.tif *.tiff *.png)"
                 )
@@ -343,8 +342,7 @@ class AddDataDialog(QDialog):
                     project_name=self.current_project_name,
                     project_folder=self.current_project_folder,
                     style_folder=self.current_style_folder,
-                    parent=self
-                )
+                    parent=self)
 
             if layer_paths:
                 load_rasters(
@@ -354,18 +352,22 @@ class AddDataDialog(QDialog):
                     style_folder=self.current_style_folder,
                     parent=self
                 )
+            if not layer_paths:
+                QMessageBox.information(self,"Couche non trouvée",f"Aucune couche trouvée pour {label} dans le dossier de projet.")
 
 
         # Pour les vecteurs
 
         else:
-            if self.current_project_folder is None:
+            if current_tab =="WMS/WFS":
+                pass
+            elif self.current_project_folder is None :
 
                 layer_paths = {}
 
                 files, _ = QFileDialog.getOpenFileNames(
                     parent=self,
-                    caption="Sélectionner une couche",
+                    caption="Pas de dossier de projet, sélectionnez une couche",
                     directory="",
                     filter="Couches vecteur (*.shp *.gpkg *.geojson)"
                 )
@@ -380,16 +382,17 @@ class AddDataDialog(QDialog):
                     project_name=self.current_project_name,
                     project_folder=self.current_project_folder,
                     style_folder=self.current_style_folder,
-                    parent=self
-                )
-
+                    parent=self,layout_mode=1)
+             
             if layer_paths:
                 load_vectors(
                     layer_paths,
                     project_name=self.current_project_name,
                     project_folder=self.current_project_folder,
                     style_folder=self.current_style_folder,
-                    parent=self
-                )
+                    parent=self)
+
+            if not layer_paths:
+                QMessageBox.information(self,"Couche non trouvée",f"Aucune couche trouvée pour {label} dans le dossier de projet.")
 
 

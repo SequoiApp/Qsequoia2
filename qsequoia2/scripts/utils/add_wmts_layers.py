@@ -12,12 +12,7 @@ Fonctionnalité :
 - Créer un groupe optionnel pour les couches
 """
 
-from qgis.core import (
-    QgsProject,
-    QgsRasterLayer,
-    QgsMessageLog,
-    Qgis,
-)
+from qgis.core import (QgsProject, QgsRasterLayer,QgsMessageLog,Qgis)
 
 from .config import get_wmts
 
@@ -48,16 +43,19 @@ def load_wmts(label, group_name = None):
         group = root.findGroup(group_name) or root.addGroup(group_name)
 
     for key in label:
-        display_name, url = get_wmts(key)
-        if project.mapLayersByName(display_name):
-            QgsMessageLog.logMessage(f"Layer '{display_name}' already loaded, skipping.", "Qsequoia2", Qgis.Info)
-            print(f"Layer '{display_name}' already loaded, skipping.")
-            continue
+        display_name, url_params = get_wmts(key)
+        # Extraire l'URL réelle après le dernier "url="
+        import re
+        match = re.search(r"url=(.+)$", url_params)
+        base_url = match.group(1) if match else url_params
 
-        layer = QgsRasterLayer(str(url), display_name, "wms")
+        # Créer l'URI complet pour QGIS
+        uri = f"url={base_url}&{url_params}"
+
+        layer = QgsRasterLayer(uri, display_name, "wms")
 
         if not layer.isValid():
-            QgsMessageLog.logMessage(f"Failed to load WMTS '{key}' from {url}", "Qsequoia2", Qgis.Warning)
+            QgsMessageLog.logMessage(f"Failed to load WMTS '{key}' from {base_url}", "Qsequoia2", Qgis.Warning)
             continue
 
         # add to project, optionally hide it from the legend

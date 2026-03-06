@@ -1,11 +1,6 @@
 """
-
-Calcul divers et utiles au plugin sur les propriété
-
+Lecture de l'excel final et affichage des données
 """
-
-
-
 
 # ===============================================
 # region import

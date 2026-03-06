@@ -5,6 +5,7 @@
 
   "fields": {
     "filter_field": "COM_NOM",
+    "dep_code": "DEP_CODE",
     "surface_field": "SURF_CAD",
     "surface_fallback": "SURF_CA",
     "city_field": "COM_NOM",

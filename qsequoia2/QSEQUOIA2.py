@@ -48,7 +48,7 @@ from qsequoia2.scripts.watchdog.dogwatcher import DogWatcher
 from .scripts.utils.new_project import *
 from .scripts.utils.suggest_project_folder import *
 from.scripts.utils.config import *
-from .scripts.forest_settings.forest_get_data import getForestdata
+from .scripts.forest_data.forest_get_data import getForestdata
 from .scripts.project_settings.project_settings import ProjectSettingsDialog
 from .scripts.utils.reloader import reloadQS2
 
@@ -497,6 +497,10 @@ class QSEQUOIA2:
                 self.dockwidget.data_settings_tab.current_project_folder = self.current_project_folder
             
             if hasattr(self.dockwidget, "project_settings_tab"):
+                self.dockwidget.project_settings_tab.current_project_name = self.current_project_name
+                self.dockwidget.project_settings_tab.current_project_folder = self.current_project_folder
+            
+            if hasattr(self.dockwidget, "forest_data_tab"):
                 self.dockwidget.project_settings_tab.current_project_name = self.current_project_name
                 self.dockwidget.project_settings_tab.current_project_folder = self.current_project_folder
 

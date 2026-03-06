@@ -39,11 +39,9 @@ from PyQt5.QtGui import QIcon
 # QSEQUOIA2
 
 from qsequoia2.scripts.data_settings.add_data import AddDataDialog
-from qsequoia2.scripts.forest_settings.forest_settings_dialog import Ui_ForestSettingsDialog
-from qsequoia2.scripts.project_settings.project_settings_dialog import Ui_ProjectSettingsDialog
+
 from qsequoia2.scripts.project_settings.project_settings import ProjectSettingsDialog
-from qsequoia2.scripts.data_settings.add_data_dialog import Ui_AddDataDialog
-from qsequoia2.scripts.tools_settings.tools_settings_dialog import Ui_ToolsSettingsDialog
+from qsequoia2.scripts.forest_data.forest_data import ForestDataDialog
 from qsequoia2.scripts.tools_settings.tools_settings import ToolsSettingsDialog
 
 # import de l'UI
@@ -95,24 +93,21 @@ class QSEQUOIA2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.data_settings_tab = QWidget()
         self.data_settings_tab = AddDataDialog(current_project_name=self.project_name, current_style_folder=self.current_style_folder, downloads_path=self.downloads_path, current_project_folder=self.current_project_folder, parent=self, iface=self.iface)
 
-
         # -- Import du module Tools_box --
         self.tools_tab = QWidget()
-        self.tools_ui = Ui_ToolsSettingsDialog()
-        self.tools_ui.setupUi(self.tools_tab)
         self.tools_tab = ToolsSettingsDialog(current_project_name=self.project_name, current_style_folder=self.current_style_folder, downloads_path=self.downloads_path, current_project_folder=self.current_project_folder, iface = self.iface)
 
-        # -- Import du module forest_settings --
-        forest_settings_tab = QWidget()
-        self.forest_settings_ui = Ui_ForestSettingsDialog()
-        self.forest_settings_ui.setupUi(forest_settings_tab)
+        # -- Import du module forest_data --
+        self.forest_data_tab = QWidget()
+        self.forest_data_tab = ForestDataDialog(current_project_name=self.project_name, current_style_folder=self.current_style_folder, downloads_path=self.downloads_path, current_project_folder=self.current_project_folder, iface = self.iface)
+
 
         # Ajoute des icons au QTabWidget
 
         plugin_path = os.path.dirname(__file__)
         self.tabWidget.addTab(self.project_settings_tab, QIcon(plugin_path + "/icons/project_settings.svg"),"")
         self.tabWidget.setTabToolTip(1, "Cartographie thématiques")
-        self.tabWidget.addTab(forest_settings_tab, QIcon(plugin_path + "/icons/forest_settings.svg"),"")
+        self.tabWidget.addTab(self.forest_data_tab, QIcon(plugin_path + "/icons/forest_data.svg"),"")
         self.tabWidget.setTabToolTip(2, "Metadata sur la propriété")
         self.tabWidget.addTab(self.data_settings_tab, QIcon(plugin_path + "/icons/add_data.svg"),"")
         self.tabWidget.setTabToolTip(3, "Ajout de données")

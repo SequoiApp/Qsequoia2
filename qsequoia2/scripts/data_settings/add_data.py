@@ -1,6 +1,4 @@
-# region IMPORT
 
-# region IMPORT
 """
 Module : add_data
 

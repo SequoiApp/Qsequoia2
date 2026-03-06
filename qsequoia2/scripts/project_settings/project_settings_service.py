@@ -24,7 +24,6 @@ from ..utils.variable import get_global_variable
 from ..utils.config import get_path
 from .processing import buffer, multipart_to_singleparts
 from ..utils.layers import resolve_layer
-from ..forest_settings.forest_stat import ForestStat
 from .project_config import ProjectConfig
 
 
@@ -283,11 +282,9 @@ class LayoutService:
 
         # build des noms
         try :
-            # import de forest_stat pour les département
-            forest_stats = ForestStat(project=QgsProject.instance(),project_name=self.project_name,project_folder=self.project_folder,style_folder=self.style_folder,iface=self.iface)
-            departements = forest_stats.forest_departements(layers = 'SEQ_PARCA_poly',project_name=self.project_name,project_folder=self.project_folder,style_folder=self.style_folder)
+            # lecture des metadata pour trouver les départements
 
-            deps = str(departements.replace(" ","").replace("&","-").replace(",","-"))
+            deps = self.metadata["departement_str"]
             layout.setName(f"{deps}-{self.project_name.upper()}-{project_key}-{years}_{fmt}_{orient_used}")
         except:
             layout.setName(f"{self.project_name.upper()}-{project_key}-{years}_{fmt}_{orient_used}")

@@ -48,7 +48,7 @@ from qgis.PyQt.QtWidgets import QMessageBox,QFileDialog, QInputDialog, QListWidg
 
 class getForestdata:
     """Lecture depuis une couche PARCA des donénes sur la forêt. 
-        Paramètre lu depuis la table forest_setting_data.json"""
+        Paramètre lu depuis la table forest_data.json"""
 
     def __init__(self, project_name, project_folder, style_folder, iface):
         """Initialise l’objet getForestdata.
@@ -63,7 +63,7 @@ class getForestdata:
         self.style_folder = style_folder
 
         self.script_dir = os.path.dirname(os.path.abspath(__file__))
-        self.json_path = os.path.join(self.script_dir, "forest_setting_data.json")
+        self.json_path = os.path.join(self.script_dir, "forest_data.json")
         self.yaml_file = os.path.join(self.script_dir,"..","..","inst","seq_fields.yaml")
 
         # Charge YAML + JSON
@@ -245,6 +245,40 @@ class getForestdata:
         self._calculated_values["owner_list"] = owner_list
         self._calculated_values["city_str"] = city_str
         self._calculated_values["owner_str"] = owner_str
+
+    # --------------------------------------------------------
+    # Récupération du ou des départements de la forêt
+    # --------------------------------------------------------
+    def forest_departements(self, parca_layer):
+        """Récupère les départements de la propriété"""
+
+        deps = []
+
+        try:
+            if parca_layer:
+                surface_field = self._resolve_field_name(
+                    parca_layer,"cad_area",json_fallback_key="surface_field_parca")
+                
+                shapefile_path = parca_layer
+                field_cfg = self.config["fields"]
+                deps = self.get_grouped_values_from_shapefile(
+                    shapefile_path=shapefile_path,
+                    value_field=field_cfg["dep_code"],
+                    filter_field=None,
+                    surface_field=surface_field)
+
+                # deps est déjà une string formatée
+                self._calculated_values["departement_str"] = deps
+
+                # version liste simple
+                dep_list = [d.strip() for d in deps.replace("&", ",").split(",")]
+
+                self._calculated_values["departement_list"] = dep_list
+
+                return dep_list
+
+        except Exception as e:
+            raise TypeError(f"erreur dans forest_departements {e}")
 
 
     # --------------------------------------------------------
@@ -644,37 +678,43 @@ class getForestdata:
 
         Centralise toute la logique de traitement.
         """
-        parca_layer = self._find_layer("PARCA")
-        ua_layer = self._find_layer("UA")
+        try :
 
-        if not hasattr(self, "_calculated_values"):
-            self._calculated_values = {}
+            parca_layer = self._find_layer("PARCA")
+            ua_layer = self._find_layer("UA")
 
-        # Ville et propriétaire (PARCA)
-        if parca_layer:
-            self._set_city_and_owner(parca_layer)
+            if not hasattr(self, "_calculated_values"):
+                self._calculated_values = {}
 
-        # Surfaces (UA si dispo, sinon fallback sur PARCA)
-        if ua_layer or parca_layer:
-            self._set_surface(ua_layer if ua_layer else None, parca_layer if parca_layer else None)
-            surface_boisee = self._calculated_values.get("surface_boisee_ha", 0.0)
-            surface_non_boisee = self._calculated_values.get("surface_non_boisee_ha", 0.0)
-        else:
-            surface_boisee = surface_non_boisee = 0.0
+            # Ville et propriétaire (PARCA)
+            if parca_layer:
+                self._set_city_and_owner(parca_layer)
+                self.forest_departements(parca_layer)
 
-        # -------------------------------
-        # 3. Regroupements et somme globale
-        # -------------------------------
-        grouped_values = self.get_grouped_values(ua_layer if ua_layer else parca_layer)
-        total_surface = self._calculated_values.get("surface_totale_ha", 0.0)
+            # Surfaces (UA si dispo, sinon fallback sur PARCA)
+            if ua_layer or parca_layer:
+                self._set_surface(ua_layer if ua_layer else None, parca_layer if parca_layer else None)
+                surface_boisee = self._calculated_values.get("surface_boisee_ha", 0.0)
+                surface_non_boisee = self._calculated_values.get("surface_non_boisee_ha", 0.0)
+            else:
+                surface_boisee = surface_non_boisee = 0.0
 
-        self._calculated_values["grouped_values"] = grouped_values
-        self._calculated_values["total_surface_ha"] = total_surface
+            # -------------------------------
+            # 3. Regroupements et somme globale
+            # -------------------------------
+            grouped_values = self.get_grouped_values(ua_layer if ua_layer else parca_layer)
+            total_surface = self._calculated_values.get("surface_totale_ha", 0.0)
 
-        # -------------------------------
-        # 4. Export JSON
-        # -------------------------------
-        self.export_all_to_json()
+            self._calculated_values["grouped_values"] = grouped_values
+            self._calculated_values["total_surface_ha"] = total_surface
+
+            # -------------------------------
+            # 4. Export JSON
+            # -------------------------------
+            self.export_all_to_json()
+        
+        except Exception as e:
+            self.iface.messageBar().pushMessage("Qsequoia2",f"Erreur lors de la construction des metadata : {e}",level=Qgis.Warning, duration=10)
 
 
 

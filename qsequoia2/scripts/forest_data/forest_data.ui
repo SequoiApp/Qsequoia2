@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>ForestSettingsDialog</class>
- <widget class="QWidget" name="ForestSettingsDialog">
+ <class>ForestDataDialog</class>
+ <widget class="QWidget" name="ForestDataDialog">
   <property name="geometry">
    <rect>
     <x>0</x>

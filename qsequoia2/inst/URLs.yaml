@@ -28,6 +28,4 @@ qseq_tables:
 qseq_path:
   url: "https://raw.githubusercontent.com/SequoiApp/Qsequoia2/refs/heads/main/qsequoia2/inst/qseq_path.yaml"
 
-qseq_functions:
-  url: "https://raw.githubusercontent.com/SequoiApp/Qsequoia2/refs/heads/main/qsequoia2/inst/qseq_functions.yaml"
 

@@ -32,7 +32,7 @@
        <item>
         <widget class="QGroupBox" name="groupBox">
          <property name="title">
-          <string>Données statistiques</string>
+          <string>Données et méta-données sur la propriété</string>
          </property>
          <layout class="QVBoxLayout" name="statsLayout">
           <item>

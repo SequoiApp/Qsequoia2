@@ -42,7 +42,7 @@ from qsequoia2.scripts.data_settings.add_data import AddDataDialog
 
 from qsequoia2.scripts.project_settings.project_settings import ProjectSettingsDialog
 from qsequoia2.scripts.forest_data.forest_data import ForestDataDialog
-from qsequoia2.scripts.tools_settings.tools_settings import ToolsSettingsDialog
+from qsequoia2.scripts.tools.tools import ToolsDialog
 
 # import de l'UI
 
@@ -52,7 +52,7 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(
 # endregion
 
 # ==========================================================================
-# Définition de la classe
+# region Définition de la classe
 # ==========================================================================
 
 class QSEQUOIA2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
@@ -95,7 +95,7 @@ class QSEQUOIA2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         # -- Import du module Tools_box --
         self.tools_tab = QWidget()
-        self.tools_tab = ToolsSettingsDialog(current_project_name=self.project_name, current_style_folder=self.current_style_folder, downloads_path=self.downloads_path, current_project_folder=self.current_project_folder, iface = self.iface)
+        self.tools_tab = ToolsDialog(current_project_name=self.project_name, current_style_folder=self.current_style_folder, downloads_path=self.downloads_path, current_project_folder=self.current_project_folder, iface = self.iface)
 
         # -- Import du module forest_data --
         self.forest_data_tab = QWidget()
@@ -111,7 +111,7 @@ class QSEQUOIA2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.tabWidget.setTabToolTip(2, "Metadata sur la propriété")
         self.tabWidget.addTab(self.data_settings_tab, QIcon(plugin_path + "/icons/add_data.svg"),"")
         self.tabWidget.setTabToolTip(3, "Ajout de données")
-        self.tabWidget.addTab(self.tools_tab, QIcon(plugin_path + "/icons/tools_settings.svg"),"")
+        self.tabWidget.addTab(self.tools_tab, QIcon(plugin_path + "/icons/tools.svg"),"")
         self.tabWidget.setTabToolTip(0, "Outils et fonctions")
 
 

@@ -1,10 +1,9 @@
 
-
-# Petite pop-up pour indiqué qu'une fonction n'est aps encore dispo
+# Petite pop-up pour indiquer qu'une fonction n'est aps encore dispo
 
 from qgis.PyQt.QtWidgets import QMessageBox
 
-def unknown_data(parent=None):
+def unknown_function(parent=None):
     """
     Affiche une boîte de dialogue indiquant que la fonctionnalité n'est pas encore disponible.
     """

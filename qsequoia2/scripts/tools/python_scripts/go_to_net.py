@@ -1,4 +1,5 @@
-"""Ce module reprend des fonctions qui renvoie l'utilisateur les pages web correspondantes"""
+"""Ce module reprend des fonctions qui renvoie l'utilisateur sur les pages web correspondantes"""
+
 
 import webbrowser, os, yaml
 from qgis.gui import QgsMessageBar

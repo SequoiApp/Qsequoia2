@@ -5,17 +5,25 @@ Auteur : Alexandre Le Bars - Comité des Forêts, Paul Carteron - Racines expert
 Email : alexlb329@gmail.com
 """
 
+# ==================================================================================
+# Import
+# ==================================================================================
+
+# python
 import os
 
-from qgis.core import (
-    QgsProject,
-    QgsRasterLayer,
-    QgsMessageLog,
-    Qgis)
+# QGIS
+
+from qgis.core import (QgsProject,QgsRasterLayer,QgsMessageLog,Qgis)
 from qgis.core import QgsRasterLayer
+
+# Qsequoia2
+
 from .config import get_style
 
-
+# ==================================================================================
+# load_rasters
+# ==================================================================================
 
 
 def load_rasters(layer_path, project_folder, project_name, style_folder, group_name=None, parent=None):

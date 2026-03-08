@@ -14,9 +14,12 @@ Email : alexlb329@gmail.com
 # region Import
 # =====================================
 
+# python
 import os
+
+# QGIS
 from qgis.PyQt.QtWidgets import QFileDialog
-from qgis.PyQt.QtWidgets import QDialog, QMessageBox
+from qgis.PyQt.QtWidgets import QMessageBox
 from qgis.core import (QgsProject,QgsCoordinateReferenceSystem)
 
 

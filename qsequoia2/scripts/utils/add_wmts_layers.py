@@ -11,12 +11,19 @@ Fonctionnalité :
 - Ajouter les couches au projet QGIS
 - Créer un groupe optionnel pour les couches
 """
+# ==================================================================================
+# Import
+# ==================================================================================
 
+# QGIS
 from qgis.core import (QgsProject, QgsRasterLayer,QgsMessageLog,Qgis)
 
+# QSEQUOIA2
 from .config import get_wmts
 
-
+# ==================================================================================
+# load_wmts
+# ==================================================================================
 
 def load_wmts(label, group_name = None):
     """

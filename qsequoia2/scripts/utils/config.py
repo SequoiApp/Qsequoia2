@@ -222,7 +222,7 @@ def flatten(label):
 
 
 # ---------------------------------------------------
-# Préfixes projet (robuste avec ton YAML)
+# Préfixes projet
 # ---------------------------------------------------
 def get_project_prefixes():
     """

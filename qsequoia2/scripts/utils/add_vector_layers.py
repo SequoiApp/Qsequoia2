@@ -5,16 +5,24 @@ avec application automatique des styles.
 Auteur : Alexandre Le Bars - Comité des Forêts, Paul Carteron - Racines experts forestiers associés, Matthieu Chevereau - Caisse des dépôts et consignation
 Email : alexlb329@gmail.com
 """
+
+# ==================================================================================
+# Import
+# ==================================================================================
+
+# python
 import os
 from pathlib import Path
-from qgis.core import (
-    QgsProject,
-    QgsVectorLayer,
-    QgsMessageLog,
-    Qgis)
 
+# QGIS
+from qgis.core import (QgsProject,QgsVectorLayer,QgsMessageLog,Qgis)
+
+# QSEQUOIA2
 from .config import get_style
 
+# ==================================================================================
+# load_vectors
+# ==================================================================================
 
 def load_vectors(layer_path, style_folder, project_folder, project_name, group_name=None, parent_group=None,parent=None):
     """

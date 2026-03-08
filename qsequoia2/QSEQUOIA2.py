@@ -57,8 +57,6 @@ from .resources import *
 # Import the code for the DockWidget
 from .QSEQUOIA2_dockwidget import QSEQUOIA2DockWidget
 
-from .scripts.utils.connect_label import connect_label
-
 from .scripts.utils.get_download_folder import get_download_folder
 
 from .scripts.utils.add_seq_config import add_seq_config

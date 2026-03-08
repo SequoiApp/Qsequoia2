@@ -12,7 +12,7 @@ import os, importlib, yaml, json
 
 # QGIS
 
-from PyQt5.QtWidgets import QDialog, QMessageBox, QFileDialog
+from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtCore import Qt
 from qgis.PyQt.QtWidgets import QWidget, QTreeWidget, QVBoxLayout, QTreeWidgetItem
 from PyQt5 import uic
@@ -20,7 +20,6 @@ from PyQt5 import uic
 # QSEQUOIA2
 
 from qsequoia2.scripts.tools.python_scripts.go_to_net import go_to_net
-from qsequoia2.scripts.tools.python_scripts.unknow_function import unknown_function
 
 # UI
 FORM_CLASS, _ = uic.loadUiType(os.path.join(

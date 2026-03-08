@@ -22,8 +22,8 @@ sys.path.insert(0, watchdog_path)
 from PyQt5.QtCore import QObject, QTimer, QThread
 from watchdog.observers import Observer
 
-from ..utils.watchdog_handler import DownloadEventHandler
-from ..utils.extract_files import show_add_banner
+from .watchdog_handler import DownloadEventHandler
+from .extract_files import show_add_banner
 
 
 class DogWatcher(QObject):
@@ -72,28 +72,13 @@ class DogWatcher(QObject):
         ctx = self.get_context()
 
         project_name = ctx["project_name"]
-        project_folder = ctx["project_folder"]
         downloads_path = ctx["downloads_path"]
         watch_mode = ctx["watch_mode"]
 
         # Choix du dossier à surveiller
-        if watch_mode == "downloads":
-            watch_path = downloads_path
-            print("[watchdog] Mode manuel → Téléchargements")
-        elif watch_mode == "project":
-            if not project_folder:
-                print("[watchdog] Mode projet sans dossier → arrêt")
-                return
-            watch_path = project_folder
-            print("[watchdog] Mode manuel → Dossier projet")
-        else:  # auto
-            watch_path = project_folder or downloads_path
-            print("[watchdog] Mode auto →", watch_path)
-
-        # Vérifier que le dossier existe
-        if not watch_path or not os.path.exists(watch_path):
-            print("[watchdog] Dossier non trouvé → arrêt")
-            return
+        watch_mode == "downloads"
+        watch_path = downloads_path
+        print("[watchdog] surveillance sur les Téléchargements")
 
         # Redémarrer l'observer
         self.stop()
@@ -154,14 +139,13 @@ class DogWatcher(QObject):
 
         # Ignorer si ZIP ne correspond pas au projet
         if project_name.lower() not in os.path.basename(zip_path).lower():
-            print("[watchdog] ZIP ignoré (ne correspond pas au projet)")
             return
 
         # Ignorer si déjà en cours
         if self._zip_in_progress == zip_path:
             return
-
-        print("[watchdog] Vérification de la stabilité du ZIP…")
+        
+        # Verification de la stabilité du ZIP
         self._zip_in_progress = zip_path
         self._zip_path = zip_path
         self._last_size = -1

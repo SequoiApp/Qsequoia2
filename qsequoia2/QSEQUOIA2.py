@@ -72,7 +72,7 @@ if watchdog_path not in sys.path:
 
 from watchdog.observers import Observer
 
-from .scripts.utils.watchdog_handler import DownloadEventHandler
+from .scripts.watchdog.watchdog_handler import DownloadEventHandler
 
 # endregion
 
@@ -339,9 +339,6 @@ class QSEQUOIA2:
 
 
             # gestionnaire de connexion
-
-            self.dockwidget.watchdog.clicked.connect(self.open_connect_label)
-            self.dockwidget.watchdog.setIcon(QIcon(plugin_path + "/icons/watchdog_settings.svg"))
 
             self.dockwidget.add_project.setIcon(QIcon(plugin_path + "/icons/add_data.svg"))
 
@@ -724,12 +721,6 @@ class QSEQUOIA2:
         self.global_settings_dialog = GlobalSettingsDialog(plugin=self)
         self.global_settings_dialog.show()
 
-    ## open_connect_label
-
-    def open_connect_label(self):
-        """Ouvre la fenêtre de connexion et de configuration des chemins surveillés."""
-        self.connect_dialog = connect_label(plugin=self)
-        self.connect_dialog.show()
 
     ## get_watchdog_context
 

@@ -43,6 +43,7 @@ from qsequoia2.scripts.data_settings.add_data import AddDataDialog
 from qsequoia2.scripts.project_settings.project_settings import ProjectSettingsDialog
 from qsequoia2.scripts.forest_data.forest_data import ForestDataDialog
 from qsequoia2.scripts.tools.tools import ToolsDialog
+from .scripts.add_on.addon_loader import load_addons
 
 # import de l'UI
 
@@ -113,6 +114,10 @@ class QSEQUOIA2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.tabWidget.setTabToolTip(3, "Ajout de données")
         self.tabWidget.addTab(self.tools_tab, QIcon(plugin_path + "/icons/tools.svg"),"")
         self.tabWidget.setTabToolTip(0, "Outils et fonctions")
+
+        # Import des addons
+        
+        load_addons(self)
 
 
 

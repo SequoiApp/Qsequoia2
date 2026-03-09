@@ -76,7 +76,7 @@ class LayoutService:
 
 
 
-        self.models_dir = Path(get_global_variable("models_directory"))
+        self.models_dir = Path(get_global_variable("QS2_models_directory"))
 
         self.script_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -529,8 +529,8 @@ class LayoutService:
         # variables internes Python
         vars_dict["project_key"] = self.project_key
         vars_dict["current_date"] = datetime.datetime.now().strftime("%m/%Y")
-        vars_dict["username"] = get_global_variable("user_full_name")
-        vars_dict["adresse"] = get_global_variable("adress_organisation")
+        vars_dict["username"] = get_global_variable("QS2_user_full_name")
+        vars_dict["adresse"] = get_global_variable("QS2_adress_organisation")
         vars_dict["project_alias"] = self.get_project_alias()
 
         return vars_dict

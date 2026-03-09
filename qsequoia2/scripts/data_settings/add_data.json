@@ -19,8 +19,7 @@
     "vector_extensions": [
       "geojson",
       "gpkg",
-      "shp",
-      "kml"
+      "shp"
     ],
     "raster_extensions": [
         "tiff",

@@ -459,7 +459,7 @@ def build_parca_index(folders_folder):
     """Fonction d’indexation pour recheche des dossier contenant une couche PARCA"""
 
     if not folders_folder:
-        pass
+        return {}
 
     project_root = Path(folders_folder)
 

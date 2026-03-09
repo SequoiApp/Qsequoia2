@@ -9,7 +9,7 @@ from qgis.PyQt.QtWidgets import QDialog, QMessageBox
 from PyQt5.QtWidgets import (QDialog,QWidget,QVBoxLayout,QCheckBox,QLabel)
 from qgis.core import Qgis, QgsProject, QgsMessageLog, QgsLayerTreeGroup, QgsCoordinateReferenceSystem, QgsMapThemeCollection
 from qgis.utils import iface
-from PyQt5.QtCore import QTimer
+from PyQt5.QtCore import QTimer, Qt
 
 #from qsequoia2.scripts.utils.layers import resolve_layer_name
 
@@ -269,7 +269,8 @@ class ProjectSettingsDialog(QDialog, Ui_ProjectSettingsDialog):
 
         self.lineEdit_city.setText(city_str)
         self.lineEdit_owner.setText(owner_str)
-        self.forest_name.setText(forest_name)
+        self.forest_name.setText(f"<b>{forest_name}</b>")
+        self.forest_name.setAlignment(Qt.AlignCenter)
         self.layout.setEnabled(True)
 
 

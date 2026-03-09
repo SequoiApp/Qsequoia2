@@ -135,10 +135,10 @@ class QSEQUOIA2:
         add_seq_config()
 
         # Récupération des variables globales
-        self.user_name = get_global_variable("user_full_name") or "Utilisateur QSEQUOIA2"
+        self.user_name = get_global_variable("QS2_user_full_name") or "Utilisateur QSEQUOIA2"
         print(" \nWelcome ! ", self.user_name)
 
-        self.current_style_folder = get_global_variable("styles_directory") or None
+        self.current_style_folder = get_global_variable("QS2_styles_directory") or None
         print(" \n==> Style folder at init:", self.current_style_folder)
         self.current_project_folder = None
 
@@ -155,7 +155,7 @@ class QSEQUOIA2:
 
         self.QSS2_default_project = get_global_variable("QS2_default_project")
 
-        self.folders_folder = get_global_variable("folders_folder") or None
+        self.folders_folder = get_global_variable("QS2_folders_folder") or None
 
         raw = get_global_variable("QS2_suggest_project")
 
@@ -371,6 +371,7 @@ class QSEQUOIA2:
             self.dockwidget.show()
 
     # endregion
+
     # -----------------------------------------------------------------------
     # region variables temporaire
     # -----------------------------------------------------------------------   
@@ -716,7 +717,7 @@ class QSEQUOIA2:
 
     def open_global_settings(self):
         """Ouvre la fenêtre de configuration globale du plugin."""
-        self.global_settings_dialog = GlobalSettingsDialog(plugin=self)
+        self.global_settings_dialog = GlobalSettingsDialog(iface=self.iface,plugin=self)
         self.global_settings_dialog.show()
 
 

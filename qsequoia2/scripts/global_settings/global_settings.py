@@ -168,7 +168,7 @@ class GlobalSettingsDialog(QDialog, FORM_CLASS):
         set_global_variable("QS2_user_full_name", user)
         set_global_variable("QS2_adress_organisation", adress)
         set_global_variable("QS2_organisation", orga_name)
-        set_global_variable("QS2_QS2_default_project", QS2_default_project)
+        set_global_variable("QS2_default_project", QS2_default_project)
         set_global_variable("QS2_folders_folder", folders_folder )
         set_global_variable("QS2_suggest_project", QS2_suggest_project )
         set_global_variable("QS2_addon_folder", addon_folder)
@@ -195,14 +195,8 @@ class GlobalSettingsDialog(QDialog, FORM_CLASS):
         dir_path = QFileDialog.getExistingDirectory(self, "Sélectionner le répertoire de travail", str(modeles_path))
         if dir_path:
             self.stylesInput.setText(dir_path)
-
-        if not dir_path.exists() or not dir_path.is_dir():
-            QMessageBox.warning(
-                self.iface.mainWindow(),
-                "Dossier introuvable",
-                f"Le dossier indiqué n’existe pas :\n{dir_path}"
-            )
-            return False
+        
+        dir_path = Path(dir_path) 
 
         if not any(dir_path.glob("*.qml")):
             QMessageBox.warning(

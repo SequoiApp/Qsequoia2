@@ -44,6 +44,7 @@ from qsequoia2.scripts.project_settings.project_settings import ProjectSettingsD
 from qsequoia2.scripts.forest_data.forest_data import ForestDataDialog
 from qsequoia2.scripts.tools.tools import ToolsDialog
 from .scripts.add_on.addon_loader import load_addons
+from.scripts.utils.variable import get_global_variable
 
 # import de l'UI
 
@@ -69,6 +70,10 @@ class QSEQUOIA2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.current_style_folder = current_style_folder
         self.downloads_path = downloads_path
         self.current_project_folder = current_project_folder
+
+        # récupération de la variable du dossier des addons pour éviter le crash si inexistante
+
+        self.addon_folder = get_global_variable("QS2_addon_folder")
 
 
 
@@ -116,9 +121,9 @@ class QSEQUOIA2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.tabWidget.setTabToolTip(0, "Outils et fonctions")
 
         # Import des addons
+        if self.addon_folder:
+            load_addons(plugin = self, current_project_name=self.project_name, current_style_folder=self.current_style_folder, downloads_path=self.downloads_path, current_project_folder=self.current_project_folder, iface = self.iface)
         
-        load_addons(plugin = self, current_project_name=self.project_name, current_style_folder=self.current_style_folder, downloads_path=self.downloads_path, current_project_folder=self.current_project_folder, iface = self.iface)
-
 
 
     def closeEvent(self, event):

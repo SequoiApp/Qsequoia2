@@ -1,0 +1,7 @@
+PluginExemple:
+  script: python/exemple.py
+  function: PluginExemple
+
+AddonExemple:
+  script: python/exemple.py
+  function: AddonExemple

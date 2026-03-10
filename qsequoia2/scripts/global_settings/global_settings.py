@@ -64,6 +64,10 @@ class GlobalSettingsDialog(QDialog, FORM_CLASS):
         self.stylesButton.clicked.connect(self.select_styles_directory)
         self.modelsButton.clicked.connect(self.select_models_directory)
         self.folders_folder_button.clicked.connect(self.select_folders_folder)
+        try:
+            self.addon.clicked.disconnect()
+        except:
+            pass
         self.addon.clicked.connect(self.open_addonCreator)
         self.find_addon_folder.clicked.connect(self.select_addon_folder)
 
@@ -257,18 +261,16 @@ class GlobalSettingsDialog(QDialog, FORM_CLASS):
             self.addon_folder.setText(addon_dir)
             self.addon_folder_path = addon_dir
 
+
     def open_addonCreator(self):
-        """Ouvre la fenêtre de création d'addon."""
-
         addon_folder = self.addon_folder.text().strip()
-
         if not addon_folder:
-            QMessageBox.warning(self,"Dossier manquant","Veuillez sélectionner un dossier d'addons.")
+            QMessageBox.warning(self, "Dossier manquant", "Veuillez sélectionner un dossier d'addons.")
             return
 
-        self.addonCreator_dialog = addonCreator(iface=self.iface,addon_folder=addon_folder,plugin=self.plugin,parent=self)
+        dialog = addonCreator(iface=self.iface,addon_folder=addon_folder,plugin=self.plugin,parent=self)
+        dialog.on_new_addon_clicked()
 
-        self.addonCreator_dialog.exec()
 
     
 

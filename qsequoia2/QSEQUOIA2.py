@@ -499,6 +499,13 @@ class QSEQUOIA2:
             if hasattr(self.dockwidget, "forest_data_tab"):
                 self.dockwidget.project_settings_tab.current_project_name = self.current_project_name
                 self.dockwidget.project_settings_tab.current_project_folder = self.current_project_folder
+            
+            # --- Propagation aux addons chargés ---
+            if hasattr(self.dockwidget, "addons_tabs"):
+                for addon in self.dockwidget.addons_tabs:
+                    addon.current_project_name = self.current_project_name
+                    addon.current_project_folder = self.current_project_folder
+
 
         # Mise à jour éventuelle du connect_dialog
         if self.connect_dialog:

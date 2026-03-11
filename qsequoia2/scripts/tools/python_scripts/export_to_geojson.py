@@ -15,7 +15,7 @@ from pathlib import Path
 from qgis.core import (QgsProject,QgsVectorLayer,QgsMessageLog,Qgis)
 
 from qsequoia2.scripts.utils import layers
-from .add_vector_layers import load_vectors
+
 import processing
 
 # ==========================================================

@@ -77,33 +77,33 @@ def load_addons(plugin, current_project_name, current_style_folder, downloads_pa
             plugin.iface.messageBar().pushMessage("Erreur de chargement : ",f"{addon_file} not found",level=Qgis.Warning)
             continue
 
-        try:
-            spec = importlib.util.spec_from_file_location(folder, addon_file)
-            module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(module)
+        #try:
+        spec = importlib.util.spec_from_file_location(folder, addon_file)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
 
-            class_name = f"{addon_name}_QS2Addon"
-            addon_class = getattr(module, class_name)
+        class_name = f"{addon_name}_QS2Addon"
+        addon_class = getattr(module, class_name)
 
-            addon = addon_class(plugin=plugin,iface=iface,current_project_name=current_project_name,
-                                current_style_folder=current_style_folder,downloads_path=downloads_path,
-                                current_project_folder=current_project_folder)
+        addon = addon_class(plugin=plugin,iface=iface,current_project_name=current_project_name,
+                            current_style_folder=current_style_folder,downloads_path=downloads_path,
+                            current_project_folder=current_project_folder)
 
-            loaded_addons.append(addon)
+        loaded_addons.append(addon)
 
-            # --- Récupération du tab et ajout au QTabWidget ---
-            tab = addon.get_tab()
-            name = addon.get_name()
-            icon_path = os.path.join(addon_dir, "icon.svg")
-            icon = QIcon(icon_path) if os.path.exists(icon_path) else QIcon()
+        # --- Récupération du tab et ajout au QTabWidget ---
+        tab = addon.get_tab()
+        name = addon.get_name()
+        icon_path = os.path.join(addon_dir, "icon.svg")
+        icon = QIcon(icon_path) if os.path.exists(icon_path) else QIcon()
 
-            index = plugin.tabWidget.addTab(tab, icon, "")
-            plugin.tabWidget.setTabToolTip(index, name)
+        index = plugin.tabWidget.addTab(tab, icon, "")
+        plugin.tabWidget.setTabToolTip(index, name)
 
-            QgsMessageLog.logMessage("Your addon has been correctly loaded", 'QSEQUOIA2', level=Qgis.Info)
+        QgsMessageLog.logMessage("Your addon has been correctly loaded", 'QSEQUOIA2', level=Qgis.Info)
 
-        except Exception as e:
-            plugin.iface.messageBar().pushMessage("[QSEQUOIA addon] Erreur de chargement",str(e),level=Qgis.Critical)
+        #except Exception as e:
+            #plugin.iface.messageBar().pushMessage("[QSEQUOIA addon] Erreur de chargement",str(e),level=Qgis.Critical)
 
     # Stocker dans le dockwidget pour propagation future
     plugin.addons_tabs = loaded_addons

@@ -40,7 +40,7 @@ from PyQt5.QtGui import QIcon
 
 from qsequoia2.scripts.data_settings.add_data import AddDataDialog
 
-from qsequoia2.scripts.project_settings.project_settings import ProjectSettingsDialog
+from qsequoia2.scripts.LayoutDesigner.LayoutDesigner import LayoutDesignerDialog
 from qsequoia2.scripts.forest_data.forest_data import ForestDataDialog
 from qsequoia2.scripts.tools.tools import ToolsDialog
 from .scripts.add_on.addon_loader import load_addons
@@ -91,9 +91,9 @@ class QSEQUOIA2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
 
 
-        # -- Import du module project_settings --
-        self.project_settings_tab = QWidget()
-        self.project_settings_tab = ProjectSettingsDialog(current_project_name=self.project_name, current_style_folder=self.current_style_folder, downloads_path=self.downloads_path, current_project_folder=self.current_project_folder, iface = self.iface)
+        # -- Import du module LayoutDesigner --
+        self.LayoutDesigner_tab = QWidget()
+        self.LayoutDesigner_tab = LayoutDesignerDialog(current_project_name=self.project_name, current_style_folder=self.current_style_folder, downloads_path=self.downloads_path, current_project_folder=self.current_project_folder, iface = self.iface)
 
         # -- Import du Module add_data --
         self.data_settings_tab = QWidget()
@@ -111,7 +111,7 @@ class QSEQUOIA2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         # Ajoute des icons au QTabWidget
 
         plugin_path = os.path.dirname(__file__)
-        self.tabWidget.addTab(self.project_settings_tab, QIcon(plugin_path + "/icons/project_settings.svg"),"")
+        self.tabWidget.addTab(self.LayoutDesigner_tab, QIcon(plugin_path + "/icons/LayoutDesigner.svg"),"")
         self.tabWidget.setTabToolTip(1, "Cartographie thématiques")
         self.tabWidget.addTab(self.forest_data_tab, QIcon(plugin_path + "/icons/forest_data.svg"),"")
         self.tabWidget.setTabToolTip(2, "Metadata sur la propriété")

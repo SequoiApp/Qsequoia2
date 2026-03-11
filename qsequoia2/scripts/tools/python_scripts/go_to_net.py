@@ -3,6 +3,7 @@
 
 import webbrowser, os, yaml
 from qgis.gui import QgsMessageBar
+from ...utils.messageBar import *
 
 def go_to_net(action, iface, dockwidget=None):
     """
@@ -15,7 +16,6 @@ def go_to_net(action, iface, dockwidget=None):
     key = action.get("key")
 
     if not category or not key:
-        print("Category ou key manquante")
         return
 
     # Chemin vers le YAML des URLs
@@ -28,20 +28,18 @@ def go_to_net(action, iface, dockwidget=None):
     # Récupération de l'entrée dans le YAML
     item_data = urls_config.get(category, {}).get(key)
     if not item_data:
-        print(f"Item introuvable dans YAML : {category} / {key}")
-        iface.messageBar().pushWarning(f"Impossible d'ouvrir {display_name}!")
+        messageBar(iface, f"Impossible d'ouvrir {display_name}!", "w", 10)
         return
 
     url = item_data.get("url")
     display_name = item_data.get("display_name", key)
 
     if url:
-        print(f"Go to NET => ouverture de {display_name} ({url})")
-        iface.messageBar().pushSuccess("Ouverture réussie", f"Ouverture de {display_name} !")
+        messageLog(f"Go to NET => ouverture de {display_name} ({url})", "i")
+
         webbrowser.open(url)
     else:
-        print(f"Aucune URL trouvée pour {display_name}")
-        iface.messageBar().pushWarning(f"Impossible d'ouvrir {display_name}!")
+        messageBar(iface, f"Impossible d'ouvrir {display_name}!","w",10)
 
 
 

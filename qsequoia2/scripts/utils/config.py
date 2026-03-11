@@ -21,7 +21,7 @@ from dataclasses import dataclass
 
 
 from qgis.core import QgsVectorLayer, QgsRasterLayer, QgsWkbTypes
-
+from .messageBar import *
 
 
 # endregion
@@ -492,5 +492,5 @@ def build_parca_index(folders_folder):
                 "file": file
             })
 
-    print(f"Index PARCA construit : {len(index)} couches trouvées")
+    messageLog(f"Index PARCA construit : {len(index)} couches trouvées", "i")
     return index

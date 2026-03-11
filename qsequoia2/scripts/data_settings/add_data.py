@@ -45,6 +45,8 @@ from qsequoia2.scripts.utils.add_vector_layers import load_vectors
 from qsequoia2.scripts.utils.add_raster_layers import load_rasters
 from qsequoia2.scripts.utils.add_wmts_layers import load_wmts
 from qsequoia2.scripts.utils.config import *
+from ..utils.layers import configure_snapping
+from ..utils.messageBar import *
 
 
 # import de l'UI 
@@ -274,7 +276,7 @@ class AddDataDialog(QDialog, FORM_CLASS):
             column (int): index de la colonne cliquée
         """
 
-        print(f"\n[add_data] => Clic sur l'item : {label}")
+        messageLog(f"\n[add_data] => Clic sur l'item : {label}", "i")
 
 
         current_tab = self.tabWidget.tabText(self.tabWidget.currentIndex())
@@ -378,6 +380,10 @@ class AddDataDialog(QDialog, FORM_CLASS):
                     project_folder=self.current_project_folder,
                     style_folder=self.current_style_folder,
                     parent=self)
+                
+                # Accrochage auto sur les couches importés
+
+                configure_snapping()
 
             if not layer_paths:
                 QMessageBox.information(self,"Couche non trouvée",f"Aucune couche trouvée pour {label} dans le dossier de projet.")

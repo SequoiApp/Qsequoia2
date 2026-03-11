@@ -47,32 +47,6 @@ def resolve_layer(layer_key: str,project=None,project_name=None,project_folder=N
     layers = project.mapLayersByName(filename)
     return layers[0] if layers else None
 
-# ==================================================================================
-# set_layers_readonly
-# ==================================================================================
-
-def set_layers_readonly(layer_keys,project=None,project_name=None,project_folder=None,style_folder=None,parent=None):
-    """
-    Passe une ou plusieurs couches en mode lecture seule dans le projet QGIS.
-
-    Les couches sont identifiées à partir de leurs clés logiques, puis
-    résolues via ``resolve_layer``.
-    """
-
-    if project is None:
-        project = QgsProject.instance()
-
-    if isinstance(layer_keys, str):
-        layer_keys = [layer_keys]
-
-    for key in layer_keys:
-        layer = resolve_layer(key,project=project,project_name=project_name,project_folder=project_folder,
-                              style_folder=style_folder,parent=parent)
-        
-        if not layer:
-            continue
-        layer.setReadOnly(True)
-
 
 # ==================================================================================
 # configure_snapping

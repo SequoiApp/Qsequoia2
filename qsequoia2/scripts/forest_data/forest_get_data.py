@@ -38,6 +38,7 @@ from PyQt5.QtCore import QVariant
 from ..utils.config import *
 from datetime import datetime
 from qgis.PyQt.QtWidgets import QMessageBox,QFileDialog, QInputDialog, QListWidget, QScrollArea
+from ..utils.messageBar import *
 
 # endregion
 
@@ -743,6 +744,6 @@ class getForestdata:
         try:
             with open(file_path, "w", encoding="utf-8") as f:
                 json.dump(data_to_save, f, indent=4, ensure_ascii=False)
-                print(f"-- metadata build pour {self.project_folder} --!")
+                messageLog(f"-- metadata build pour {self.project_folder} --!","i")
         except Exception as e:
-            self.iface.messageBar().pushMessage(f"Erreur lors de l'export JSON : {e}", Qgis.Warning)
+            messageBar(self.iface, f"Erreur lors de l'export JSON : {e}", "w", 10)

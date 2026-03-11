@@ -1,34 +1,30 @@
+
+# ==========================================================================
+# region import
+# ==========================================================================
+
+# python 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Tuple, Optional, List
+from typing import Tuple, Optional
+import os, datetime
 
-import os, datetime,json, yaml
-from qgis.PyQt.QtWidgets import QDialog, QMessageBox
-
-from qgis.core import (
-    QgsVectorLayer,
-    QgsRectangle,
-    QgsWkbTypes,
-    QgsUnitTypes,
-    QgsPrintLayout,
-    QgsReadWriteContext,
-    QgsLayoutItemMap,
-    QgsLayoutFrame,
-    QgsLayoutItemAttributeTable,
-    QgsProject
-)
-
+# QGIS
+from qgis.PyQt.QtWidgets import QMessageBox
+from qgis.core import *
 from qgis.PyQt.QtXml import QDomDocument
 
+# Python
 from ..utils.variable import get_global_variable
 from ..utils.config import get_path
 from .processing import buffer, multipart_to_singleparts
 from ..utils.layers import resolve_layer
-from .project_config import ProjectConfig
+from .ConfigLoader import ConfigLoader
+from ..utils.messageBar import messageBar
 
-
+# endregion
 # ============================================================
-# Data container
+# region Data container
 # ============================================================
 
 @dataclass
@@ -39,18 +35,42 @@ class MapInfo:
     area: float
 
 
-# ============================================================
-#  Layout Service
-# ============================================================
+# endregion
+# ==========================================================================
+# region LayoutDesignerDialog
+# ==========================================================================
 
 class LayoutService:
     """
-    Service complet pour :
+    Auteur : Alexandre Le Bars, Paul Carteron, Matthieu Chevereau
+    Date : 2026
 
-    - calculer le format papier optimal
-    - importer un layout template QPT
-    - configurer carte + thème + légendes
-    - remplir automatiquement une table attributaire
+    Description :
+    -------------
+    Ce module fournit le service `LayoutService` pour le plugin QSequoia2 dans QGIS.
+    Il centralise toutes les fonctionnalités liées à la génération et configuration
+    automatique des layouts (impression/cartes) à partir des données projet.
+
+    Fonctionnalités principales :
+    - Calcul automatique du format papier optimal et de l'orientation de la carte
+    selon l'emprise de la parcelle ou des couches sélectionnées.
+    - Import de templates QPT et configuration du layout (carte, thème, légendes).
+    - Remplissage automatique des tables attributaires dans le layout.
+    - Gestion des metadata du projet et application aux éléments du layout.
+    - Ajout des couches à la légende et application des alias définis.
+    - Compatibilité avec les multiples projets et gestion des échelles.
+
+    Utilitaires et dépendances :
+    - `ConfigLoader` : Gestion des fichiers YAML de configuration et metadata.
+    - Fonctions utilitaires : `get_global_variable`, `get_path`, `resolve_layer`, 
+    `buffer`, `multipart_to_singleparts`, `messageBar`.
+
+    Notes :
+    ------
+    - Destiné à être utilisé avec QGIS >= 3.40.
+    - Plugin QSequoia2 pour la configuration des layouts et la
+    préparation des cartes pour l'impression.
+    - Toutes les variables et metadata sont persistées et réutilisées dans le layout.
     """
 
     FORMATS_MM: Tuple[Tuple[str, Tuple[int, int]], ...] = (
@@ -58,84 +78,71 @@ class LayoutService:
         ("A3", (297, 420)),
         ("A2", (420, 594)),
         ("A1", (594, 841)),
-        ("A0", (841, 1189)),
+        ("A0", (841, 1189))
     )
 
     # ------------------------------------------------------------
     # INIT
     # ------------------------------------------------------------
 
-    def __init__(self, project,project_key, project_name, style_folder, downloads_path, project_folder, iface):
+    def __init__(self, project_key: str, 
+                 project, project_name, style_folder, 
+                 downloads_path, project_folder, iface, 
+                 config_loader):
+        
         self.project = project
         self.iface = iface
-        self.project_name = project_name
+
+
+        # ------------------------------------------------------
+        # Config centralisée
+        # ------------------------------------------------------
+        self.config = config_loader
+
+        # Metadata, mapping, alias déjà chargés dans ConfigLoader
+        self.metadata = config_loader.metadata
+        self.mapping_config = self.config.mapping_config
+        self.layer_aliases = self.config.layer_aliases
+
+        # Canvas / Layout YAML
+        self.canvas_cfg = self.config.get_project_canvas(project_key)
+        self.layout_cfg = self.config.get_project_layout(project_key)
+
+        # ------------------------------------------------------
+        # Dossiers / paths
+        # ------------------------------------------------------
         self.style_folder = style_folder
         self.downloads_path = downloads_path
         self.project_folder = project_folder
+        self.project_name = project_name
         self.project_key = project_key
 
-
-
+        # Directory des modèles QPT
         self.models_dir = Path(get_global_variable("QS2_models_directory"))
-
-        self.script_dir = os.path.dirname(os.path.abspath(__file__))
-
-        # Metadata
-
-        metadata_path = os.path.join(self.script_dir, "..","..","data","_metadata","currentFolder","forest_metadata.json")
-
-        with open(metadata_path, 'r', encoding='utf-8') as f:
-            data_json = json.load(f)
-
-        # Extraire proprement la clé "metadata"
-        self.metadata = data_json.get("metadata", {})
-
-        # Mapping config
-
-        mapping_json = os.path.join(self.script_dir,"mapping.json")
-
-        # Charger la config
-        with open(mapping_json, 'r', encoding='utf-8') as f:
-            mapping_config = json.load(f)
-
-        self.mapping_config = mapping_config
-
-
-        # Project.yaml
-
-        project_yaml = os.path.join(
-            self.script_dir, "..", "..", "inst", "project.yaml")
-
-        with open(project_yaml, "r", encoding="utf-8") as f:
-            self.project_data_yaml = yaml.safe_load(f)
-
-        self.config = ProjectConfig(yaml_path=project_yaml)
-
-
-        # Chargement des alias de couches
-        self.script_dir = os.path.dirname(os.path.abspath(__file__))
-
-        alias_json_path = os.path.join(self.script_dir, "..","..","inst", "alias.json")
-        if os.path.exists(alias_json_path):
-            with open(alias_json_path, "r", encoding="utf-8") as f:
-                aliases_json = json.load(f)
-                self.layer_aliases = aliases_json.get("layer_aliases", {})
-        else:
-            self.layer_aliases = {}
 
 
     # ============================================================
     # FORMAT + ORIENTATION
     # ============================================================
 
-    def _fits_bbox(
-        self,
-        mm: Tuple[int, int],
-        scale: int,
-        bbox: QgsRectangle,
-        coeff_cadre: float = 0.90,
-        marge_mm: int = 6,
-    ) -> bool:
+    def _fits_bbox(self,mm: Tuple[int, int],
+                   scale: int,
+                   bbox: QgsRectangle,
+                   coeff_cadre: float = 0.90,
+                   marge_mm: int = 6,) -> bool:
+        """
+        Vérifie si une emprise (bbox) peut tenir dans un format papier donné à une échelle donnée.
+
+        Args:
+            mm (Tuple[int,int]): Dimensions du papier en mm (largeur, hauteur).
+            scale (int): Échelle de la carte.
+            bbox (QgsRectangle): Emprise de la zone à cartographier.
+            coeff_cadre (float, optional): Coefficient de réduction de la zone utilisable. Defaults to 0.90.
+            marge_mm (int, optional): Marge autour du papier en mm. Defaults to 6.
+
+        Returns:
+            bool: True si la bbox tient dans le papier, False sinon.
+        """
 
         needed_w = (bbox.width() / scale) * 1000
         needed_h = (bbox.height() / scale) * 1000
@@ -146,6 +153,17 @@ class LayoutService:
         return needed_w <= available_w and needed_h <= available_h
 
     def _pick_format(self, scale: int, bbox: QgsRectangle, coeff=0.90) -> str:
+        """
+        Sélectionne le format papier minimal qui peut contenir la bbox à l'échelle donnée.
+
+        Args:
+            scale (int): Échelle de la carte.
+            bbox (QgsRectangle): Emprise de la zone.
+            coeff (float, optional): Coefficient de marge interne du papier. Defaults to 0.90.
+
+        Returns:
+            str: Nom du format papier choisi ("A4", "A3", … ou "A0+" si trop grand).
+        """
 
         for name, mm in self.FORMATS_MM:
             if self._fits_bbox(mm, scale, bbox, coeff):
@@ -154,32 +172,55 @@ class LayoutService:
         return "A0+"
 
     def _pick_orientation(self, bbox: QgsRectangle) -> str:
+        """
+        Détermine l’orientation (portrait ou paysage) pour une bbox.
+
+        Args:
+            bbox (QgsRectangle): Emprise de la zone.
+
+        Returns:
+            str: "portrait" ou "landscape".
+        """
         return "portrait" if bbox.height() >= bbox.width() else "landscape"
 
     # ============================================================
     # COMPUTE MAP INFO
     # ============================================================
 
-    def compute_layout_info(
-        self,
-        uri: Optional[str] = None,
-        scale: int = 15000,
-        snap_distance: int = 200,
-        coeff_cadre: float = 0.90,
-        provider: str = "ogr",
-    ) -> MapInfo:
+    def compute_layout_info(self,uri: Optional[str] = None,
+                            scale: int = 15000,
+                            snap_distance: int = 200,
+                            coeff_cadre: float = 0.90,
+                            provider: str = "ogr",) -> MapInfo:
+        """
+        Calcule les informations de mise en page à partir d'une couche vectorielle.
+
+        Effectue le buffer/dissolve, sélectionne le plus grand polygone, et calcule
+        le format et l’orientation du layout.
+
+        Args:
+            uri (Optional[str], optional): URI de la couche à utiliser. Defaults to None.
+            scale (int, optional): Échelle de la carte. Defaults to 15000.
+            snap_distance (int, optional): Distance de buffer en mètres. Defaults to 200.
+            coeff_cadre (float, optional): Coefficient de réduction pour le cadre. Defaults to 0.90.
+            provider (str, optional): Fournisseur de données (ogr, etc.). Defaults to "ogr".
+
+        Raises:
+            ValueError: Si la couche est invalide ou aucune géométrie trouvée.
+            TypeError: Si la couche n’est pas polygonale.
+
+        Returns:
+            MapInfo: Contient bbox, orientation, format papier et surface.
+        """
 
         if uri is None:
             layer_dict = get_path("SEQ_PARCA_poly", project_name=self.project_name, project_folder=self.project_folder, style_folder=self.style_folder, parent=None)
         
-
         if not layer_dict:
             raise ValueError(f"URI invalide : {uri}")
         uri = list(layer_dict.values())[0]
 
-
         layer = QgsVectorLayer(uri, "tmp", provider)
-
 
         if not layer.isValid():
             raise ValueError(f"Layer invalide : {uri}")
@@ -188,23 +229,19 @@ class LayoutService:
             raise TypeError("Layer doit être polygonal")
 
         if layer.crs().mapUnits() != QgsUnitTypes.DistanceMeters:
-            print("⚠ buffer interprété en unités CRS (pas mètres)")
+            messageBar(self.iface, "buffer interprété en unités CRS (pas mètres)", "w",10)
 
         # --- PROCESS ---
         buffered = buffer(layer, distance=snap_distance / 2, dissolve=True)
 
-
         dissolved = buffer(buffered, distance=-snap_distance / 2)
-
 
         single_parts = multipart_to_singleparts(dissolved)
 
 
-        feat = max(
-            single_parts.getFeatures(),
-            key=lambda f: f.geometry().area(),
-            default=None,
-        )
+        feat = max(single_parts.getFeatures(),
+                   key=lambda f: f.geometry().area(),
+                   default=None,)
 
         if feat is None or feat.geometry().isEmpty():
             raise ValueError("Aucune géométrie valide trouvée")
@@ -218,13 +255,7 @@ class LayoutService:
 
 
 
-        return MapInfo(
-            bbox=bbox,
-            orientation=orient,
-            paper_format=fmt,
-            area=geom.area(),
-        )
-
+        return MapInfo(bbox=bbox,orientation=orient,paper_format=fmt,area=geom.area())
 
 
     # ============================================================
@@ -232,6 +263,19 @@ class LayoutService:
     # ============================================================
 
     def _find_template(self, fmt: str, orient: str):
+        """
+        Cherche le template QPT correspondant au format et à l’orientation.
+
+        Args:
+            fmt (str): Format papier (A4, A3, …).
+            orient (str): Orientation ("portrait" ou "landscape").
+
+        Returns:
+            Tuple[Path, str]: Chemin du template et orientation utilisée.
+
+        Raises:
+            FileNotFoundError: Si aucun template n’est trouvé.
+        """
 
         orient = orient.lower().strip()
 
@@ -261,6 +305,17 @@ class LayoutService:
         raise FileNotFoundError(f"Template introuvable : {fmt}_{orient}")
 
     def import_layout(self, project_key, fmt: str, orient: str) -> QgsPrintLayout:
+        """
+        Importe un layout depuis un fichier template QPT.
+
+        Args:
+            project_key (str): Clé du projet utilisé pour le nommage.
+            fmt (str): Format papier choisi.
+            orient (str): Orientation choisie.
+
+        Returns:
+            QgsPrintLayout: Layout initialisé et prêt à être configuré.
+        """
 
         qpt, orient_used = self._find_template(fmt, orient)
 
@@ -314,13 +369,22 @@ class LayoutService:
     # CONFIGURE LAYOUT
     # ============================================================
 
-    def configure_layout(
-        self,
-        layout: QgsPrintLayout,
-        theme: str = None,
-        scale: int = None,
-        legends: list = None,
-        hide_legend_names: bool = False,):
+    def configure_layout(self,
+                         layout: QgsPrintLayout,
+                         theme: str = None,
+                         scale: int = None,
+                         legends: list = None,
+                         hide_legend_names: bool = False,):
+        """
+        Configure le layout : carte, échelle, thème, légendes, et table attributaire.
+
+        Args:
+            layout (QgsPrintLayout): Layout à configurer.
+            theme (str, optional): Thème à appliquer aux couches. Defaults to None.
+            scale (int, optional): Échelle de la carte. Defaults to None.
+            legends (list, optional): Liste de légendes à configurer. Defaults to None.
+            hide_legend_names (bool, optional): Masque les noms des couches. Defaults to False.
+        """
 
         # --- MAP ITEM ---
         maps = [i for i in layout.items() if isinstance(i, QgsLayoutItemMap)]
@@ -348,12 +412,11 @@ class LayoutService:
         # Legends
         if legends:
             for l in legends:
-                self.add_layer_to_legend(
-                    layout=layout,
-                    legend_id=l["name"],
-                    layer_keys=l["layers"],
-                    map_id="map1",
-                )
+                self.add_layer_to_legend(layout=layout,
+                                         legend_id=l["name"],
+                                         layer_keys=l["layers"],
+                                         map_id="map1",
+                                         )
 
         # ====================================================
         # AUTO TABLE CONFIG
@@ -382,16 +445,21 @@ class LayoutService:
     # ============================================================
     # LEGEND
     # ============================================================
-    def add_layer_to_legend(
-        self,
-        layout,
-        legend_id: str,
-        layer_keys: list,
-        map_id: str = None,
-    ):
+    def add_layer_to_legend(self,layout,
+                            legend_id: str,
+                            layer_keys: list,
+                            map_id: str = None,):
         """
-        Ajoute les layers à une légende QGIS et applique les alias.
-        Fonction compatible avec des listes imbriquées.
+        Ajoute des couches à une légende dans le layout et applique les alias.
+
+        Args:
+            layout (QgsPrintLayout): Layout contenant la légende.
+            legend_id (str): ID de la légende.
+            layer_keys (list): Clés des couches à ajouter.
+            map_id (str, optional): ID de la carte liée. Defaults to None.
+
+        Raises:
+            ValueError: Si la légende n’est pas trouvée.
         """
 
         legend = layout.itemById(legend_id)
@@ -462,20 +530,31 @@ class LayoutService:
     # ============================================================
     # ATTRIBUTE TABLE
     # ============================================================
-    def configure_attribute_table(
-        self,
-        layout,
-        table_id: str,
-        layer_key: str,
-        fields: list,
-        map_id: str = None,
-        filter_expression: str = None,
-    ):
+    def configure_attribute_table(self,
+                                  layout,
+                                  table_id: str,
+                                  layer_key: str,
+                                  fields: list,
+                                  map_id: str = None,
+                                  filter_expression: str = None,):
+        """
+        Configure une table attributaire dans le layout.
+
+        Args:
+            layout (QgsPrintLayout): Layout contenant la table.
+            table_id (str): ID de la table.
+            layer_key (str): Clé de la couche à afficher.
+            fields (list): Liste des champs à afficher.
+            map_id (str, optional): ID de la carte pour filtrer les features visibles. Defaults to None.
+            filter_expression (str, optional): Expression de filtre QGIS. Defaults to None.
+
+        Raises:
+            ValueError: Si la couche ou la table est introuvable.
+        """
 
         item = layout.itemById(table_id)
         if not item:
-            raise ValueError(f"Table '{table_id}' introuvable")
-
+            pass
         # MultiFrame support
         if isinstance(item, QgsLayoutFrame):
             table = item.multiFrame()
@@ -531,17 +610,17 @@ class LayoutService:
         vars_dict["current_date"] = datetime.datetime.now().strftime("%m/%Y")
         vars_dict["username"] = get_global_variable("QS2_user_full_name")
         vars_dict["adresse"] = get_global_variable("QS2_adress_organisation")
-        vars_dict["project_alias"] = self.get_project_alias()
+        vars_dict["project_alias"] = self.get_project_alias(self.project_key)
 
         return vars_dict
 
 
     def apply_metadata_to_layout(self, layout):
         """
-        Assigne les valeurs du JSON data_json aux éléments de layout selon mapping_json
-        layout : QgsLayout
-        data_json : dictionnaire avec tes données (le JSON du projet)
-        mapping_json : dictionnaire {objectName_layout: variable_data_json}
+        Remplit les éléments du layout avec les variables et metadata du projet.
+
+        Args:
+            layout (QgsPrintLayout): Layout à remplir.
         """
 
         all_vars = self.build_available_variables()
@@ -578,12 +657,21 @@ class LayoutService:
 
             item.setText(str(value))
 
-
     ### Récupération des alias
 
-    def get_project_alias(self):
+    def get_project_alias(self, project_key: str) -> str:
+        """
+        Retourne l'alias du projet tel que défini dans le YAML.
 
-        project_config = self.project_data_yaml.get(self.project_key, {})
+        Args:
+            project_key (str): Clé du projet.
 
-        return project_config.get("alias", self.project_key)
-            
+        Returns:
+            str: Alias du projet ou la clé si aucun alias n’existe.
+        """
+        project_config = self.config._load_project().get(project_key, {})
+        # Vérifie si 'un projet' existe et contient 'alias'
+        alias = project_config.get("alias",self.project_key)
+        if alias:
+            return alias
+        return project_key

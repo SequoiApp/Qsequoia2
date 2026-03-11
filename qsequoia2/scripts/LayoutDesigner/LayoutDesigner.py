@@ -1,73 +1,149 @@
+
+# ==========================================================================
+# region import
+# ==========================================================================
+
+# python 
+
 import os,re
 import time
 import yaml, json
-
-
 from pathlib import Path
 
+# QGIS
+
 from qgis.PyQt.QtWidgets import QDialog, QMessageBox
-from PyQt5.QtWidgets import (QDialog,QWidget,QVBoxLayout,QCheckBox,QLabel)
-from qgis.core import Qgis, QgsProject, QgsMessageLog, QgsLayerTreeGroup, QgsCoordinateReferenceSystem, QgsMapThemeCollection
+from PyQt5.QtWidgets import QDialog
+from qgis.core import *
 from qgis.utils import iface
 from PyQt5.QtCore import QTimer, Qt
+from PyQt5 import uic
 
-#from qsequoia2.scripts.utils.layers import resolve_layer_name
-
-
-from .project_settings_dialog import Ui_ProjectSettingsDialog
-
+# Qsequoia2
 
 # Import from utils folder
-from .project_config import ProjectConfig
-from .project_settings_service import LayoutService
+from .ConfigLoader import ConfigLoader
+from .LayoutDesigner_service import LayoutService
 from ..utils.layers import configure_snapping 
-from .layout import ProjectBuilder
+from .ProjectBuilder import ProjectBuilder
 from ..utils.variable import set_project_variable
+from ..utils.messageBar import messageBar
+from .ConfigLoader import ConfigLoader
 
+FORM_CLASS, _ = uic.loadUiType(os.path.join(
+    os.path.dirname(__file__), 'LayoutDesigner.ui'))
 
+# endregion
+# ==========================================================================
+# region LayoutDesignerDialog
+# ==========================================================================
+"""
+Module LayoutDesigner
 
-class ProjectSettingsDialog(QDialog, Ui_ProjectSettingsDialog):
+Ce module contient la classe `LayoutDesignerDialog` et les fonctions associées
+pour la configuration et la génération de layouts QGIS dans le plugin QSequoia2.
+
+Fonctionnalités principales :
+- Sélection de theme de cartes.
+- Gestion des types de propriétés forestières et des checkboxes mutuellement exclusives.
+- Mise à jour automatique des échelles du canevas selon le projet.
+- utilisation des metadata du projet (nom de forêt, commune, propriétaire).
+- Création et configuration automatique des layouts QGIS via `LayoutService`.
+- Prise en compte du snapping et des paramètres du projet.
+- Sauvegarde conditionnelle du projet après configuration.
+
+Classes principales :
+- `LayoutDesignerDialog` : Interface utilisateur pour configurer le layout et le composeur.
+
+Utilitaires utilisés :
+- `ConfigLoader` pour la lecture des YAML de configuration.
+- `ProjectBuilder` pour l'import et la configuration des couches.
+- `LayoutService` pour la création et configuration du layout.
+- `configure_snapping` pour appliquer les paramètres globaux d’accrochage.
+
+Auteur : Alexandre Le Bars, Paul Carteron, Matthieu Chevereau
+Date : 2026
+
+Notes :
+- Destiné à être utilisé dans QGIS >= 3.40.
+- Conçu pour le plugin QSequoia2.
+- Toutes les modifications des metadata sont persistées dans le fichier JSON associé au projet.
+
+"""
+
+class LayoutDesignerDialog(QDialog, FORM_CLASS):
 
     # ==========================================================
     # INIT
     # ==========================================================
 
-    def __init__(self,current_project_name,current_style_folder,downloads_path,current_project_folder,iface,parent=None):
+    def __init__(self, current_project_name, current_style_folder, downloads_path, 
+                current_project_folder, iface, parent=None):
+        """
+        Initialise le dialogue de configuration du layout pour un projet.
+
+        Cette fenêtre permet à l'utilisateur de :
+        - sélectionner un projet,
+        - définir les types de propriétés forestières,
+        - configurer la mise en page (layout) et le composeur.
+
+        :param current_project_name: Nom du projet courant.
+        :type current_project_name: str
+
+        :param current_style_folder: Chemin du dossier contenant les styles QGIS.
+        :type current_style_folder: str
+
+        :param downloads_path: Chemin du dossier de téléchargements.
+        :type downloads_path: str
+
+        :param current_project_folder: Dossier racine du projet courant.
+        :type current_project_folder: str
+
+        :param iface: Interface QGIS pour interagir avec le GUI.
+        :type iface: QgisInterface
+
+        :param config_loader: Instance de ConfigLoader déjà initialisée.
+        :type config_loader: ConfigLoader
+
+        :param parent: Widget parent Qt (optionnel).
+        :type parent: QWidget | None
+        """
         super().__init__(parent)
 
         self.iface = iface
+        self.script_dir = os.path.dirname(__file__)
+        self.yaml_path = os.path.join(self.script_dir, "..","..","inst","project.yaml")
+        config_loader = ConfigLoader(str(self.yaml_path))
+        self.config = config_loader
+
 
         self.current_project_name = current_project_name
         self.current_style_folder = current_style_folder
         self.downloads_path = downloads_path
         self.current_project_folder = current_project_folder
-        self.script_dir = os.path.dirname(os.path.abspath(__file__))
 
-        self.metadata_path = os.path.join(self.script_dir, "..","..","data","_metadata","currentFolder","forest_metadata.json")
+        # Metadata / YAML déjà chargé via config_loader
+        self.metadata = config_loader.metadata
 
+        # UI
         self.setupUi(self)
 
-        ## Connection des checkboxes
+        # ------------------------------------------------------
+        # Checkboxes types de propriétés
+        # ------------------------------------------------------
         self.nom_checkbox = {
             self.checkBox_domaine: "Domaine",
             self.checkBox_massif: "Massif",
             self.checkBox_foret: "Forêt",
-            self.checkBox_bois: "Bois",
+            self.checkBox_bois: "Bois"
         }
         for cb in self.nom_checkbox:
             cb.toggled.connect(self.on_checkbox_toggled)
 
-
-
-        # YAML principal
-        self.yaml_path = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "..", "..", "inst", "project.yaml")
-        )
-
-        # Liste des projets
-        self.projects_list = self.get_current_project_type(self.yaml_path)
-
-        # ComboBox
+        # ------------------------------------------------------
+        # ComboBox projets
+        # ------------------------------------------------------
+        self.projects_list = self.config.get_projects()
         self.comboBox_projects.addItem("")
         self.comboBox_projects.addItems(self.projects_list)
         self.comboBox_projects.setCurrentIndex(0)
@@ -77,38 +153,28 @@ class ProjectSettingsDialog(QDialog, Ui_ProjectSettingsDialog):
         self.comboBox_projects.currentTextChanged.connect(self.update_scale)
         self.layout.clicked.connect(self.accept)
 
-        # Connect composeur chekbox to occup percentage
+        # ------------------------------------------------------
+        # Composeur
+        # ------------------------------------------------------
         self.cb_composeur.toggled.connect(self.dsb_occup.setEnabled)
         if self.cb_composeur.isChecked():
             self.dsb_occup.setEnabled(True)
 
-        # Mettre le boutton de mise en page en gris si pas de paramètres
-
+        # Bouton layout grisé si pas de paramètres
         self.layout.setEnabled(False)
-
-        self.config = ProjectConfig(self.yaml_path)
 
 
     # ==========================================================
     # PROJECT TYPES
     # ==========================================================
 
-    def get_current_project_type(self, yaml_path):
-        """Retourne les types de projets disponibles depuis project.yaml"""
-
-        if not os.path.exists(yaml_path):
-            return []
-
-        with open(yaml_path, "r", encoding="utf-8") as f:
-            data = yaml.safe_load(f) or {}
-
-        if not isinstance(data, dict):
-            return []
-
-        return list(data.keys())
-
     def _get_project_key(self):
-        """Retourne le projet sélectionné"""
+        """
+        Retourne le nom du projet actuellement sélectionné dans le comboBox.
+
+        :return: Nom du projet sélectionné.
+        :rtype: str
+        """
         return self.comboBox_projects.currentText()
 
     # ==========================================================
@@ -116,7 +182,13 @@ class ProjectSettingsDialog(QDialog, Ui_ProjectSettingsDialog):
     # ==========================================================
 
     def _on_project_changed(self):
-        """Quand l'utilisateur change de projet"""
+        """
+        Callback déclenché lorsque l'utilisateur change de projet dans la liste.
+
+        Met à jour l'échelle du layout en fonction du projet sélectionné.
+
+        :return: None
+        """
 
         project_key = self._get_project_key()
 
@@ -129,9 +201,17 @@ class ProjectSettingsDialog(QDialog, Ui_ProjectSettingsDialog):
     # ==========================================================
 
     def update_scale(self, project_name: str):
-        """Met à jour scaleBox selon project.yaml
-        - posibilité de modifier sa valeur manuellement
-        - se reinitialise à chaque changement de projet"""
+        """
+        Met à jour la boîte d'échelle (`scaleBox`) selon les informations
+        du fichier YAML du projet.
+
+        :param project_name: Nom du projet dont l'échelle doit être chargée.
+        :type project_name: str
+
+        :return: None
+        :note: Si aucun projet n'est sélectionné ou si une erreur survient, la fonction
+            ne fait rien et logge l'erreur.
+        """
 
         if not project_name:
             return
@@ -144,7 +224,7 @@ class ProjectSettingsDialog(QDialog, Ui_ProjectSettingsDialog):
             
 
         except Exception as e:
-            print("Erreur update_scale :", e)
+            messageBar(self.iface, f"Erreur update_scale :{e}","w",10)
 
 
     # =========================================================
@@ -156,9 +236,16 @@ class ProjectSettingsDialog(QDialog, Ui_ProjectSettingsDialog):
 
     def on_checkbox_toggled(self, checked):
         """
-        Déclenché quand l'utilisateur coche/décoche une checkbox.
-        - Si pas de projet, décocher toutes.
-        - Sinon, rendre les checkboxes mutuellement exclusives.
+        Gère la sélection des checkboxes de type de propriété.
+
+        - Si aucun projet n'est sélectionné, toutes les checkboxes sont décochées.
+        - Les checkboxes sont rendues mutuellement exclusives.
+        - Met à jour le nom de la forêt en fonction de la sélection.
+
+        :param checked: État actuel de la checkbox déclenchante.
+        :type checked: bool
+
+        :return: None
         """
         if not getattr(self, "current_project_name", None):
             # Aucun projet => décocher toutes
@@ -181,14 +268,24 @@ class ProjectSettingsDialog(QDialog, Ui_ProjectSettingsDialog):
         # Mettre à jour le nom de forêt si nécessaire
         self.update_forest_name()
 
-
     ### Mise à jour du nom de la forêt
 
     def update_forest_name(self):
+        """
+        Met à jour le nom de la forêt en combinant le nom du projet et le type
+        de propriété sélectionné.
+
+        - Applique des règles de formatage (préfixes ST, articles, majuscules/minuscules).
+        - Ajoute le `forest_name` dans le fichier JSON des metadata.
+        - Met à jour l'affichage des propriétaires et des communes.
+
+        :return: None
+        :raises Exception: Si le fichier JSON est manquant ou corrompu.
+        """
 
         try:
             # Charger le JSON existant
-            with open(self.metadata_path, 'r', encoding='utf-8') as f:
+            with open(self.config.metadata_path, 'r', encoding='utf-8') as f:
                 metadata = json.load(f)
         except FileNotFoundError:
             metadata = {}
@@ -243,7 +340,7 @@ class ProjectSettingsDialog(QDialog, Ui_ProjectSettingsDialog):
         metadata["metadata"]["forest_name"] = forest_name
 
         # Réécrire le JSON
-        with open(self.metadata_path, 'w', encoding='utf-8') as f:
+        with open(self.config.metadata_path, 'w', encoding='utf-8') as f:
             json.dump(metadata, f, indent=4, ensure_ascii=False)
         
         # afficher le nom du propriétaire
@@ -252,10 +349,20 @@ class ProjectSettingsDialog(QDialog, Ui_ProjectSettingsDialog):
     ### Affichage des communes et des propriétaire
 
     def load_city_and_owner(self):
-        """Charge les propriétaire et communes depuis les metadata"""
+        """
+        Charge et affiche les informations sur la commune et le propriétaire
+        depuis les metadata du projet.
+
+        Met à jour :
+        - `lineEdit_city`
+        - `lineEdit_owner`
+        - `forest_name` (centré et en gras)
+
+        :return: None
+        """
         try:
             # Charger le JSON existant
-            with open(self.metadata_path, 'r', encoding='utf-8') as f:
+            with open(self.config.metadata_path, 'r', encoding='utf-8') as f:
                 metadata = json.load(f)
         except FileNotFoundError:
             metadata = {}
@@ -278,8 +385,25 @@ class ProjectSettingsDialog(QDialog, Ui_ProjectSettingsDialog):
     # Prise en compte des paramètres et acceptation du projet
     # ==========================================================
 
-
     def accept(self):
+        """
+        Prend en compte les paramètres sélectionnés et construit le projet.
+
+        Étapes principales :
+        1. Vérifie qu'un projet est sélectionné.
+        2. Initialise et construit le projet via `ProjectBuilder`.
+        3. Configure le snapping global via `configure_snapping`.
+        4. Si le composeur est activé :
+        - Calcule le format et l'orientation.
+        - Importe et configure le layout.
+        - Ouvre le Layout Designer QGIS.
+        - Met à jour l'échelle du canevas.
+        5. Si l'option de sauvegarde est cochée, enregistre le projet avec un léger délai.
+
+        :return: None
+        :raises Exception: Si aucune sélection de projet n'est effectuée.
+        :note: Les exceptions internes sont loggées et peuvent être décommentées pour le debug.
+        """
 
         project_key = self._get_project_key()
 
@@ -288,24 +412,14 @@ class ProjectSettingsDialog(QDialog, Ui_ProjectSettingsDialog):
             return
         # pour le debug on sort du try catch, mais à terme il faudrait le remettre pour éviter les plantages
         #try:
-        # ================================
-        # 1. Variable projet
-        # ================================
-        set_project_variable("forest_map_project", project_key)
 
         # ================================
-        # 2. Construire projet via la classe
+        # Construire projet (import et configuration des couches)
         # ================================
 
-        #if self.copy_layers.isChecked():
-            #copy_layers = True
-        #else:
-        copy_layers = False # Désactivé pour le moment pas stable et pas voulu dans la BETA 1
-
-        builder = ProjectBuilder(copy_layers,current_project_name=self.current_project_name,current_style_folder=self.current_style_folder,downloads_path=self.downloads_path,current_project_folder=self.current_project_folder,project_key=project_key, yaml_path=self.yaml_path,iface=self.iface)
+        builder = ProjectBuilder(current_project_name=self.current_project_name,current_style_folder=self.current_style_folder,downloads_path=self.downloads_path,current_project_folder=self.current_project_folder,project_key=project_key, yaml_path=self.yaml_path,iface=self.iface)
 
         builder.build()
-
 
         # ================================
         # 3. Snapping
@@ -313,7 +427,7 @@ class ProjectSettingsDialog(QDialog, Ui_ProjectSettingsDialog):
         configure_snapping()
 
         # ================================
-        # 4. Layout composeur si demandé
+        # 4. Ouvrir et construire la mise en page 
         # ================================
         if self.cb_composeur.isChecked():
 
@@ -328,19 +442,18 @@ class ProjectSettingsDialog(QDialog, Ui_ProjectSettingsDialog):
                 style_folder=self.current_style_folder,
                 downloads_path=self.downloads_path,
                 project_folder=self.current_project_folder,
-                iface=self.iface
-            )
+                iface=self.iface, config_loader=self.config)
+            
 
-            # 1. Calcul format + orientation
+            # Calcul format + orientation
             info = layout_service.compute_layout_info(
                 scale=canvas_cfg.scale,
-                coeff_cadre=self.dsb_occup.value() / 100
-            )
+                coeff_cadre=self.dsb_occup.value() / 100)
 
-            # 1. Import layout et conserver la référence
+            # Import layout et conserver la référence
             self.current_layout = layout_service.import_layout(project_key=project_key, fmt=info.paper_format, orient=info.orientation)
 
-            # 2. Ajouter au layout manager (une seule fois)
+            # Ajouter au layout manager
             lm = QgsProject.instance().layoutManager()
 
             # éviter les collisions de nom, je le garde pour le dev je met une condition pour éviter erreur python si le projet existe déja
@@ -353,7 +466,7 @@ class ProjectSettingsDialog(QDialog, Ui_ProjectSettingsDialog):
 
             lm.addLayout(self.current_layout)
 
-            # 3. Configurer le layout
+            # Configurer le layout
             layout_service.configure_layout(
                 layout=self.current_layout,
                 theme=layout_cfg.theme,
@@ -361,7 +474,7 @@ class ProjectSettingsDialog(QDialog, Ui_ProjectSettingsDialog):
                 legends=layout_cfg.legends
             )
 
-            # 4. Ouvrir le designer
+            # Ouvrir le designer
             self.iface.openLayoutDesigner(self.current_layout)
 
 
@@ -371,24 +484,10 @@ class ProjectSettingsDialog(QDialog, Ui_ProjectSettingsDialog):
             #Mettre la loupe à 100%
             self.iface.mapCanvas().setMapTool(self.iface.mapCanvas().mapTool())
 
-        # Sauvegarde du projet courant
-
-        def save_project():
-            project = QgsProject.instance()
-            QgsProject.write(project, project.fileName())
-
-        if self.cb_save_project.isChecked():
-            QTimer.singleShot(1300, save_project)  # délai pour laisser le temps à QGIS de tout configurer avant d'écrire le projet
-
-
-
-
-
 
         #except Exception as e:
         
-            #print("Erreur lors de l'acceptation du projet :", e)
-            #QMessageBox.warning(self, "Erreur", f"Erreur lors de l'acceptation du projet : {e}")
+            #messageBar(self.iface, f"Echec de la mise en page {e}","critical", 10)
 
 
 

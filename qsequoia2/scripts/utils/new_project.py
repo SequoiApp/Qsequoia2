@@ -41,7 +41,6 @@ def create_new_folder(project_name, parent_widget=None,log=None,dockwidget=None,
     dossier_source = QFileDialog.getExistingDirectory(parent_widget,"Enregistrer le dossier dans...")
 
     if not dossier_source:
-        print("Aucun dossier sélectionné. Fin du script.")
         return None
 
     # --- Création du dossier principal ---

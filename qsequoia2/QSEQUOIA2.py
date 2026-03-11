@@ -49,7 +49,7 @@ from .scripts.utils.new_project import *
 from .scripts.utils.suggest_project_folder import *
 from.scripts.utils.config import *
 from .scripts.forest_data.forest_get_data import getForestdata
-from .scripts.project_settings.project_settings import ProjectSettingsDialog
+from .scripts.LayoutDesigner.LayoutDesigner import LayoutDesignerDialog
 from .scripts.utils.reloader import reloadQS2
 
 from .resources import *
@@ -60,6 +60,8 @@ from .QSEQUOIA2_dockwidget import QSEQUOIA2DockWidget
 from .scripts.utils.get_download_folder import get_download_folder
 
 from .scripts.utils.add_seq_config import add_seq_config
+
+from .scripts.utils.messageBar import *
 
 # lib interne watchdog 
 plugin_path = os.path.dirname(__file__)
@@ -131,21 +133,21 @@ class QSEQUOIA2:
         self.current_project_name = None
         # Récupération des configs de Rsequoia2
 
-        print(" \nDownoload the last version of Rsequoia2 config files…")
+        messageLog("Downoload the last version of Rsequoia2 config files…","i")
         add_seq_config()
 
         # Récupération des variables globales
         self.user_name = get_global_variable("QS2_user_full_name") or "Utilisateur QSEQUOIA2"
-        print(" \nWelcome ! ", self.user_name)
+        messageLog(f"Welcome ! {self.user_name}","i")
 
         self.current_style_folder = get_global_variable("QS2_styles_directory") or None
-        print(" \n==> Style folder at init:", self.current_style_folder)
+        messageLog(f"==> Style folder at init: {self.current_style_folder}","i")
         self.current_project_folder = None
 
 
         # Création du watchdog
         self.downloads_path = get_download_folder()
-        print("Téléchargements :", self.downloads_path)
+        messageLog(f"Téléchargements : {self.downloads_path}","i")
         self.connect_dialog = None
 
         self.dogwatcher = DogWatcher(iface=self.iface, get_context_callback=self.get_watchdog_context, parent=None)
@@ -405,12 +407,11 @@ class QSEQUOIA2:
             path = QFileDialog.getExistingDirectory(self.dockwidget, "Select project Directory")
 
             if not path:
-                print("No directory selected")
                 self.current_project_folder = None
                 self.current_project_name = None
                 return
 
-        print("Selected directory:", path)
+        messageLog(f"Selected directory: {path}","i")
         self.current_project_folder = path
         # SI chemin, on masque les suggestion de projet
         if path:
@@ -492,13 +493,13 @@ class QSEQUOIA2:
                 self.dockwidget.data_settings_tab.current_project_name = self.current_project_name
                 self.dockwidget.data_settings_tab.current_project_folder = self.current_project_folder
             
-            if hasattr(self.dockwidget, "project_settings_tab"):
-                self.dockwidget.project_settings_tab.current_project_name = self.current_project_name
-                self.dockwidget.project_settings_tab.current_project_folder = self.current_project_folder
+            if hasattr(self.dockwidget, "LayoutDesigner_tab"):
+                self.dockwidget.LayoutDesigner_tab.current_project_name = self.current_project_name
+                self.dockwidget.LayoutDesigner_tab.current_project_folder = self.current_project_folder
             
             if hasattr(self.dockwidget, "forest_data_tab"):
-                self.dockwidget.project_settings_tab.current_project_name = self.current_project_name
-                self.dockwidget.project_settings_tab.current_project_folder = self.current_project_folder
+                self.dockwidget.forest_data_tab.current_project_name = self.current_project_name
+                self.dockwidget.forest_data_tab.current_project_folder = self.current_project_folder
             
             # --- Propagation aux addons chargés ---
             if hasattr(self.dockwidget, "addons_tabs"):
@@ -515,7 +516,7 @@ class QSEQUOIA2:
         if self.dogwatcher:
             self.dogwatcher.restart()
 
-            print(f"Project name => {self.current_project_name}")
+            messageLog(f"Project name => {self.current_project_name}", "i")
         
         # Vérifier si dossier contient un projet QGZ, si non, on le crée, uniquement si variable utilisateur
 
@@ -528,11 +529,9 @@ class QSEQUOIA2:
                 project_name=self.current_project_name,
                 epsg="EPSG:2154")
             
-            print(f"Projet QGZ chargé : {project_path}")
+            messageLog(f"Projet QGZ chargé : {project_path}", "i")
         
-        self.iface.messageBar().pushMessage("Qsequoia2",
-                                            f"Dossier {self.current_project_name} sélectionné avec succès : {self.current_project_folder}",
-                                            level=Qgis.Success, duration=10)
+        messageBar(self.iface, f"Dossier {self.current_project_name} sélectionné avec succès : {self.current_project_folder}","s",10)
         
         # Vérifier s'il y a une couche PARCA dans le dossier projet
 
@@ -541,7 +540,7 @@ class QSEQUOIA2:
         # Si une couche Parca existe, on lance le calcul des metadonnées de bases
 
         if not parca_files:
-            print("Aucune couche PARCA trouvée dans le dossier du projet. Calcul forestier annulé.")
+            messageLog("Aucune couche PARCA trouvée dans le dossier du projet. Calcul forestier annulé.","w")
         else:
             try:
                 forest_data = getForestdata(
@@ -552,7 +551,7 @@ class QSEQUOIA2:
                 
                 forest_data.run_all_calculations()
             except Exception as e:
-                print(f"Erreur lors du calcul forestier : {e}")
+                messageLog(f"Erreur lors du calcul des metadata : {e}","w")
 
     ## on_project_name_changed
 
@@ -632,7 +631,7 @@ class QSEQUOIA2:
                 self.dogwatcher.restart()
 
             else:
-                print("Watcher non initialisé, rien à redémarrer.")
+                messageLog("Watcher non initialisé, rien à redémarrer.","w")
 
 
     ## on_suggestion_item_clicked
@@ -690,34 +689,6 @@ class QSEQUOIA2:
 
         if folder_path and os.path.isdir(folder_path):
             self.set_projectFolder(folder_path)
-        else:
-            print("Création du dossier annulée ou invalide.")
-
-
-    ## gest_style
-
-    def gest_style(self):
-        """
-        Permet à l'utilisateur de sélectionner un dossier contenant les styles QGIS.
-
-        Le chemin sélectionné est enregistré comme dossier de styles actif
-        et propagé aux composants du DockWidget qui en ont besoin.
-        """
-        path = QFileDialog.getExistingDirectory(self.dockwidget, "Select stylesDirectory")
-        if path:
-            print("Selected directory:", path)
-            self.current_style_folder = path
-        else:
-            print("No directory selected")
-            self.current_style_folder = None
-        
-        self.current_style_folder = path
-
-        if self.dockwidget:
-            self.dockwidget.current_style_folder = self.current_style_folder
-            if hasattr(self.dockwidget, "tools_tab"):
-                self.dockwidget.tools_tab.current_style_folder = self.current_style_folder
-
 
 
     ## open_global_settings

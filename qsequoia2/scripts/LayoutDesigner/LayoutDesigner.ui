@@ -54,33 +54,6 @@
              </property>
              <layout class="QVBoxLayout">
               <item>
-               <layout class="QHBoxLayout" name="optionsLayout">
-                <item>
-                 <widget class="QCheckBox" name="cb_save_project">
-                  <property name="text">
-                   <string>Enregistrer automatiquement après création</string>
-                  </property>
-                  <property name="checked">
-                   <bool>true</bool>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <spacer name="optionsSpacer">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>0</width>
-                    <height>0</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
-               </layout>
-              </item>
-              <item>
                <layout class="QHBoxLayout" name="optionsLayout_2">
                 <item>
                  <widget class="QCheckBox" name="cb_composeur">

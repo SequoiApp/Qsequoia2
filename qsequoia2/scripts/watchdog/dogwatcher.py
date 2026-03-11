@@ -24,7 +24,7 @@ from watchdog.observers import Observer
 
 from .watchdog_handler import DownloadEventHandler
 from .extract_files import show_add_banner
-
+from ..utils.messageBar import *
 
 class DogWatcher(QObject):
     """
@@ -78,7 +78,7 @@ class DogWatcher(QObject):
         # Choix du dossier à surveiller
         watch_mode == "downloads"
         watch_path = downloads_path
-        print("[watchdog] surveillance sur les Téléchargements")
+        messageLog("[watchdog] surveillance sur les Téléchargements","i")
 
         # Redémarrer l'observer
         self.stop()
@@ -97,7 +97,7 @@ class DogWatcher(QObject):
             self.observer.stop()
             self.observer.join()
             self.observer = None
-            print("[watchdog] Surveillance arrêtée")
+            messageLog("[watchdog] Surveillance arrêtée","i")
 
         if self.zip_timer:
             self.zip_timer.stop()
@@ -134,7 +134,6 @@ class DogWatcher(QObject):
 
         # Ignorer si projet non défini
         if not project_name:
-            print("[watchdog] Projet vide → ZIP ignoré")
             return
 
         # Ignorer si ZIP ne correspond pas au projet

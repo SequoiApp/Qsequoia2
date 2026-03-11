@@ -5,8 +5,11 @@
 # region Import
 #==================================
 
+# Python
 import sys
 from time import time
+
+# QGIS
 from qgis.PyQt.QtCore import QObject
 from qgis.core import Qgis, QgsMessageLog, QgsProject
 import qgis.utils

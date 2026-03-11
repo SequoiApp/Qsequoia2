@@ -1,0 +1,53 @@
+{
+  "layers": {
+    "PARCA": ["SEQ_PARCA_poly","_PARCA_polygon"],
+    "UA": ["SEQ_UA_poly","_UA_polygon"]},
+
+  "fields": {
+    "filter_field": "COM_NOM",
+    "dep_code": "DEP_CODE",
+    "surface_field": "SURF_CAD",
+    "surface_fallback": "SURF_CA",
+    "city_field": "COM_NOM",
+    "city_filter": "DEP_CODE",
+    "owner_field": "PROP",
+    "surface_field_ua": "SURF_COR",
+    "surface_field_parca": "SURF_CA",
+    "surface_SIG":"SURF_SIG",
+    "surface_boisee": "BOISEE",
+    "surface_non_boisee": "NON BOISEE",
+    "occup_field": "OCCUP_SOL",
+    "QSURF_COR": "QSURF_COR",
+    "id_field": "IDU"},
+
+  "ui": {
+    "city": "lineEdit_city",
+    "owner": "lineEdit_owner",
+    "surface_boisee": "doubleSpinBox_1",
+    "surface_non_boisee": "doubleSpinBox_2",
+    "name": "lineEdit_name"},
+
+  "surface": {
+    "null_value": 0.0,
+    "unit_divider": 10000,
+    "round_decimals": 4,
+    "display_mode": "auto", 
+    "ha_label": "ha",
+    "a_label": "a",
+    "ca_label": "ca",
+    "text_total": "Surface totale:",
+    "text_boisee": "Surface boisée:",
+    "no_filter_label": "No Filter"},
+
+  "formatting": {
+    "separator": ", ",
+    "last_separator": " & ",
+    "group_separator": "; "
+  },
+
+  "messages": {
+    "layer_not_found": "Pas de couche PARCA trouvé.",
+    "invalid_field": "Champ introuvable dans la couche."
+  }
+
+}

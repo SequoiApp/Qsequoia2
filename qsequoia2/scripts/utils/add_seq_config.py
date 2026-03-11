@@ -18,6 +18,8 @@ import urllib.request
 import yaml
 from qgis.PyQt.QtWidgets import QMessageBox
 
+from ..utils.messageBar import *
+
 #---------------------------------------------------------------------------------
 
 
@@ -57,14 +59,13 @@ def add_seq_config():
         # Récupération de l’URL dans le sous-dictionnaire
         url = entry.get("url")
         if not url:
-            print(f"[WARN] Pas d'URL pour {key}, ignoré.")
             continue
 
         try:
             response = urllib.request.urlopen(url)
             remote_yaml_content = response.read().decode('utf-8')
         except Exception as e:
-            QMessageBox.critical(None, "Erreur de téléchargement",
+            QMessageBox.critical(None, "Erreur réseau",
                                 f"Impossible de télécharger {key}.yaml.\nErreur : {e}")
             continue
 
@@ -80,6 +81,6 @@ def add_seq_config():
         
         # Message de confirmation dans les logs de QGIS
 
-    print("Les fichiers de configuration RSequoia2 ont été mis à jour avec succès.")
+    messageLog("Les fichiers de configuration RSequoia2 ont été mis à jour avec succès.","i")
 
 

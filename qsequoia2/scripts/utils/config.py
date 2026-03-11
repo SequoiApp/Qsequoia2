@@ -21,7 +21,7 @@ from dataclasses import dataclass
 
 
 from qgis.core import QgsVectorLayer, QgsRasterLayer, QgsWkbTypes
-
+from .messageBar import *
 
 
 # endregion
@@ -222,7 +222,7 @@ def flatten(label):
 
 
 # ---------------------------------------------------
-# Préfixes projet (robuste avec ton YAML)
+# Préfixes projet
 # ---------------------------------------------------
 def get_project_prefixes():
     """
@@ -459,7 +459,7 @@ def build_parca_index(folders_folder):
     """Fonction d’indexation pour recheche des dossier contenant une couche PARCA"""
 
     if not folders_folder:
-        pass
+        return {}
 
     project_root = Path(folders_folder)
 
@@ -492,5 +492,5 @@ def build_parca_index(folders_folder):
                 "file": file
             })
 
-    print(f"Index PARCA construit : {len(index)} couches trouvées")
+    messageLog(f"Index PARCA construit : {len(index)} couches trouvées", "i")
     return index

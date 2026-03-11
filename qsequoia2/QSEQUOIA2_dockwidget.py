@@ -21,27 +21,41 @@
  *                                                                         *
  ***************************************************************************/
 """
+# ==========================================================================
+# region import
+# ==========================================================================
+
+# python 
 
 import os
+
+# Qgis
 
 from qgis.PyQt import QtGui, QtWidgets, uic
 from PyQt5.QtWidgets import QWidget
 from qgis.PyQt.QtCore import pyqtSignal
-from qgis.PyQt.QtWidgets import QFileDialog
-from qgis.PyQt.QtWidgets import QTreeWidgetItem
 from PyQt5.QtGui import QIcon
 
+# QSEQUOIA2
+
 from qsequoia2.scripts.data_settings.add_data import AddDataDialog
-from qsequoia2.scripts.forest_settings.forest_settings_dialog import Ui_ForestSettingsDialog
-from qsequoia2.scripts.project_settings.project_settings_dialog import Ui_ProjectSettingsDialog
-from qsequoia2.scripts.project_settings.project_settings import ProjectSettingsDialog
-from qsequoia2.scripts.data_settings.add_data_dialog import Ui_AddDataDialog
-from qsequoia2.scripts.tools_settings.tools_settings_dialog import Ui_ToolsSettingsDialog
-from qsequoia2.scripts.tools_settings.tools_settings import ToolsSettingsDialog
+
+from qsequoia2.scripts.LayoutDesigner.LayoutDesigner import LayoutDesignerDialog
+from qsequoia2.scripts.forest_data.forest_data import ForestDataDialog
+from qsequoia2.scripts.tools.tools import ToolsDialog
+from .scripts.add_on.addon_loader import load_addons
+from.scripts.utils.variable import get_global_variable
+
+# import de l'UI
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'QSEQUOIA2_dockwidget_base.ui'))
 
+# endregion
+
+# ==========================================================================
+# region Définition de la classe
+# ==========================================================================
 
 class QSEQUOIA2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
@@ -57,6 +71,10 @@ class QSEQUOIA2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.downloads_path = downloads_path
         self.current_project_folder = current_project_folder
 
+        # récupération de la variable du dossier des addons pour éviter le crash si inexistante
+
+        self.addon_folder = get_global_variable("QS2_addon_folder")
+
 
 
         # chemin vers logo 
@@ -71,38 +89,41 @@ class QSEQUOIA2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         # ---------------------------------------------------------------
 
 
-        # -- Import du module Tools_box --
-        self.tools_tab = QWidget()
-        self.tools_ui = Ui_ToolsSettingsDialog()
-        self.tools_ui.setupUi(self.tools_tab)
-        self.tools_tab = ToolsSettingsDialog(current_project_name=self.project_name, current_style_folder=self.current_style_folder, downloads_path=self.downloads_path, current_project_folder=self.current_project_folder, iface = self.iface)
 
-        # -- Import du module forest_settings --
-        forest_settings_tab = QWidget()
-        self.forest_settings_ui = Ui_ForestSettingsDialog()
-        self.forest_settings_ui.setupUi(forest_settings_tab)
 
-        # -- Import du module project_settings --
-        self.project_settings_tab = QWidget()
-        self.project_settings_tab = ProjectSettingsDialog(current_project_name=self.project_name, current_style_folder=self.current_style_folder, downloads_path=self.downloads_path, current_project_folder=self.current_project_folder, iface = self.iface)
+        # -- Import du module LayoutDesigner --
+        self.LayoutDesigner_tab = QWidget()
+        self.LayoutDesigner_tab = LayoutDesignerDialog(current_project_name=self.project_name, current_style_folder=self.current_style_folder, downloads_path=self.downloads_path, current_project_folder=self.current_project_folder, iface = self.iface)
 
         # -- Import du Module add_data --
         self.data_settings_tab = QWidget()
         self.data_settings_tab = AddDataDialog(current_project_name=self.project_name, current_style_folder=self.current_style_folder, downloads_path=self.downloads_path, current_project_folder=self.current_project_folder, parent=self, iface=self.iface)
 
+        # -- Import du module Tools_box --
+        self.tools_tab = QWidget()
+        self.tools_tab = ToolsDialog(current_project_name=self.project_name, current_style_folder=self.current_style_folder, downloads_path=self.downloads_path, current_project_folder=self.current_project_folder, iface = self.iface)
+
+        # -- Import du module forest_data --
+        self.forest_data_tab = QWidget()
+        self.forest_data_tab = ForestDataDialog(current_project_name=self.project_name, current_style_folder=self.current_style_folder, downloads_path=self.downloads_path, current_project_folder=self.current_project_folder, iface = self.iface)
+
 
         # Ajoute des icons au QTabWidget
 
         plugin_path = os.path.dirname(__file__)
-        self.tabWidget.addTab(self.tools_tab, QIcon(plugin_path + "/icons/tools_settings.svg"),"")
-        self.tabWidget.setTabToolTip(0, "Outils et fonctions")
-        self.tabWidget.addTab(self.project_settings_tab, QIcon(plugin_path + "/icons/project_settings.svg"),"")
-        self.tabWidget.setTabToolTip(1, "Cartographie")
-        self.tabWidget.addTab(forest_settings_tab, QIcon(plugin_path + "/icons/forest_settings.svg"),"")
-        self.tabWidget.setTabToolTip(2, "Paramètre de la propriété")
+        self.tabWidget.addTab(self.LayoutDesigner_tab, QIcon(plugin_path + "/icons/LayoutDesigner.svg"),"")
+        self.tabWidget.setTabToolTip(1, "Cartographie thématiques")
+        self.tabWidget.addTab(self.forest_data_tab, QIcon(plugin_path + "/icons/forest_data.svg"),"")
+        self.tabWidget.setTabToolTip(2, "Metadata sur la propriété")
         self.tabWidget.addTab(self.data_settings_tab, QIcon(plugin_path + "/icons/add_data.svg"),"")
         self.tabWidget.setTabToolTip(3, "Ajout de données")
+        self.tabWidget.addTab(self.tools_tab, QIcon(plugin_path + "/icons/tools.svg"),"")
+        self.tabWidget.setTabToolTip(0, "Outils et fonctions")
 
+        # Import des addons
+        if self.addon_folder:
+            load_addons(plugin = self, current_project_name=self.project_name, current_style_folder=self.current_style_folder, downloads_path=self.downloads_path, current_project_folder=self.current_project_folder, iface = self.iface)
+        
 
 
     def closeEvent(self, event):

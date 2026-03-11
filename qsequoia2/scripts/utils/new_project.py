@@ -14,9 +14,12 @@ Email : alexlb329@gmail.com
 # region Import
 # =====================================
 
+# python
 import os
+
+# QGIS
 from qgis.PyQt.QtWidgets import QFileDialog
-from qgis.PyQt.QtWidgets import QDialog, QMessageBox
+from qgis.PyQt.QtWidgets import QMessageBox
 from qgis.core import (QgsProject,QgsCoordinateReferenceSystem)
 
 
@@ -38,7 +41,6 @@ def create_new_folder(project_name, parent_widget=None,log=None,dockwidget=None,
     dossier_source = QFileDialog.getExistingDirectory(parent_widget,"Enregistrer le dossier dans...")
 
     if not dossier_source:
-        print("Aucun dossier sélectionné. Fin du script.")
         return None
 
     # --- Création du dossier principal ---

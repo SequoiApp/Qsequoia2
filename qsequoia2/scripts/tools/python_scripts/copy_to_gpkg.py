@@ -15,7 +15,6 @@ from pathlib import Path
 from qgis.core import (QgsProject,QgsVectorLayer,QgsMessageLog,Qgis)
 
 from qsequoia2.scripts.utils import layers
-from .add_vector_layers import load_vectors
 
 from qgis.core import (QgsProject, QgsVectorLayer, QgsVectorFileWriter, QgsMessageLog, Qgis)
 
@@ -92,6 +91,6 @@ def copy_to_gpkg(project_key,layer_paths, style_folder, project_folder, project_
 
         # Charger + styles
         dest = f"{gpkg_posix}|layername={src.stem}"
-        load_vectors({src.stem: dest}, style_folder, project_folder, project_name, group_name, parent)
+
 
 # endregion

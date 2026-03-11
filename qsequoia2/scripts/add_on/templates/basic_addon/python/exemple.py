@@ -4,7 +4,7 @@ from qgis.core import *
 # Appel d'une fonction QSEQUOIA2
 
 def PluginExemple(pf, self, iface, args):
-    pf.test(self, iface, args)
+    pf.messageBar(iface, "Salut, ceci est une fonction Qsequoia2 appelé dans un script externe !", "s",10)
 
 # Appel d'une fonction interne à l'addon 
 def AddonExemple(self, iface, args):

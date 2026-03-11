@@ -168,5 +168,10 @@ class addonCreator(QDialog):
                     new_file = file.replace("template_addon", addon_folder_name)
                     new_path = os.path.join(root, new_file)
                     os.rename(old_path, new_path)
+                    
+                if file in ("addons.ui", "addon.py", "addon.ui"):
+                    file_path = os.path.join(root, file)
+                    os.remove(file_path)
+
 
         return addon_dir

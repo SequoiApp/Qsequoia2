@@ -1,3 +1,0 @@
-test :
-  path: "qsequoia2.scripts.add_on.test"
-  function: "test"

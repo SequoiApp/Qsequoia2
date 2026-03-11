@@ -42,17 +42,21 @@ FORM_CLASS, _ = uic.loadUiType(
 # ==============================================================
 
 class PluginFunctionLoader:
-    """Charge les fonctions de Qseuoia2 et interne à l'addon depuis un YAML et expose chaque fonction comme attribut"""
+    """
+    Charge les fonctions de QSequoia2 et internes à l'addon depuis un YAML
+    et expose chaque fonction ou classe comme attribut.
+    """
     def __init__(self, yaml_path):
         self._functions = {}
+
         with open(yaml_path, "r", encoding="utf-8") as f:
             config = yaml.safe_load(f)
 
         for name, info in config.items():
             module = importlib.import_module(info["path"])
-            func = getattr(module, info["function"])
-            setattr(self, name, func)  # rend accessible via self.""
-            self._functions[name] = func
+            attr = getattr(module, info["name"])
+            setattr(self, name, attr)  # rend accessible via self."nom"
+            self._functions[name] = attr
 
 # ==============================================================
 # region chargement des fonctions interne à {{ADDON_NAME}}
@@ -122,7 +126,7 @@ class {{ADDON_CLASS}}(QDialog, FORM_CLASS):
         # -- récupère la liste des fonctions --
 
         # Chemin vers le YAML du plugin
-        self.Pluginfunctions_yaml = os.path.join(self.QS2_config_path,"QS2_functions.yaml")
+        self.Pluginfunctions_yaml = os.path.join(self.QS2_config_path,"QS2_functions_registry.yaml")
 
         # Chemin vers le Yaml de {{ADDON_NAME}}
         self.addonFunction_yaml = os.path.join(self.addon_path, "_functions.yaml")
@@ -180,7 +184,7 @@ class {{ADDON_CLASS}}(QDialog, FORM_CLASS):
         args = "Bonjour !" 
 
         # ou pf indique l'appel direct d'une fonction plugin
-        self.pf.test(self,self.iface,args) # Appel de la fonction Qsequoia2
+        self.pf.messageBar(self.iface, "Salut, ceci est une fonction Qsequoia2 !", "s",10) # Appel de la fonction Qsequoia2
         
         # l'utilisation des fonctions Qsequoia2 est possible dans un script externe de manière classique
         # mais en passant toujours  : pf : comme argument dans la fonction d'appel 

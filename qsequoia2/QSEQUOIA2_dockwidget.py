@@ -105,8 +105,7 @@ class QSEQUOIA2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         # -- Import du module forest_data --
         self.forest_data_tab = QWidget()
-        self.forest_data_tab = ForestDataDialog(current_project_name=self.project_name, current_style_folder=self.current_style_folder, downloads_path=self.downloads_path, current_project_folder=self.current_project_folder, iface = self.iface)
-
+        self.forest_data_tab = ForestDataDialog(current_project_name=self.project_name,current_style_folder=self.current_style_folder,downloads_path=self.downloads_path,current_project_folder=self.current_project_folder,iface=self.iface,parent=self)
 
         # Ajoute des icons au QTabWidget
 

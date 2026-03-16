@@ -112,7 +112,7 @@ class LayoutDesignerDialog(QDialog, FORM_CLASS):
 
         self.iface = iface
         self.script_dir = os.path.dirname(__file__)
-        self.yaml_path = os.path.join(self.script_dir, "..","..","inst","project.yaml")
+        self.yaml_path = os.path.join(self.script_dir, "..","..","inst","layoutSettings.yaml")
         config_loader = ConfigLoader(str(self.yaml_path))
         self.config = config_loader
 
@@ -442,7 +442,7 @@ class LayoutDesignerDialog(QDialog, FORM_CLASS):
                 style_folder=self.current_style_folder,
                 downloads_path=self.downloads_path,
                 project_folder=self.current_project_folder,
-                iface=self.iface, config_loader=self.config)
+                iface=self.iface)
             
 
             # Calcul format + orientation

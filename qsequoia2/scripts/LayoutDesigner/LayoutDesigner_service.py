@@ -87,20 +87,25 @@ class LayoutService:
 
     def __init__(self, project_key: str, 
                  project, project_name, style_folder, 
-                 downloads_path, project_folder, iface, 
-                 config_loader):
+                 downloads_path, project_folder, iface):
         
         self.project = project
         self.iface = iface
+
+        # Chargement de la config
+
+        self.script_dir = os.path.dirname(__file__)
+        self.yaml_path = os.path.join(self.script_dir, "..","..","inst","layoutSettings.yaml")
+        config_loader = ConfigLoader(str(self.yaml_path))
+        self.config = config_loader
 
 
         # ------------------------------------------------------
         # Config centralisée
         # ------------------------------------------------------
-        self.config = config_loader
 
         # Metadata, mapping, alias déjà chargés dans ConfigLoader
-        self.metadata = config_loader.metadata
+        self.metadata = self.config.metadata
         self.mapping_config = self.config.mapping_config
         self.layer_aliases = self.config.layer_aliases
 
@@ -338,7 +343,6 @@ class LayoutService:
         # build des noms
         try :
             # lecture des metadata pour trouver les départements
-
             deps = self.metadata["departement_str"]
             layout.setName(f"{deps}-{self.project_name.upper()}-{project_key}-{years}_{fmt}_{orient_used}")
         except:
@@ -385,7 +389,7 @@ class LayoutService:
             legends (list, optional): Liste de légendes à configurer. Defaults to None.
             hide_legend_names (bool, optional): Masque les noms des couches. Defaults to False.
         """
-
+        print("configure_layout START", self.project_key)
         # --- MAP ITEM ---
         maps = [i for i in layout.items() if isinstance(i, QgsLayoutItemMap)]
         if not maps:
@@ -421,25 +425,30 @@ class LayoutService:
         # ====================================================
         # AUTO TABLE CONFIG
         # ====================================================
+        if self.project_key not in ("assemblage",):
 
-        path = get_path("SEQ_PF_poly", project_name= self.project_name, project_folder=self.project_folder, style_folder = self.style_folder, parent=None)
 
-        if path:
-            first_key = list(path.keys())[0]
-            path = path[first_key]
-            layer_name = Path(path).stem
-            layers = self.project.mapLayersByName(layer_name)
+            path = get_path("SEQ_PF_poly", project_name= self.project_name, project_folder=self.project_folder, style_folder = self.style_folder, parent=None)
 
-            if layers:
-                self.configure_attribute_table(
-                    layout=layout,
-                    table_id="table1",
-                    layer_key=layer_name,
-                    fields=["N_PARFOR", "SURF_COR"],
-                    map_id="map1",
-                    filter_expression='"N_PARFOR" <> \'00\'',)
+            if path:
+                first_key = list(path.keys())[0]
+                path = path[first_key]
+                layer_name = Path(path).stem
+                layers = self.project.mapLayersByName(layer_name)
+
+                if layers:
+                    self.configure_attribute_table(
+                        layout=layout,
+                        table_id="table1",
+                        layer_key=layer_name,
+                        fields=["N_PARFOR", "SURF_COR"],
+                        map_id="map1",
+                        filter_expression='"N_PARFOR" <> \'00\'',)
                 
         # Import des metadata dans le layout
+        print("Metadata:", self.metadata)
+        print("Mapping config:", self.mapping_config)
+
         self.apply_metadata_to_layout(layout)
 
     # ============================================================
@@ -628,11 +637,13 @@ class LayoutService:
         combined_mapping = {}
         combined_mapping.update(self.mapping_config.get("metadata", {}))
         combined_mapping.update(self.mapping_config.get("var", {}))
+        print("combined_mapping ", combined_mapping)
 
         for obj_name, config in combined_mapping.items():
 
             item = layout.itemById(obj_name)
             if not item:
+                print("manquant : ", obj_name)
                 continue
 
             # Si mapping simple

@@ -5,7 +5,6 @@ assemblage:
     zoom_on: SEQ_PARCA_poly
     readonly: [SEQ_PARCA_poly]
     groups:
-
       - name: VECTEUR
         type: vector
         layers: &assemblage_w_vect 

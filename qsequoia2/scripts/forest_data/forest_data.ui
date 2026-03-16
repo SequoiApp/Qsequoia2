@@ -65,7 +65,7 @@
           <item>
            <widget class="QTabWidget" name="tabWidget">
             <property name="currentIndex">
-             <number>0</number>
+             <number>1</number>
             </property>
             <widget class="QWidget" name="met">
              <attribute name="title">
@@ -113,7 +113,43 @@
              <attribute name="title">
               <string>Finalisation</string>
              </attribute>
-             <layout class="QVBoxLayout" name="excelLayout"/>
+             <layout class="QVBoxLayout" name="excelLayout">
+              <item>
+               <widget class="QScrollArea" name="scrollArea_3">
+                <property name="widgetResizable">
+                 <bool>true</bool>
+                </property>
+                <widget class="QWidget" name="scrollAreaWidgetContents_3">
+                 <property name="geometry">
+                  <rect>
+                   <x>0</x>
+                   <y>0</y>
+                   <width>273</width>
+                   <height>365</height>
+                  </rect>
+                 </property>
+                 <layout class="QVBoxLayout" name="metaLayout_2">
+                  <item>
+                   <widget class="QLabel" name="finaldata">
+                    <property name="text">
+                     <string/>
+                    </property>
+                    <property name="scaledContents">
+                     <bool>true</bool>
+                    </property>
+                    <property name="wordWrap">
+                     <bool>true</bool>
+                    </property>
+                    <property name="textInteractionFlags">
+                     <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </widget>
+              </item>
+             </layout>
             </widget>
            </widget>
           </item>

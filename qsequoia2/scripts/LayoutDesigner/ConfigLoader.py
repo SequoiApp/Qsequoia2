@@ -66,7 +66,7 @@ class ConfigLoader:
     Charge et centralise toutes les configurations externes nécessaires au plugin QSequoia2.
 
     Les fichiers pris en charge :
-    - YAML des projets (project.yaml)
+    - YAML des projets (layoutSettings.yaml)
     - JSON de metadata du projet
     - JSON de mapping (objets layout → variables)
     - JSON d'alias de couches
@@ -78,7 +78,7 @@ class ConfigLoader:
     - Obtenir les layers par défaut pour le thème d’un projet.
 
     Attributes:
-        yaml_path (Path): Chemin vers le fichier project.yaml.
+        yaml_path (Path): Chemin vers le fichier layoutSettings.yaml.
         base_dir (Path): Dossier racine du plugin.
         metadata_path (Path): Chemin vers le JSON de metadata.
         mapping_path (Path): Chemin vers le JSON de mapping.
@@ -187,7 +187,7 @@ class ConfigLoader:
         return wmts.get("display_name")
 
     def get_projects(self) -> List[str]:
-        """Retourne la liste des projets définis dans project.yaml."""
+        """Retourne la liste des projets définis dans layoutSettings.yaml."""
         data = self._load_project()
         if not isinstance(data, dict):
             return []

@@ -16,7 +16,7 @@
       "prefix": "Propriétaire : "
     },
 
-    "COM": {
+    "COMM": {
       "var": "city_str",
       "prefix": "Communes : "
     }
@@ -34,6 +34,6 @@
     },
 
     "username": "username",
-    "adresse": "adresse"
+    "orgAdress": "adresse"
   }
 }

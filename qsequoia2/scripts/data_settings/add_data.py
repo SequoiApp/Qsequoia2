@@ -302,10 +302,11 @@ class AddDataDialog(QDialog, FORM_CLASS):
 
         # --- Appel dynamique ---
 
+
         # Pour les WMTS
 
         if current_tab == self.setting["add_tree_tab"]["tabs"]["services"]:
-            load_wmts([label])
+            load_wmts([label],"WMTS")
 
         # Pour les Rasters
 
@@ -339,6 +340,7 @@ class AddDataDialog(QDialog, FORM_CLASS):
                     project_name=self.current_project_name,
                     project_folder=self.current_project_folder,
                     style_folder=self.current_style_folder,
+                    group_name="rasters",
                     parent=self
                 )
             if not layer_paths:
@@ -379,6 +381,7 @@ class AddDataDialog(QDialog, FORM_CLASS):
                     project_name=self.current_project_name,
                     project_folder=self.current_project_folder,
                     style_folder=self.current_style_folder,
+                    group_name="vecteurs+SEQ",
                     parent=self)
                 
                 # Accrochage auto sur les couches importés

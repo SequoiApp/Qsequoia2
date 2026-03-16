@@ -270,14 +270,10 @@ class getForestdata:
 
                 # deps est déjà une string formatée
                 self._calculated_values["departement_str"] = deps
-
                 # version liste simple
                 dep_list = [d.strip() for d in deps.replace("&", ",").split(",")]
-
                 self._calculated_values["departement_list"] = dep_list
-
                 return dep_list
-
         except Exception as e:
             raise TypeError(f"erreur dans forest_departements {e}")
 
@@ -413,10 +409,7 @@ class getForestdata:
                         break
 
         if layer is None or surface_field is None:
-            self.iface.messageBar().pushMessage(
-                "Attention : aucune surface exploitable trouvée",
-                Qgis.Warning
-            )
+            messageBar(self.iface,"Attention : aucune surface exploitable trouvée","w",10)
             return
 
         # ---------------------------------------------------------
@@ -426,27 +419,12 @@ class getForestdata:
         if layer == ua_layer:
             try:
                 occup_field = self._resolve_field_name(layer, "is_wooded", json_fallback_key="occup_field")
-            except ValueError:
-                # UA mais absent → création temporaire
-                temp_field_name = "OCCUP_SOL"
-                if temp_field_name not in [f.name() for f in layer.fields()]:
-                    layer.startEditing()
-                    layer.dataProvider().addAttributes([QgsField(temp_field_name, QVariant.Bool)])
-                    layer.updateFields()
-                    layer.commitChanges()
-                occup_field = temp_field_name
-                self.iface.messageBar().pushMessage(
-                    "Champ boisé temporaire créé pour UA, toutes les entités considérées comme boisées.",
-                    level=Qgis.Success,
-                    duration=10
-                )
+                values = set(feat[occup_field] for feat in layer.getFeatures())
 
-            # Remplir le champ temporaire
-            layer.startEditing()
-            for feat in layer.getFeatures():
-                feat[occup_field] = True
-                layer.updateFeature(feat)
-            layer.commitChanges()
+            except ValueError:
+                # UA mais champ absent → utiliser un champ temporaire pour le calcul uniquement
+                occup_field = None
+                messageBar(self.iface,"Champ boisé absent dans UA : toutes les surfaces considérées comme boisées.", "w",10)
 
         # ---------------------------------------------------------
         # Calcul des surfaces
@@ -460,8 +438,11 @@ class getForestdata:
             commune = feat[cfg.get("filter_field")] if cfg.get("filter_field") in layer.fields().names() else "No Filter"
 
             if layer == ua_layer and occup_field:
-                is_wooded_value = feat[occup_field]
-                if is_wooded_value in [True, 1, "1", "True", "true","vrai","BOISEE","NR","nr",""]:
+                # Normaliser la valeur pour être sûr que False ne devienne pas True
+                value = feat[occup_field]
+                is_wooded = bool(value) if isinstance(value, bool) else str(value).strip().lower() in {"true", "1", "vrai", "boisee"}
+
+                if is_wooded:
                     surface_boisee += surface
                     city_dict[commune]["boisee"] += surface
                 else:
@@ -472,7 +453,7 @@ class getForestdata:
                 surface_boisee += surface
                 city_dict[commune]["boisee"] += surface
 
-        surface_totale = surface_boisee + surface_non_boisee
+            surface_totale = surface_boisee + surface_non_boisee
 
         # ---------------------------------------------------------
         # Stockage interne pour export JSON

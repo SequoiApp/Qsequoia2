@@ -11,13 +11,14 @@ import os, json
 # Qgis
 from PyQt5 import uic
 from qgis.PyQt.QtWidgets import QDialog, QFileDialog, QMessageBox
-from qgis.core import Qgis, QgsProject
+from qgis.core import *
 from PyQt5.QtWidgets import QLabel, QTableWidget, QTableWidgetItem
 from PyQt5.QtCore import QTimer, Qt
 
 # Qsequoia2 
 
 from ..utils.messageBar import *
+from .forest_get_data import getForestdata
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'forest_data.ui'))
@@ -69,6 +70,18 @@ class ForestDataDialog(QDialog, FORM_CLASS):
         # Extraire la clé "metadata"
         self.metadata = data_json.get("metadata", {})
         
+        if len(self.metadata) == 0:
+            try:
+                forest_data = getForestdata(
+                    project_name=self.project_name,
+                    project_folder=self.current_project_folder,
+                    style_folder=self.current_style_folder,
+                    iface=self.iface)
+                
+                forest_data.run_all_calculations()
+            except Exception as e:
+                messageLog(f"Erreur lors du calcul des metadata : {e}","w")
+        
     def actu_data(self):
         """relance les fonctions de chargement des data pour actualiser l'affichage"""
         if not self.project_name:
@@ -98,14 +111,13 @@ class ForestDataDialog(QDialog, FORM_CLASS):
         surface_non_boisee_ha = self.metadata.get("surface_non_boisee_ha","")
         owner_str = self.metadata.get("owner_str","")
 
-        html = template.format(
-            forest_name=forest_name,
-            departement_str=departement_str,
-            city_str=city_str,
-            surface_formatted=surface_formatted,
-            surface_boisee_ha=surface_boisee_ha,
-            surface_non_boisee_ha=surface_non_boisee_ha,
-            owner_str=owner_str)
+        html = template.format(forest_name=forest_name,
+                               departement_str=departement_str,
+                               city_str=city_str,
+                               surface_formatted=surface_formatted,
+                               surface_boisee_ha=surface_boisee_ha,
+                               surface_non_boisee_ha=surface_non_boisee_ha,
+                                owner_str=owner_str)
 
         return html
 
@@ -114,8 +126,9 @@ class ForestDataDialog(QDialog, FORM_CLASS):
     def display_final_data(self):
         """Affiche dans un onglet les données générales finale de la forêt"""
 
-    def diplay_attribute(self):
-        """Permet l'affichage des données de la table attributaire UA, et la modification de cette dernière"""
+
+
+
 
 
 

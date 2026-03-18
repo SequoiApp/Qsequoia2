@@ -98,12 +98,10 @@ class GlobalSettingsDialog(QDialog, FORM_CLASS):
         self.userInput.setText(user)
 
         # Organisation
-
         orga_name = get_global_variable("QS2_organisation")
         self.orga.setText(orga_name)
 
         # Adresse de l'organisation
-
         adress = get_global_variable("QS2_adress_organisation")
         self.adress.setText(adress)
 
@@ -117,8 +115,7 @@ class GlobalSettingsDialog(QDialog, FORM_CLASS):
             self.open_project.setChecked(True)
 
         # Proposition des projets
-
-        folders_folder = get_global_variable("QS2_folders_folder")
+        folders_folder = get_global_variable("QS2_suggest_folder")
         self.folders_folder.setText(folders_folder)
 
         QS2_suggest_project_state = get_global_variable("QS2_suggest_project")
@@ -132,7 +129,6 @@ class GlobalSettingsDialog(QDialog, FORM_CLASS):
             self.folders_folder_button.setEnabled(True)
 
         # Dossier des Addons
-
         addon_folder = get_global_variable("QS2_addon_folder")
         if not addon_folder:
             self.addon.setEnabled(False)
@@ -169,7 +165,7 @@ class GlobalSettingsDialog(QDialog, FORM_CLASS):
         set_global_variable("QS2_adress_organisation", adress)
         set_global_variable("QS2_organisation", orga_name)
         set_global_variable("QS2_default_project", QS2_default_project)
-        set_global_variable("QS2_folders_folder", folders_folder )
+        set_global_variable("QS2_suggest_folder", folders_folder )
         set_global_variable("QS2_suggest_project", QS2_suggest_project )
         set_global_variable("QS2_addon_folder", addon_folder)
 

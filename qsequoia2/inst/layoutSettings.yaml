@@ -53,7 +53,6 @@ assemblage:
       - name: 'legend2'
         layers: *assemblage_w_vect
 
-
 situation:
   alias : "Cartographie de situation"
   canvas:
@@ -140,10 +139,6 @@ peuplements:
       - name: legend2
         layers: ['sspf_polygon_plt']
 
-
-
-
-
 enjeux_environnementaux:
   alias : "Cartographie des enjeux environnementaux"
   canvas:
@@ -199,7 +194,6 @@ enjeux_sociaux:
         layers: ['SEQ_PARCA_poly']
       - name: legend2
         layers: ['ppi', 'ppr', 'ppe']
-
 
 enjeux_patrimoniaux:
   alias : "Cartographie des enjeux patrimoniaux"

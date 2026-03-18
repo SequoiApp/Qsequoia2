@@ -14,28 +14,25 @@
     "IGN": "Fond IGN",
     "GEOL": "Fond géologique",
 
-
     "SEQ_PARCA_poly": "Parcelles cadastrales",
     "SEQ_FORET_point": "Points forêt",
     "SEQ_FORET_line": "Limites de propriété",
     "SEQ_FORET_poly": "Propriété",
     "SEQ_OWNER_poly": "Propriétaires",
-    "SEQ_UA_poly": "Unités d'aménagement",
+    "SEQ_UA_poly": "Unités d'analyse",
     "SEQ_PF_poly": "Parcelles forestières",
     "SEQ_PF_line": "Limites de parcelle forestières",
-    "SEQ_PF_point": "Parcelles forestières",
+    "SEQ_PF_point": "Parcelles forestières (centroid)",
     "SEQ_SSPF_poly": "Sous-parcelles forestières",
     "SEQ_SSPF_point": "SEQ_SSPF_point",
     "SEQ_SSPF_line": "SEQ_SSPF_line",
     "SEQ_AME_poly": "Aménagements",
-
 
     "COMS_TOPO_poly": "Communes",
     "COMS_TOPO_line": "Limites communales",
     "COMS_TOPO_point": "Centroïdes communaux",
     "COM_GRAPHIC_line": "Habillage communal",
     "COM_GRAPHIC_point": "Éléments graphiques commune",
-
 
     "SOL_BDCHARM50_poly": "Carte géologique BDCharm50",
     "SOL_CARHAB_poly": "Carte des habitats",
@@ -54,7 +51,6 @@
 
     "ARS_PERIMETRES_poly": "ARS_PERIMETRES_poly",
     "ARS_CAPTAGE_point": "ARS_CAPTAGE_point",
-
 
     "HYDRO_point": "Hydrographie ponctuelle",
     "HYDRO_line": "Hydrographie",
@@ -94,7 +90,6 @@
     "MNHN_ZPR_poly": "MNHN_ZPR_poly",
     "MNHN_ZPS_poly": "MNHN_ZPS_poly",
 
-
     "TOPONYME_point": "TOPONYME_point",
 
     "CURVES_line": "isoplètes d'altitudes",
@@ -103,16 +98,13 @@
     "ACCESS_PORTEUR_poly": "ACCESS_PORTEUR_poly",
     "ACCESS_SKIDDER_poly": "ACCESS_SKIDDER_poly",
 
-
     "INFRA_point": "Infrastructures ponctuelles",
     "INFRA_line": "Infrastructures linéaires",
     "INFRA_poly": "Batiments et zones urbanisées",
 
-
     "VEGE_point": "Éléments végétation ponctuels",
     "VEGE_line": "Haies et alignements",
     "VEGE_poly": "Forêts voisines",
-
 
     "ROAD_TOPO_line": "Desserte",
     "ROAD_TOPO_poly": "Surfaces routières",
@@ -121,7 +113,6 @@
 
     "SECU_PRSF_point": "SECU_PRSF_point",
     "SECU_OLD_poly": "SECU_OLD_poly",
-
 
     "CAD_PARCELLE_poly": "Parcelles cadastrales",
     "CAD_SECTION_poly": "Sections cadastrales",

@@ -125,10 +125,8 @@ class QSEQUOIA2:
         self.updating_project_name = False
 
         # Watchdog
-        self.watch_mode = "auto"
         # valeurs possibles : "auto", "downloads", "project"
-
-
+        self.watch_mode = "auto"
 
         self.current_project_name = None
         # Récupération des configs de Rsequoia2
@@ -157,7 +155,7 @@ class QSEQUOIA2:
 
         self.QSS2_default_project = get_global_variable("QS2_default_project")
 
-        self.folders_folder = get_global_variable("QS2_folders_folder") or None
+        self.folders_folder = get_global_variable("QS2_suggest_folder") or None
 
         raw = get_global_variable("QS2_suggest_project")
 

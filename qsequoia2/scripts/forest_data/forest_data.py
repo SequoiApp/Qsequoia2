@@ -1,5 +1,5 @@
 from pathlib import Path
-import os, json
+from collections import defaultdict
 
 from PyQt5 import uic
 from qgis.PyQt.QtWidgets import QWidget
@@ -7,7 +7,7 @@ from qgis.core import QgsProject
 
 from ..utils.messageBar import *
 from ..utils.variable import get_project_variable 
-from ..utils.seq_config import seq_read
+from ..utils.seq_config import seq_read, seq_field
 from .forest_get_data import getForestdata
 
 UI_PATH = Path(__file__).parent / "forest_data.ui"
@@ -39,48 +39,69 @@ class ForestDataDialog(QWidget, FORM_CLASS):
         self.project = QgsProject.instance()
         self.metadata = {}
 
-        # Native QGIS refresh icon
         self.btn_update.setIcon(QgsApplication.getThemeIcon("/mActionRefresh.svg"))
         self.btn_update.setText("")
 
-        # Signals
         self.btn_update.clicked.connect(self.update_view)
 
     def update_view(self):
 
-        self.project_name = get_project_variable("QS2_project_name")
-        self.project_folder = get_project_variable("QS2_project_folder")
+        self.project_name = get_project_variable("QS2_project_name") or ""
+        self.project_folder = get_project_variable("QS2_project_folder") or ""
 
         if not self.project_name:
             messageBar(self.iface, "Pas de dossier de projet !", "w", 10)
             return
 
-        parca = seq_read("parca")
-        
-        print(parca)
-    #     self._render_metadata()
- 
+        parca = seq_read("parca", self.project_folder, add_to_project=False)
+        f_com_name = seq_field("com_name")["name"]
+        f_owner = seq_field("owner")["name"]
+        f_surface = seq_field("cad_area")["name"]
 
-    # def _render_metadata(self):
+        # Aggregation structures
+        self.city_surface = defaultdict(float)
+        self.owner_surface = defaultdict(float)
 
-    #     html = self._build_html()
-    #     self.txt_html.setHtml(html)
+        for feat in parca.getFeatures():
 
-    # def _build_html(self) -> str:
+            commune = feat[f_com_name]
+            owner = feat[f_owner]
+            surface = float(feat[f_surface] or 0.0)
 
-    #     template_path = Path(__file__).parent / "html" / "metadata_display.html"
-    #     template = template_path.read_text(encoding="utf-8")
+            # --- per commune
+            self.city_surface[commune] += surface
+            self.owner_surface[owner] += surface
 
-    #     forest_name = self.metadata.get("forest_name") or self.project_name
+        messageLog(f"city_surface:{self.city_surface}")
+        messageLog(f"owner_surface:{self.owner_surface}")
 
-    #     context = {
-    #         "forest_name": forest_name,
-    #         "departement_str": self.metadata.get("departement_str", ""),
-    #         "city_str": self.metadata.get("city_str", ""),
-    #         "surface_formatted": self.metadata.get("surface_formatted", ""),
-    #         "surface_boisee_ha": self.metadata.get("surface_boisee_ha", ""),
-    #         "surface_non_boisee_ha": self.metadata.get("surface_non_boisee_ha", ""),
-    #         "owner_str": self.metadata.get("owner_str", ""),
-    #     }
+        self._render_metadata()
 
-    #     return template.format(**context)
+    def _render_metadata(self):
+
+        html = self._build_html()
+        self.txt_html.setHtml(html)
+
+    def _build_html(self) -> str:
+
+        template_path = Path(__file__).parent / "html" / "metadata_display.html"
+        with open(template_path, "r", encoding="utf-8") as f:
+            template = f.read()
+
+        city_str = ",".join(self.city_surface.keys())
+        owner_str = ",".join(self.owner_surface.keys())
+        total_surface = sum(self.city_surface.values())
+
+        context = {
+            "forest_name": self.project_name,
+            "city_str": city_str,
+            "owner_str": owner_str,
+            "surface_formatted": f"{round(total_surface, 2)} ha",
+
+            # keep others if needed
+            "departement_str": "",
+            "surface_boisee_ha": "",
+            "surface_non_boisee_ha": "",
+        }
+
+        return template.format(**context)

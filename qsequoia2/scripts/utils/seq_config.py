@@ -142,6 +142,24 @@ def seq_layer(key, verbose=False):
 
     return result
 
+def seq_field(field: str) -> dict:
+
+    cfg = get_seq_config("seq_fields")
+
+    # Return full config
+    if field is None:
+        return cfg
+
+    # Validate key
+    if field not in cfg:
+        raise ValueError(
+            f"Field '{field}' does not exist.\n"
+            "Valid keys are defined in seq_fields.yaml.\n"
+            "This file is managed by Rsequoia2 and must not be modified."
+        )
+
+    return cfg[field]
+
 def get_style(layer_key, style_folder):
 
     if not style_folder:
@@ -172,7 +190,7 @@ def seq_read(key, project_folder, add_to_project=False, group_name=None, style_f
 
     project_folder = Path(project_folder)
 
-    matches = list(project_folder.rglob(filename))
+    matches = list(project_folder.rglob(f"*{filename}"))
     if not matches:
         raise FileNotFoundError(f"Layer '{filename}' not found in '{project_folder}'")
 
@@ -232,8 +250,8 @@ def find_seq_dir(root_dir):
         return []
 
     projects = {
-        file.parent.parent.name
+        file.parents[1]
         for file in root_dir.rglob(f"*/{folder}/*{filename}")
     }
 
-    return sorted(projects)
+    return projects

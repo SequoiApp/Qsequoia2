@@ -169,27 +169,28 @@ class Qsequoia2:
 
         root = get_global_variable("QS2_project_suggestions_root")
         enabled = bool(get_global_variable("QS2_project_suggestions_enabled") or False)
+        combo = self.dockwidget.cb_seq_folder
 
-        project_names = []
+        projects = []
         if enabled and root:
-            project_names = find_seq_dir(root)
+            projects = find_seq_dir(root)
 
-        project_names = sorted(project_names)
+        projects = sorted(projects, key=lambda p: p.name.lower())
+        project_names = [p.name for p in projects]
 
         combo = self.dockwidget.cb_seq_folder
         combo.clear()
         combo.setPlaceholderText("Nom du projet")
         combo.setEditable(True)
 
-        for name in project_names:
-            path = str(Path(root) / name)
-            combo.addItem(name, path)
+        for p in projects:
+            combo.addItem(p.name, str(p))
 
         completer = QCompleter(project_names, combo)
         completer.setCaseSensitivity(Qt.CaseInsensitive)
         completer.setFilterMode(Qt.MatchContains)
-        combo.setCompleter(completer)
 
+        combo.setCompleter(completer)
         combo.setCurrentIndex(-1)
 
         if not project_names:

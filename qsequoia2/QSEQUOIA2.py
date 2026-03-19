@@ -10,7 +10,7 @@ from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import Qt
 
 from qsequoia2.scripts.global_settings.global_settings import GlobalSettingsDialog
-from qsequoia2.scripts.utils.variable import get_global_variable, set_global_variable
+from qsequoia2.scripts.utils.variable import get_global_variable, set_global_variable, set_project_variable
 from qsequoia2.scripts.watchdog.dogwatcher import DogWatcher
 from .scripts.utils.new_project import *
 from .scripts.utils.suggest_project_folder import *
@@ -159,39 +159,97 @@ class Qsequoia2:
         self.dockwidget.btn_create.setIcon(QIcon(str(ICONS_DIR / "add_data.svg")))
         self.dockwidget.setWindowIcon(QIcon(str(ICONS_DIR / "Qsequoia.png")))
 
-        # Combo setup
-        self.setup_project_suggestions()
+        self._setup_project_suggestions()
+        self._setup_project_selection()
         
         self.iface.addDockWidget(Qt.RightDockWidgetArea, self.dockwidget)
         self.dockwidget.show()
 
-    def setup_project_suggestions(self):
+    def _setup_project_suggestions(self):
 
-        project_suggestions_root = get_global_variable("QS2_project_suggestions_root")
-        project_suggestions_enabled = bool(get_global_variable("QS2_project_suggestions_enabled") or False)
+        root = get_global_variable("QS2_project_suggestions_root")
+        enabled = bool(get_global_variable("QS2_project_suggestions_enabled") or False)
 
         project_names = []
-        if project_suggestions_enabled and project_suggestions_root:
-            project_names = find_seq_dir(project_suggestions_root)
+        if enabled and root:
+            project_names = find_seq_dir(root)
 
         project_names = sorted(project_names)
 
-        project_combo = self.dockwidget.cb_seq_folder
+        combo = self.dockwidget.cb_seq_folder
+        combo.clear()
+        combo.setPlaceholderText("Nom du projet")
+        combo.setEditable(True)
 
-        project_combo.clear()
-        project_combo.setPlaceholderText("Nom du projet")
-        project_combo.addItems(project_names)
-        project_combo.setEditable(True)
+        for name in project_names:
+            path = str(Path(root) / name)
+            combo.addItem(name, path)
 
-        completer = QCompleter(project_names, project_combo)
+        completer = QCompleter(project_names, combo)
         completer.setCaseSensitivity(Qt.CaseInsensitive)
         completer.setFilterMode(Qt.MatchContains)
+        combo.setCompleter(completer)
 
-        project_combo.setCompleter(completer)
-        project_combo.setCurrentIndex(-1)
+        combo.setCurrentIndex(-1)
 
         if not project_names:
-            project_combo.setPlaceholderText("Aucun projet trouvé")
+            combo.setPlaceholderText("Aucun projet trouvé")
+
+        combo.currentIndexChanged.connect(self._on_project_suggested) 
+
+    def _on_project_suggested(self, index):
+
+        if index < 0:
+            return
+
+        combo = self.dockwidget.cb_seq_folder
+
+        project_name = combo.itemText(index)
+        project_folder = combo.itemData(index)
+
+        if not project_folder:
+            return
+
+        set_project_variable("QS2_project_name", project_name)
+        set_project_variable("QS2_project_folder", project_folder)
+
+        messageLog(f"Project name: {project_name}", "i")
+        messageLog(f"Project folder: {project_folder}", "i")
+
+    def _setup_project_selection(self):
+
+        root = get_global_variable("QS2_project_suggestions_root")
+        enabled = bool(get_global_variable("QS2_project_suggestions_enabled") or False)
+
+        self._default_project_root = root if enabled and root else ""
+
+        self.dockwidget.btn_select_seq_folder.clicked.connect(self._on_project_selected)
+
+    def _on_project_selected(self):
+
+        project_directory = QFileDialog.getExistingDirectory(
+            self.dockwidget,
+            "Sélectionner un dossier projet",
+            str(self._default_project_root)
+        )
+
+        if not project_directory:
+            return
+
+        combo = self.dockwidget.cb_seq_folder
+        project_name = Path(project_directory).name
+
+        combo.blockSignals(True)
+        combo.addItem(project_name, project_directory)
+        combo.setCurrentIndex(combo.count() - 1)
+        combo.blockSignals(False)
+
+        set_project_variable("QS2_project_name", project_name)
+        set_project_variable("QS2_project_folder", project_directory)
+
+        messageLog(f"Project name: {project_name}", "i")
+        messageLog(f"Project folder: {project_directory}", "i")
+            
 
     ## fonction set_projectFolder
     def set_projectFolder(self, path=None):
@@ -405,38 +463,6 @@ class Qsequoia2:
 
             else:
                 messageLog("Watcher non initialisé, rien à redémarrer.","w")
-
-    ## on_suggestion_item_clicked
-    def on_suggestion_item_clicked(self, item):
-        """
-        Gère la sélection d'une suggestion de dossier de projet.
-
-        Lorsque l'utilisateur clique sur une suggestion :
-        - le nom du projet et le dossier associé sont récupérés,
-        - le champ de saisie du nom du projet est mis à jour,
-        - la liste de suggestions est masquée,
-        - les variables internes sont mises à jour,
-        - le workflow normal de chargement du projet est lancé.
-        """
-
-        selected_name = item.text()
-        index = self.suggestion_list.row(item)
-        selected_folder = self.current_suggested_folders[index]
-
-        # Mise à jour du QLineEdit
-        self.dockwidget.cb_seq_folder.blockSignals(True)
-        self.dockwidget.cb_seq_folder.setText(selected_name)
-        self.dockwidget.cb_seq_folder.blockSignals(False)
-
-        # Cacher la zone de suggestions
-        self.suggestion_scroll.setVisible(False)
-
-        # Mise à jour interne
-        self.current_project_name = selected_name
-        self.current_project_folder = str(selected_folder)
-
-        # Lancer ton workflow existant
-        self.set_projectFolder(self.current_project_folder)
 
     ## add_project_clicked
     def add_project_clicked(self):

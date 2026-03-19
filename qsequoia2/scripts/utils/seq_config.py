@@ -2,7 +2,14 @@ from pathlib import Path
 import urllib.request
 import yaml
 
-from qgis.core import QgsApplication
+from .variable import get_global_variable
+
+from qgis.core import (
+    QgsApplication,
+    QgsVectorLayer,
+    QgsRasterLayer,
+    QgsProject
+)
 
 _BASE_URL = "https://raw.githubusercontent.com/SequoiApp/Rsequoia2/main/inst/config"
 
@@ -155,6 +162,60 @@ def get_style(layer_key, style_folder):
         return str(path)
 
     return None
+
+def seq_read(key, project_folder, add_to_project=False, group_name=None, style_folder=None):
+
+    meta = seq_layer(key)
+    layer_type = meta["type"]
+    layer_name = meta["name"]
+    filename = meta["filename"]
+
+    project_folder = Path(project_folder)
+
+    matches = list(project_folder.rglob(filename))
+    if not matches:
+        raise FileNotFoundError(f"Layer '{filename}' not found in '{project_folder}'")
+
+    if len(matches) > 1:
+        paths_str = "\n".join(str(p) for p in matches)
+        raise RuntimeError(
+            f"Multiple layers found for '{filename}':\n{paths_str}"
+        )
+
+    path = matches[0]
+
+    if layer_type == "vect":
+        layer = QgsVectorLayer(str(path), layer_name, "ogr")
+    elif layer_type == "rast":
+        layer = QgsRasterLayer(str(path), layer_name)
+    else:
+        raise ValueError(f"Unsupported layer type: {layer_type}")
+
+    if not layer.isValid():
+        raise RuntimeError(f"Invalid layer: {path}")
+
+    if style_folder:
+        style_path = get_style(key, style_folder)
+        if style_path:
+            layer.loadNamedStyle(style_path)
+            layer.triggerRepaint()
+
+    if add_to_project:
+        project = QgsProject.instance()
+        root = project.layerTreeRoot()
+
+        if group_name:
+            group = root.findGroup(group_name)
+            if not group:
+                group = root.addGroup(group_name)
+
+            project.addMapLayer(layer, False)
+            group.addLayer(layer)
+
+        else:
+            project.addMapLayer(layer)
+
+    return layer
 
 def find_seq_dir(root_dir):
 

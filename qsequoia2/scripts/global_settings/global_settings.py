@@ -94,8 +94,8 @@ class GlobalSettingsDialog(QDialog, FORM_CLASS):
             self.open_project.setChecked(True)
 
         # Proposition des projets
-        project_root = get_global_variable("QS2_suggest_project_root") or ""
-        suggest_enabled = bool(get_global_variable("QS2_suggest_project_enabled"))
+        project_root = get_global_variable("QS2_project_suggestions_root") or ""
+        suggest_enabled = bool(get_global_variable("QS2_project_suggestions_enabled"))
 
         self.project_root.setText(project_root)
         self.cb_suggest_enabled.setChecked(suggest_enabled)
@@ -144,10 +144,10 @@ class GlobalSettingsDialog(QDialog, FORM_CLASS):
         set_global_variable("QS2_addon_folder", addon_folder)
 
         project_root = self.project_root.text()
-        set_global_variable("QS2_suggest_project_root", project_root)
+        set_global_variable("QS2_project_suggestions_root", project_root)
 
         suggest_enabled = self.cb_suggest_enabled.isChecked()
-        set_global_variable("QS2_suggest_project_enabled", suggest_enabled)
+        set_global_variable("QS2_project_suggestions_enabled", suggest_enabled)
         
         # Je mets en commentaire pour le moment car cela à un gros coût
         # reloadQS2(plugin=self.plugin, plug = "qsequoia2")

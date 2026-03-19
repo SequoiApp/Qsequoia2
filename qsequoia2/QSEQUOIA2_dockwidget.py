@@ -42,10 +42,10 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.tabWidget.addTab(widget, icon, "")
             self.tabWidget.setTabToolTip(self.tabWidget.count() - 1, tooltip)
 
-        # forest_tab = ForestDataDialog(iface=self.iface,parent=self, )
-        # _add_tab(forest_tab, "forest_data.svg", "Metadata sur la propriété")
+        forest_tab = ForestDataDialog(iface=self.iface,parent=self, )
+        _add_tab(forest_tab, "forest_data.svg", "Metadonnées sur la propriété")
 
-        tools_tab = ToolsDialog(iface=self.iface,parent=self, )
+        tools_tab = ToolsDialog(iface=self.iface,parent=self)
         _add_tab(tools_tab, "tools.svg", "Outils et fonctions")
 
         # layout_tab = LayoutDesignerDialog(iface=self.iface,parent=self, )

@@ -1,121 +1,78 @@
-"""Modules outils"""
-
-
-# ==========================================================================
-# region import
-# ==========================================================================
-
-# python 
-
-import os, importlib, yaml, json
-
-
-# QGIS
+import importlib
+import yaml
+from pathlib import Path
 
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtCore import Qt
 from qgis.PyQt.QtWidgets import QWidget, QTreeWidget, QVBoxLayout, QTreeWidgetItem
 from PyQt5 import uic
 
-# QSEQUOIA2
-
 from qsequoia2.scripts.tools.python_scripts.go_to_net import go_to_net
+from qsequoia2.scripts.utils.variable import get_global_variable
 
-# UI
-FORM_CLASS, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'tools.ui'))
-
-
-# endregion
-# ==========================================================================
-# region ToolsDialog
-# ==========================================================================
+UI_PATH = Path(__file__).parent / "tools.ui"
+FORM_CLASS, _ = uic.loadUiType(str(UI_PATH))
 
 class ToolsDialog(QWidget, FORM_CLASS):
-    def __init__(self, current_project_name, current_style_folder, downloads_path, current_project_folder, iface, parent=None):
-        super().__init__(parent)
-        self.iface = iface
-        self.current_project_name = current_project_name
-        self.current_style_folder = current_style_folder
-        self.downloads_path = downloads_path
-        self.current_project_folder = current_project_folder
 
-        self.setupUi(self)
-        self.add_tree_tools()
+    def __init__(self, iface, parent=None):
+        super().__init__(parent)
+
+        self.iface = iface
         self.dock = parent
 
-        # Connexion des signaux pour appel des fonctions
+        self.setupUi(self)
+
+        self._init_tree()
         self.treeTOOLS.itemClicked.connect(self.on_item_clicked)
 
-    # ------------------------------------------------------------------------
-    # Création de l'arbre de fonction depuis la table fonction en yaml
-    # ------------------------------------------------------------------------
+    def _init_tree(self):
+        """Build tools tree from YAML"""
 
-    def add_tree_tools(self):
-        """
-        Crée et remplit l'onglet OUTILS à partir du YAML qseq_functions.yaml
-        """
-
-        # Widget onglet
         tab = QWidget()
         layout = QVBoxLayout(tab)
 
-        # TreeWidget
         self.treeTOOLS = QTreeWidget()
         self.treeTOOLS.setObjectName("tools")
         self.treeTOOLS.setHeaderLabels(["Outils disponibles"])
 
-        # Lecture du YAML
-        script_dir = os.path.dirname(__file__)
-        yaml_path = os.path.join(script_dir, "..", "..", "inst", "qseq_functions.yaml")
+        yaml_path = Path(__file__).resolve().parents[2] / "inst" / "qs2_tools.yaml"
 
-        with open(yaml_path, "r", encoding="utf-8") as file:
-            data = yaml.safe_load(file)
+        data = yaml.safe_load(yaml_path.read_text(encoding="utf-8")) or {}
 
-            for category_name, tools in data.items():
-                # Création de la catégorie
-                category_item = QTreeWidgetItem([category_name])
-                category_item.setExpanded(True)
-                self.treeTOOLS.addTopLevelItem(category_item)
+        for category_name, tools in data.items():
 
-                # dict des fonctions
-                for tool_name, tool_data in tools.items():
-                    tool_item = QTreeWidgetItem([tool_name])
+            category_item = QTreeWidgetItem([category_name])
+            category_item.setExpanded(True)
+            self.treeTOOLS.addTopLevelItem(category_item)
 
-                    # stocker les infos pour usage ultérieur
-                    tool_item.setData(0, Qt.UserRole,
-                                      {"type": "tool",
-                                       "category": category_name,  # catégorie parent
-                                       "key": tool_name,            # clé YAML de l'outil
-                                       **tool_data                 # function/module/skip_check/url...
-                                       })
+            for tool_name, tool_data in tools.items():
 
-                    category_item.addChild(tool_item)
+                tool_item = QTreeWidgetItem([tool_name])
 
-        # Ajout au layout
+                tool_item.setData(
+                    0,
+                    Qt.UserRole,
+                    {
+                        "type": "tool",
+                        "category": category_name,
+                        "key": tool_name,
+                        **tool_data
+                    }
+                )
+
+                category_item.addChild(tool_item)
+
         layout.addWidget(self.treeTOOLS)
-
-        # Ajout à l’onglet
         self.tabWidget.addTab(tab, "OUTILS")
 
 
-    #-------------------------------------------------------------------------
-    # Import des fonctions externes et appel en fonction de l'item cliqué
-    #-------------------------------------------------------------------------
+    def on_item_clicked(self, item):
 
-    def on_item_clicked(self, item, column):
-        """
-        Slot appelé lors d’un clic sur un item d’un QTreeWidget.
-
-        Args:
-            item (QTreeWidgetItem): l’élément cliqué
-            column (int): la colonne cliquée
-        """
-        action = item.data(0, Qt.ItemDataRole.UserRole)
-
-        # Si pas de data
-        if action is None:
+        action = item.data(0, Qt.UserRole)
+        if not action:
             return
+
         parent = item.parent()
         category = parent.text(0) if parent else None
 
@@ -123,23 +80,33 @@ class ToolsDialog(QWidget, FORM_CLASS):
             go_to_net(action, self.iface)
             return
 
-        self.call_functions(action, category)
+        self._call_function(action)
 
-    def call_functions(self, action, category):
-        project_name = getattr(self, "current_project_name", "DefaultProject")
-        style_folder = getattr(self, "current_style_folder", None)
+    def _call_function(self, action):
+
+        project_name = get_global_variable("QS2_project_name")
+        style_folder = get_global_variable("QS2_styles_directory")
 
         skip_check = action.get("skip_check", False)
+
         if not skip_check:
 
-            if not project_name or project_name in ["Nom du projet","DefaultProject"]:
-
-                QMessageBox.information(self,"Nom absent","Merci de renseigner le nom du projet.")
+            if not project_name or project_name in ["Nom du projet"]:
+                QMessageBox.information(
+                    self,
+                    "Nom absent",
+                    "Merci de renseigner le nom du projet."
+                )
                 return
 
             if not style_folder:
-                QMessageBox.information(self,"Kartenn","Pas de dossier de styles sélectionné.")
+                QMessageBox.information(
+                    self,
+                    "Kartenn",
+                    "Pas de dossier de styles sélectionné."
+                )
                 return
+
         else:
             project_name = project_name or ""
             style_folder = style_folder or ""
@@ -148,14 +115,14 @@ class ToolsDialog(QWidget, FORM_CLASS):
         func_name = action.get("function")
 
         if not mod_name or not func_name:
-            QMessageBox.warning(self,"Action incomplète","Cette action n'est pas encore implémentée.")
+            QMessageBox.warning(
+                self,
+                "Action incomplète",
+                "Cette action n'est pas encore implémentée."
+            )
             return
-        
-        module = importlib.import_module(mod_name)
 
+        module = importlib.import_module(mod_name)
         func = getattr(module, func_name)
 
         func(project_name, style_folder, dockwidget=self, iface=self.iface)
-
-
-

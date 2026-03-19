@@ -1,86 +1,63 @@
-"""
-Module `seq_config` : gestion du téléchargement et de la mise à jour
-des fichiers de configuration YAML pour RSequoia2 depuis le dépôt distant.
-
-Auteur : Alexandre Le Bars - Comité des Forêts
-Email : alexlb329@gmail.com
-
-Fonctionnalités :
-- Téléchargement automatique des fichiers YAML de configuration à chaque démarrage du plugin
-- Remplacement des fichiers locaux si différents de la version distante
-"""
-
-
-#---------------------------------------------------------------------------------
-
-import os
+from pathlib import Path
 import urllib.request
 import yaml
-from qgis.PyQt.QtWidgets import QMessageBox
 
-from ..utils.messageBar import *
+from qgis.core import QgsApplication
 
-#---------------------------------------------------------------------------------
+BASE_URL = "https://raw.githubusercontent.com/SequoiApp/Rsequoia2/main/inst/config"
 
+SEQ_CONFIG_URLS = {
+    key: f"{BASE_URL}/{key}.yaml"
+    for key in ["seq_fields", "seq_layers", "seq_path", "seq_tables"]
+}
 
-def add_seq_config():
+CACHE_DIR = Path(QgsApplication.qgisSettingsDirPath()) / "qsequoia2"
+
+def sync_seq_configs(timeout: int = 3) -> None:
     """
-    Télécharge et met à jour les fichiers de configuration RSequoia2 depuis le dépôt distant.
+    Download latest configs to cache.
 
-    Processus :
-    1. Récupère le dossier local 'inst' du plugin.
-    2. Lit le fichier `URLs.yaml` contenant les URLs des fichiers YAML à mettre à jour.
-    3. Télécharge chaque fichier YAML depuis le dépôt distant.
-    4. Écrit le fichier localement, remplaçant la version existante si nécessaire.
-    5. Affiche des messages d'erreur via QMessageBox en cas de problème réseau ou d'écriture.
-    
-    Notes :
-        - Le téléchargement est fait via urllib.request.
-        - Les fichiers YAML sont stockés dans le dossier `inst` du plugin.
-        - Les erreurs critiques affichent un message utilisateur et continuent le traitement des autres fichiers.
+    - Silent if offline
+    - Safe to call at plugin startup
     """
-    
-    # Récupération du dossier de configuration de QSequoia2
 
-    script_path = os.path.dirname(os.path.abspath(__file__))
-    inst = os.path.abspath(os.path.join(script_path, '..', '..', 'inst'))
+    CACHE_DIR.mkdir(exist_ok=True)
 
-    # Lecture du YAML des URLs 
-
-    urls_yaml_path = os.path.join(inst, 'URLs.yaml')
-    with open(urls_yaml_path, 'r', encoding='utf-8') as file:
-        urls_data = yaml.safe_load(file)
-    seq_layers_url = urls_data['seq_layers']['url']
-
-    # Connexion au dépôt GitHub pour récupérer les fichiers YAML
-
-    for key, entry in urls_data.items():
-
-        # Récupération de l’URL dans le sous-dictionnaire
-        url = entry.get("url")
-        if not url:
-            continue
+    for key, url in SEQ_CONFIG_URLS.items():
+        path = CACHE_DIR / f"{key}.yaml"
 
         try:
-            response = urllib.request.urlopen(url)
-            remote_yaml_content = response.read().decode('utf-8')
-        except Exception as e:
-            QMessageBox.critical(None, "Erreur réseau",
-                                f"Impossible de télécharger {key}.yaml.\nErreur : {e}")
-            continue
+            response = urllib.request.urlopen(url, timeout=timeout)
+            content = response.read().decode("utf-8")
+            path.write_text(content, encoding="utf-8")
 
-        local_yaml_path = os.path.join(inst, f"{key}.yaml")
+        except Exception:
+            # Silent fallback
+            pass
+    
+    return None
 
-        try:
-            with open(local_yaml_path, 'w', encoding='utf-8') as local_file:
-                local_file.write(remote_yaml_content)
-        except Exception as e:
-            QMessageBox.critical(None, "Erreur d'écriture",
-                                f"Impossible d'écrire {key}.yaml.\nErreur : {e}")
-            return
-        
-        # Message de confirmation dans les logs de QGIS
+def get_seq_config_path(name: str) -> Path:
+    """
+    Return cached config path.
 
-    messageLog("Les fichiers de configuration RSequoia2 ont été mis à jour avec succès.","i")
+    Raises:
+        RuntimeError if config is missing (first run offline)
+    """
 
+    path = CACHE_DIR / f"{name}.yaml"
+    if path.exists():
+        return path
 
+    raise RuntimeError(
+        f"Config '{name}' not found.\n"
+        "You need an internet connection for the first plugin use."
+    )
+
+def get_seq_config(name: str) -> dict:
+    """
+    Load YAML config.
+    """
+
+    path = get_seq_config_path(name)
+    return yaml.safe_load(path.read_text(encoding="utf-8"))

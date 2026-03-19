@@ -1,5 +1,5 @@
 #/***************************************************************************
-# QSEQUOIA2
+# Qsequoia2
 #
 # simplifions le qutodien des forestiers
 #							 -------------------
@@ -38,15 +38,15 @@ LOCALES =
 # translation
 SOURCES = \
 	__init__.py \
-	QSEQUOIA2.py QSEQUOIA2_dockwidget.py
+	Qsequoia2.py Qsequoia2_dockwidget.py
 
-PLUGINNAME = QSEQUOIA2
+PLUGINNAME = Qsequoia2
 
 PY_FILES = \
 	__init__.py \
-	QSEQUOIA2.py QSEQUOIA2_dockwidget.py
+	Qsequoia2.py Qsequoia2_dockwidget.py
 
-UI_FILES = QSEQUOIA2_dockwidget_base.ui
+UI_FILES = Qsequoia2_dockwidget_base.ui
 
 EXTRAS = metadata.txt icon.png
 

@@ -19,7 +19,6 @@ from pathlib import Path
 from dataclasses import dataclass
 
 
-
 from qgis.core import QgsVectorLayer, QgsRasterLayer, QgsWkbTypes
 from .messageBar import *
 

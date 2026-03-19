@@ -14,14 +14,14 @@ hide_password:
   args:
   - url
   - start
-QSEQUOIA2:
+Qsequoia2:
   type: class
-  path: qsequoia2.QSEQUOIA2
-  name: QSEQUOIA2
-QSEQUOIA2DockWidget:
+  path: qsequoia2.Qsequoia2
+  name: Qsequoia2
+Qsequoia2DockWidget:
   type: class
-  path: qsequoia2.QSEQUOIA2_dockwidget
-  name: QSEQUOIA2DockWidget
+  path: qsequoia2.Qsequoia2_dockwidget
+  name: Qsequoia2DockWidget
 qInitResources:
   type: function
   path: qsequoia2.resources

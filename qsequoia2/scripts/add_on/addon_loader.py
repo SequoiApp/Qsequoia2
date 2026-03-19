@@ -17,7 +17,6 @@ import os
 import importlib.util
 
 #QGIS
-from qgis.core import QgsApplication
 from PyQt5.QtGui import QIcon
 from qgis.core import *
 
@@ -30,7 +29,7 @@ from ..utils.messageBar import *
 # region load_addons
 # ==========================================================================
 
-def load_addons(plugin, current_project_name, current_style_folder, downloads_path, current_project_folder, iface):
+def load_addons(plugin, iface):
     """
     Charge et initialise tous les add-ons QS2 présents dans le dossier dédié.
 
@@ -86,9 +85,7 @@ def load_addons(plugin, current_project_name, current_style_folder, downloads_pa
             class_name = f"{addon_name}_QS2Addon"
             addon_class = getattr(module, class_name)
 
-            addon = addon_class(plugin=plugin,iface=iface,current_project_name=current_project_name,
-                                current_style_folder=current_style_folder,downloads_path=downloads_path,
-                                current_project_folder=current_project_folder)
+            addon = addon_class(plugin=plugin,iface=iface)
 
             loaded_addons.append(addon)
 

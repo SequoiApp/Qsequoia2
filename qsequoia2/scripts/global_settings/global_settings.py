@@ -1,19 +1,7 @@
-# -*- coding: utf-8 -*-
-# ==========================================================================
-# region import
-# ==========================================================================
-
-# python 
-
-import yaml, json, os
 from pathlib import Path
-
-# Qgis
 
 from qgis.PyQt.QtWidgets import QDialog, QFileDialog, QMessageBox
 from PyQt5 import uic
-# QSEQUOIA2
-
 from qgis.core import QgsProject
 
 # Import from utils folder
@@ -23,16 +11,9 @@ from..add_on.addon_creator import addonCreator
 
 from .go_to_maps import open_maps
 
-# UI 
-FORM_CLASS, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'global_settings.ui'))
-
-# endregion
-
-# endregion
-# ==========================================================================
-# region ClASSDATADIALOG
-# ==========================================================================
+FORM_CLASS, _ = uic.loadUiType(
+    str(Path(__file__).parent / "global_settings.ui")
+)
 
 class GlobalSettingsDialog(QDialog, FORM_CLASS):
     def __init__(self, iface, plugin, parent=None):
@@ -55,7 +36,6 @@ class GlobalSettingsDialog(QDialog, FORM_CLASS):
         self.parent = parent
         self.iface = iface
 
-        
         # Charger les paramètres existants
         self.load_settings()
 
@@ -63,14 +43,13 @@ class GlobalSettingsDialog(QDialog, FORM_CLASS):
         self.buttonBox.accepted.connect(self.save_settings)
         self.stylesButton.clicked.connect(self.select_styles_directory)
         self.modelsButton.clicked.connect(self.select_models_directory)
-        self.folders_folder_button.clicked.connect(self.select_folders_folder)
+        self.btn_project_root.clicked.connect(self.select_project_root)
         try:
             self.addon.clicked.disconnect()
         except:
             pass
         self.addon.clicked.connect(self.open_addonCreator)
         self.find_addon_folder.clicked.connect(self.select_addon_folder)
-
 
     def load_settings(self):
         """
@@ -115,18 +94,16 @@ class GlobalSettingsDialog(QDialog, FORM_CLASS):
             self.open_project.setChecked(True)
 
         # Proposition des projets
-        folders_folder = get_global_variable("QS2_suggest_folder")
-        self.folders_folder.setText(folders_folder)
+        project_root = get_global_variable("QS2_suggest_project_root") or ""
+        suggest_enabled = bool(get_global_variable("QS2_suggest_project_enabled"))
 
-        QS2_suggest_project_state = get_global_variable("QS2_suggest_project")
-        if not QS2_suggest_project_state :
-            self.suggest_folder.setChecked(False)
-            self.folders_folder.setEnabled(False)
-            self.folders_folder_button.setEnabled(False)
-        else : 
-            self.suggest_folder.setChecked(True)
-            self.folders_folder.setEnabled(True)
-            self.folders_folder_button.setEnabled(True)
+        self.project_root.setText(project_root)
+        self.cb_suggest_enabled.setChecked(suggest_enabled)
+
+        self.project_root.setEnabled(suggest_enabled)
+        self.btn_project_root.setEnabled(suggest_enabled)
+
+        self.cb_suggest_enabled.toggled.connect(self._toggle_project_root)
 
         # Dossier des Addons
         addon_folder = get_global_variable("QS2_addon_folder")
@@ -134,7 +111,9 @@ class GlobalSettingsDialog(QDialog, FORM_CLASS):
             self.addon.setEnabled(False)
         self.addon_folder.setText(addon_folder)
 
-
+    def _toggle_project_root(self, state):
+        self.project_root.setEnabled(state)
+        self.btn_project_root.setEnabled(state)
 
     def save_settings(self):
         """
@@ -154,24 +133,24 @@ class GlobalSettingsDialog(QDialog, FORM_CLASS):
         adress = self.adress.text()
         orga_name = self.orga.text()
         QS2_default_project = self.open_project.isChecked()
-        folders_folder = self.folders_folder.text()
-        QS2_suggest_project = self.suggest_folder.isChecked()
         addon_folder = self.addon_folder.text()
         
-
         set_global_variable("QS2_styles_directory", styles_dir)
         set_global_variable("QS2_models_directory", models_dir)
         set_global_variable("QS2_user_full_name", user)
         set_global_variable("QS2_adress_organisation", adress)
         set_global_variable("QS2_organisation", orga_name)
         set_global_variable("QS2_default_project", QS2_default_project)
-        set_global_variable("QS2_suggest_folder", folders_folder )
-        set_global_variable("QS2_suggest_project", QS2_suggest_project )
         set_global_variable("QS2_addon_folder", addon_folder)
 
+        project_root = self.project_root.text()
+        set_global_variable("QS2_suggest_project_root", project_root)
+
+        suggest_enabled = self.cb_suggest_enabled.isChecked()
+        set_global_variable("QS2_suggest_project_enabled", suggest_enabled)
         
-    # lancement de la fonction de reload du plugin à l'acceptation des paramètres
-        reloadQS2(plugin=self.plugin, plug = "qsequoia2")
+        # Je mets en commentaire pour le moment car cela à un gros coût
+        # reloadQS2(plugin=self.plugin, plug = "qsequoia2")
 
     def select_styles_directory(self):
         """
@@ -201,7 +180,6 @@ class GlobalSettingsDialog(QDialog, FORM_CLASS):
                 f"Le dossier sélectionné ne contient aucun fichier .qml :\n{dir_path}")
             return False
 
-
     def select_models_directory(self):
         """
         Permet à l'utilisateur de sélectionner le dossier contenant les
@@ -216,9 +194,8 @@ class GlobalSettingsDialog(QDialog, FORM_CLASS):
         dir_path = QFileDialog.getExistingDirectory(self, "Sélectionner le répertoire de travail", str(modeles_path))
         if dir_path:
             self.modelsInput.setText(dir_path)
-    
 
-    def select_folders_folder(self):
+    def select_project_root(self):
         """
         Permet de sélectionner le dossier racine utilisé pour rechercher
         ou proposer automatiquement des dossiers de projets.
@@ -231,7 +208,7 @@ class GlobalSettingsDialog(QDialog, FORM_CLASS):
         work_path = QgsProject.instance().homePath() or str(Path.home())
         dir_path = QFileDialog.getExistingDirectory(self, "Sélectionner le répertoire de travail", str(work_path))
         if dir_path:
-            self.folders_folder.setText(dir_path)
+            self.project_root.setText(dir_path)
     
     def generate_addon(self):
         """affiche la fenetre de création des addons"""
@@ -250,7 +227,6 @@ class GlobalSettingsDialog(QDialog, FORM_CLASS):
         if addon_dir:
             self.addon_folder.setText(addon_dir)
             self.addon_folder_path = addon_dir
-
 
     def open_addonCreator(self):
         addon_folder = self.addon_folder.text().strip()

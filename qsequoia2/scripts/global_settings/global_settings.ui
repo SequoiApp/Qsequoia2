@@ -163,7 +163,7 @@
      <item row="6" column="1">
       <layout class="QHBoxLayout" name="_2">
        <item>
-        <widget class="QCheckBox" name="suggest_folder">
+        <widget class="QCheckBox" name="cb_suggest_enabled">
          <property name="toolTip">
           <string>Proposer des dossiers de projets en fonction du nom</string>
          </property>
@@ -176,14 +176,14 @@
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="folders_folder">
+        <widget class="QLineEdit" name="project_root">
          <property name="enabled">
           <bool>false</bool>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="folders_folder_button">
+        <widget class="QPushButton" name="btn_project_root">
          <property name="toolTip">
           <string>Choisir un répertoire de travail</string>
          </property>

@@ -93,7 +93,7 @@ def seq_key(key):
 
     return matches[0]
 
-def seq_layer(key, verbose=False):
+def seq_layer(key):
     """Resolve a Sequoia layer key to metadata."""
 
     cfg_layer = get_seq_config("seq_layers")
@@ -136,9 +136,6 @@ def seq_layer(key, verbose=False):
         "full_path": str(full_path) if full_path else None,
         "type": layer_type
     }
-
-    if verbose:
-        print(f"Resolved '{key}' → {result['full_path']}")
 
     return result
 

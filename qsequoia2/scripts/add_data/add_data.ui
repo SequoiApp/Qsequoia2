@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>tw_add_data</class>
+ <widget class="QTabWidget" name="tw_add_data">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>437</width>
+    <height>344</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Importer des couches</string>
+  </property>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

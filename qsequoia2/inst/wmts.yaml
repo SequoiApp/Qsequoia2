@@ -1,0 +1,105 @@
+wmts_scan1000:
+  display_name: "IGN SCAN 1000 TOPO (Metropole)"
+  family: scan
+  url: contextualWMSLegend=0&crs=EPSG:2154&dpiMode=7&featureCount=10&format=image/png&layers=FXX_SCAN1000&styles&url=http://mapsref.brgm.fr/wxs/refcom-brgm/refign
+
+wmts_scan100:
+  display_name: "IGN SCAN 100 TOPO (Metropole)"
+  family: scan
+  url: contextualWMSLegend=0&crs=EPSG:2154&dpiMode=7&featureCount=10&format=image/png&http-header:referer=&layers=FXX_SCAN100&styles&url=http://mapsref.brgm.fr/wxs/refcom-brgm/refign
+
+wmts_scan25:
+  display_name: "IGN SCAN 25 TOPO (Metropole)"
+  family: scan
+  url: contextualWMSLegend=0&crs=EPSG:2154&dpiMode=7&featureCount=10&format=image/png&layers=FXX_SCAN25TOPO&styles&url=http://mapsref.brgm.fr/wxs/refcom-brgm/refign
+
+wmts_scan25_grey:
+  display_name: "IGN SCAN 25 TOPO (Metropole) gray"
+  family: scan
+  url: contextualWMSLegend=0&crs=EPSG:2154&dpiMode=7&featureCount=10&format=image/png&http-header:referer=&layers=FXX_SCAN25NB&styles&url=http://mapsref.brgm.fr/wxs/refcom-brgm/refign
+
+wmts_irc:
+  display_name: "IGN BDORTHO IRC 20cm"
+  family: ortho
+  url: contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&featureCount=10&format=image/jpeg&layers=ORTHOIMAGERY.ORTHOPHOTOS.IRC&styles=normal&tileMatrixSet=PM_6_19&tilePixelRatio=0&url=https://data.geopf.fr/wmts?SERVICE%3DWMTS%26VERSION%3D1.0.0%26REQUEST%3DGetCapabilities
+
+wmts_rgb:
+  display_name: "IGN BDORTHO RGB 20cm"
+  family: ortho
+  url: contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&featureCount=10&format=image/jpeg&layers=HR.ORTHOIMAGERY.ORTHOPHOTOS&styles=normal&tileMatrixSet=PM_6_19&tilePixelRatio=0&url=https://data.geopf.fr/wmts?SERVICE%3DWMTS%26VERSION%3D1.0.0%26REQUEST%3DGetCapabilities
+
+wmts_spot_2023:
+  display_name: "spot 6-7 2023"
+  family: satellite
+  url: contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&featureCount=10&format=image/jpeg&layers=ORTHOIMAGERY.ORTHO-SAT.SPOT.2023&styles=normal&tileMatrixSet=PM_0_17&tilePixelRatio=0&url=https://data.geopf.fr/wmts?SERVICE%3DWMTS%26VERSION%3D1.0.0%26REQUEST%3DGetCapabilities
+
+wmts_pci:
+  display_name: "IGN Parcellaire Image"
+  family: cadastre
+  url: contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&featureCount=10&format=image/png&layers=CADASTRALPARCELS.PARCELLAIRE_EXPRESS&styles=PCI vecteur&tileMatrixSet=PM_0_19&tilePixelRatio=0&url=https://data.geopf.fr/wmts?SERVICE%3DWMTS%26VERSION%3D1.0.0%26REQUEST%3DGetCapabilities
+
+wmts_geol:
+  display_name: "BRGM BD Scan-Geol-50"
+  family: geol
+  url: contextualWMSLegend=0&crs=EPSG:2154&dpiMode=7&featureCount=10&format=image/png&layers=SCAN_D_GEOL50&styles&url=http://geoservices.brgm.fr/geologie
+
+wmts_histo_1950:
+  display_name: "ORTHOHISTO 1950-1965"
+  family: histoire
+  url: contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&featureCount=10&format=image/png&layers=ORTHOIMAGERY.ORTHOPHOTOS.1950-1965&styles=normal&tileMatrixSet=PM_0_18&tilePixelRatio=0&url=https://data.geopf.fr/wmts?SERVICE%3DWMTS%26VERSION%3D1.0.0%26REQUEST%3DGetCapabilities
+
+wmts_histo_1965:
+  display_name: "ORTHOHISTO 1965-1980"
+  family: histoire
+  url: contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&featureCount=10&format=image/png&layers=ORTHOIMAGERY.ORTHOPHOTOS.1965-1980&styles=BDORTHOHISTORIQUE&tileMatrixSet=PM_3_18&tilePixelRatio=0&url=https://data.geopf.fr/wmts?SERVICE%3DWMTS%26VERSION%3D1.0.0%26REQUEST%3DGetCapabilities
+
+wmts_histo_1980:
+  display_name: "ORTHOHISTO 1980-1995"
+  family: histoire
+  url: contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&featureCount=10&format=image/png&layers=ORTHOIMAGERY.ORTHOPHOTOS.1980-1995&styles=BDORTHOHISTORIQUE&tileMatrixSet=PM_3_18&tilePixelRatio=0&url=https://data.geopf.fr/wmts?SERVICE%3DWMTS%26VERSION%3D1.0.0%26REQUEST%3DGetCapabilities
+
+wmts_histo_2000:
+  display_name: "ORTHOHISTO 2000-2005"
+  family: histoire
+  url: contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&featureCount=10&format=image/jpeg&layers=ORTHOIMAGERY.ORTHOPHOTOS2000-2005&styles=normal&tileMatrixSet=PM_6_18&tilePixelRatio=0&url=https://data.geopf.fr/wmts?SERVICE%3DWMTS%26VERSION%3D1.0.0%26REQUEST%3DGetCapabilities
+
+wmts_histo_2006:
+  display_name: "ORTHOHISTO 2006-2010"
+  family: histoire
+  url: contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&featureCount=10&format=image/jpeg&layers=ORTHOIMAGERY.ORTHOPHOTOS2006-2010&styles=normal&tileMatrixSet=PM_6_18&tilePixelRatio=0&url=https://data.geopf.fr/wmts?SERVICE%3DWMTS%26VERSION%3D1.0.0%26REQUEST%3DGetCapabilities
+
+wmts_histo_2011:
+  display_name: "ORTHOHISTO 2011-2015"
+  family: histoire
+  url: contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&featureCount=10&format=image/jpeg&layers=ORTHOIMAGERY.ORTHOPHOTOS2011-2015&styles=normal&tileMatrixSet=PM_6_18&tilePixelRatio=0&url=https://data.geopf.fr/wmts?SERVICE%3DWMTS%26VERSION%3D1.0.0%26REQUEST%3DGetCapabilities
+
+wmts_lidar_mnt:
+  display_name: "LIDAR MNT"
+  family: lidar
+  url: contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&featureCount=10&format=image/png&layers=IGNF_LIDAR-HD_MNT_ELEVATION.ELEVATIONGRIDCOVERAGE.SHADOW&styles=normal&tileMatrixSet=PM_0_18&tilePixelRatio=0&url=https://data.geopf.fr/wmts?SERVICE%3DWMTS%26VERSION%3D1.0.0%26REQUEST%3DGetCapabilities
+
+wmts_lidar_mnh:
+  display_name: "LIDAR MNH"
+  family: lidar
+  url: contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&featureCount=10&format=image/png&layers=IGNF_LIDAR-HD_MNH_ELEVATION.ELEVATIONGRIDCOVERAGE.SHADOW&styles=normal&tileMatrixSet=PM_0_18&tilePixelRatio=0&url=https://data.geopf.fr/wmts?SERVICE%3DWMTS%26VERSION%3D1.0.0%26REQUEST%3DGetCapabilities
+
+wmts_ocs_2017_2020:
+  display_name: "OCS_COSIA 2017-2020"
+  family: satellite
+  url: contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&featureCount=10&format=image/png&layers=IGNF_COSIA_2024-2026&styles=normal&tileMatrixSet=PM_6_18&tilePixelRatio=0&url=https://data.geopf.fr/wmts?SERVICE%3DWMTS%26VERSION%3D1.0.0%26REQUEST%3DGetCapabilities
+
+wmts_ocs_2021_2023:
+  display_name: "OCS_COSIA 2021-2023"
+  family: satellite
+  url: contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&featureCount=10&format=image/png&layers=IGNF_COSIA_2021-2023&styles=normal&tileMatrixSet=PM_6_18&tilePixelRatio=0&url=https://data.geopf.fr/wmts?SERVICE%3DWMTS%26VERSION%3D1.0.0%26REQUEST%3DGetCapabilities
+
+wmts_ocs_2024_2025:
+  display_name: "OCS_COSIA 2024-2025"
+  family: satellite
+  url: contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&featureCount=10&format=image/png&layers=IGNF_COSIA_2024-2026&styles=normal&tileMatrixSet=PM_6_18&tilePixelRatio=0&url=https://data.geopf.fr/wmts?SERVICE%3DWMTS%26VERSION%3D1.0.0%26REQUEST%3DGetCapabilities
+
+wmts_foret_ancienne:
+  display_name: "IGNF Forêt anciennes"
+  family: autres
+  url: contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&featureCount=10&format=image/png&layers=IGNF_FORETS-ANCIENNES&styles=normal&tileMatrixSet=PM_6_16&tilePixelRatio=0&url=https://data.geopf.fr/wmts?SERVICE%3DWMTS%26VERSION%3D1.0.0%26REQUEST%3DGetCapabilities
+

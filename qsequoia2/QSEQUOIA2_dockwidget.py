@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import QWidget
 from PyQt5.QtGui import QIcon
 
 # Qsequoia2
-from qsequoia2.scripts.data_settings.add_data import AddDataDialog
+from qsequoia2.scripts.add_data.add_data import AddDataTabWidget
 from qsequoia2.scripts.LayoutDesigner.LayoutDesigner import LayoutDesignerDialog
 from qsequoia2.scripts.forest_data.forest_data import ForestDataDialog
 from qsequoia2.scripts.tools.tools import ToolsDialog
@@ -37,22 +37,23 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
     def _init_tabs(self):
 
-        def _add_tab(widget, icon_name, tooltip):
+        def add_tab(widget, icon_name, tooltip):
             icon = QIcon(str(PLUGIN_DIR / "icons" / icon_name))
             self.tabWidget.addTab(widget, icon, "")
             self.tabWidget.setTabToolTip(self.tabWidget.count() - 1, tooltip)
 
         forest_tab = ForestDataDialog(iface=self.iface,parent=self, )
-        _add_tab(forest_tab, "forest_data.svg", "Metadonnées sur la propriété")
+        add_tab(forest_tab, "forest_data.svg", "Metadonnées sur la propriété")
+        
+        add_data_tab = AddDataTabWidget(iface=self.iface,parent=self, )
+        add_tab(add_data_tab, "add_data.svg", "Ajout de données")
 
         tools_tab = ToolsDialog(iface=self.iface,parent=self)
-        _add_tab(tools_tab, "tools.svg", "Outils et fonctions")
+        add_tab(tools_tab, "tools.svg", "Outils et fonctions")
 
         # layout_tab = LayoutDesignerDialog(iface=self.iface,parent=self, )
         # _add_tab(layout_tab, "layout.svg", "Création de carte thématique")
-        
-        # add_data_tab = ForestDataDialog(iface=self.iface,parent=self, )
-        # _add_tab(add_data_tab, "add_data.svg", "Ajout de données")
+
 
 
     def _load_addons(self):

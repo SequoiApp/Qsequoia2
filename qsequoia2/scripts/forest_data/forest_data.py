@@ -14,7 +14,6 @@ UI_PATH = Path(__file__).parent / "forest_data.ui"
 FORM_CLASS, _ = uic.loadUiType(str(UI_PATH))
 
 from pathlib import Path
-import importlib
 
 from PyQt5 import uic
 from qgis.PyQt.QtWidgets import QWidget

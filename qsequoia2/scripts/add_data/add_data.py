@@ -2,6 +2,7 @@ import yaml
 from pathlib import Path
 
 from PyQt5 import uic
+from qgis.PyQt.QtGui import QColor, QBrush
 from PyQt5.QtWidgets import QTabWidget
 from qgis.PyQt.QtWidgets import QWidget, QVBoxLayout, QTreeWidget, QTreeWidgetItem
 from qgis.PyQt.QtCore import Qt
@@ -15,7 +16,19 @@ from ..utils.messageBar import messageBar, messageLog
 UI_PATH = Path(__file__).parent / "add_data.ui"
 FORM_CLASS, _ = uic.loadUiType(str(UI_PATH))
 
+VTAB_INDEX = 0
+RTAB_INDEX = 1
+WTAB_INDEX = 2
+
 class AddDataTabWidget(QTabWidget, FORM_CLASS):
+    """
+    When Qsequoia2 is loaded, no project folder is selected, so all layers are initially unavailable.
+
+    When a folder is selected, the `projectChanged` signal is emitted.
+    This signal triggers a rebuild of the vector and raster tabs using the selected folder.
+
+    During this rebuild, layer availability is evaluated so that only accessible layers are enabled.
+    """
 
     def __init__(self, iface, parent=None):
 
@@ -31,7 +44,7 @@ class AddDataTabWidget(QTabWidget, FORM_CLASS):
         self.add_raster_tab()
         self.add_wmts_tab()
 
-    def add_vecteur_tab(self):
+    def add_vecteur_tab(self, folder=None):
 
         tab = QWidget()
         layout = QVBoxLayout(tab)
@@ -62,16 +75,20 @@ class AddDataTabWidget(QTabWidget, FORM_CLASS):
             # Add layer
             item = QTreeWidgetItem([l["name"]])
             item.setData(0, Qt.UserRole, l)
+
+            # Grey if not available
+            if not self.is_available(l, folder):
+                item.setDisabled(True)
+
             categories[family_key].addChild(item)
 
         layout.addWidget(tree)
-        self.addTab(tab, "VECTEURS")
-
+        self.insertTab(VTAB_INDEX, tab, "VECTEUR")
         tree.itemDoubleClicked.connect(self.on_seq_layer_clicked)
 
         return tab
 
-    def add_raster_tab(self):
+    def add_raster_tab(self, folder=None):
 
         tab = QWidget()
         layout = QVBoxLayout(tab)
@@ -102,11 +119,15 @@ class AddDataTabWidget(QTabWidget, FORM_CLASS):
             # Add layer
             item = QTreeWidgetItem([l["name"]])
             item.setData(0, Qt.UserRole, l)
+
+            # Grey if not available
+            if not self.is_available(l, folder):
+                item.setDisabled(True)
+
             categories[family_key].addChild(item)
 
         layout.addWidget(tree)
-        self.addTab(tab, "RASTER")
-
+        self.insertTab(RTAB_INDEX, tab, "RASTER")
         tree.itemDoubleClicked.connect(self.on_seq_layer_clicked)
 
         return tab
@@ -147,12 +168,19 @@ class AddDataTabWidget(QTabWidget, FORM_CLASS):
             categories[family_key].addChild(item)
 
         layout.addWidget(tree)
-        self.addTab(tab, "WMTS")
-
+        self.insertTab(WTAB_INDEX, tab, "WMTS")
         tree.itemDoubleClicked.connect(self.on_wmts_clicked)
 
         return tab
   
+    @staticmethod
+    def is_available(layer, folder):
+        if not folder:
+            return False
+        # Return at first match to avoid full scan
+        return any(Path(folder).rglob(f"*{layer.get('filename','')}"))
+    
+    # region ADD LAYER TO QGIS
     def on_seq_layer_clicked(self, item, column):
 
         project_folder = get_project_variable("QS2_project_folder")
@@ -222,3 +250,31 @@ class AddDataTabWidget(QTabWidget, FORM_CLASS):
 
         except Exception as e:
             messageBar(self.iface, f"Erreur WMTS: {e}", "c")
+    # endregion
+
+    # region UPDATE FROM SIGNAL
+    def on_project_changed(self, name, folder):
+        self._reload_vecteur_tab(folder)
+        self._reload_raster_tab(folder)
+
+    def _reload_vecteur_tab(self, folder):
+        # Find where is user
+        current = self.currentIndex()
+
+        self.removeTab(VTAB_INDEX)
+        self.add_vecteur_tab(folder)
+
+        # Restore user position
+        self.setCurrentIndex(current)
+
+    def _reload_raster_tab(self, folder):
+        # Find where is user
+        current = self.currentIndex()
+
+        self.removeTab(RTAB_INDEX)
+        self.add_vecteur_tab(folder)
+
+        # Restore user position
+        self.setCurrentIndex(current)
+
+    # endregion

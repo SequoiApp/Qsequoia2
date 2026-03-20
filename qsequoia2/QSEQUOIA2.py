@@ -1,47 +1,26 @@
-import os, sys
+import sys
 from pathlib import Path
 
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QAction, QCompleter
-from qgis.core import QgsApplication, Qgis, QgsProject
-from qgis.PyQt.QtWidgets import QMessageBox,QFileDialog, QInputDialog, QListWidget, QScrollArea
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtCore import Qt
+from qgis.PyQt.QtWidgets import QAction
 
 from qsequoia2.scripts.global_settings.global_settings import GlobalSettingsDialog
-from qsequoia2.scripts.utils.variable import get_global_variable, set_global_variable, set_project_variable
 from qsequoia2.scripts.watchdog.dogwatcher import DogWatcher
-from .scripts.utils.new_project import *
-from .scripts.utils.suggest_project_folder import *
-from.scripts.utils.config import *
-from .scripts.forest_data.forest_get_data import getForestdata
-from .scripts.LayoutDesigner.LayoutDesigner import LayoutDesignerDialog
-from .scripts.utils.reloader import reloadQS2
-from .scripts.utils.seq_config import find_seq_dir
+from qsequoia2.scripts.utils.get_download_folder import get_download_folder
+from qsequoia2.scripts.utils.seq_config import sync_seq_configs
+from qsequoia2.scripts.utils.messageBar import messageLog
+from qsequoia2.scripts.utils.reloader import reloadQS2
+from qsequoia2.scripts.utils.variable import set_project_variable
 
-from .resources import *
-
-# Import the code for the DockWidget
 from .qsequoia2_dockwidget import Qsequoia2DockWidget
 
-from .scripts.utils.get_download_folder import get_download_folder
-from .scripts.utils.seq_config import sync_seq_configs
-from .scripts.utils.messageBar import *
-
-# lib interne watchdog 
 PLUGIN_ROOT = Path(__file__).resolve().parent
 ICONS_DIR = PLUGIN_ROOT / "icons"
 
 watchdog_path = str(PLUGIN_ROOT / "inst" / "lib")
 if watchdog_path not in sys.path:
     sys.path.insert(0, watchdog_path)
-
-# endregion
-
-# ==========================================================================
-# Définition de la classe
-# ==========================================================================
 
 class Qsequoia2:
 
@@ -67,9 +46,6 @@ class Qsequoia2:
         self.toolbar = None
         self.dockwidget = None
         self.dlg = None
-
-        # State
-        self.pluginIsActive = False
 
         # Watchdog
         self.watch_mode = "auto"
@@ -106,17 +82,60 @@ class Qsequoia2:
                 parent=None
             )
 
-    def on_closed_plugin(self):
+    def run(self):
+
+        # Handle DockWidget
+        ## If already created:  show
+        if self.dockwidget:
+            self.dockwidget.show()
+            self.dockwidget.raise_()
+            return
+
+        self.pluginIsActive = True
+
+        ## Else: create
+        self.dockwidget = Qsequoia2DockWidget(iface=self.iface)
+
+        # Signals wiring
+        self.dockwidget.closingPlugin.connect(self._on_closed_plugin)
+        self.dockwidget.projectChanged.connect(self._on_project_changed)
+        self.dockwidget.settingsClicked.connect(self._open_global_settings)
+        self.dockwidget.reloadClicked.connect(self._reload_plugin)
+
+        # Add to QGIS
+        self.iface.addDockWidget(Qt.RightDockWidgetArea, self.dockwidget)
+        self.dockwidget.show()
+
+    def _on_closed_plugin(self):
+        """Cleanup when dockwidget is closed"""
 
         if self.dockwidget:
             try:
-                self.dockwidget.closingPlugin.disconnect(self.on_closed_plugin)
+                self.dockwidget.closingPlugin.disconnect(self._on_closed_plugin)
             except Exception:
                 pass
 
             self.dockwidget = None
 
-        self.pluginIsActive = False
+    def _on_project_changed(self, name, folder):
+        """Handle project selection from UI"""
+
+        messageLog("_on_project_changed")
+
+        set_project_variable("QS2_project_name", name)
+        set_project_variable("QS2_project_folder", folder)
+
+        messageLog(f"Project name: {name}", "i")
+        messageLog(f"Project folder: {folder}", "i")
+
+    def _reload_plugin(self):
+        """Reload plugin (wrapped for clarity)"""
+        reloadQS2(self.iface)
+
+    def _open_global_settings(self):
+        """Ouvre la fenêtre de configuration globale du plugin."""
+        self.global_settings_dialog = GlobalSettingsDialog(iface=self.iface, plugin=self)
+        self.global_settings_dialog.show()
 
     def unload(self):
 
@@ -134,366 +153,6 @@ class Qsequoia2:
         if hasattr(self, "translator"):
             QCoreApplication.removeTranslator(self.translator)
 
-    def run(self):
-        """Run method that loads and starts the plugin"""
-
-        # Handle DockWidget
-        ## If already created:  show
-        if self.dockwidget:
-            self.dockwidget.show()
-            self.dockwidget.raise_()
-            return
-
-        self.pluginIsActive = True
-
-        ## Else: create
-        self.dockwidget = Qsequoia2DockWidget(iface=self.iface)
-
-        # Connecting signal
-        self.dockwidget.closingPlugin.connect(self.on_closed_plugin)
-        self.dockwidget.btn_settings.clicked.connect(self.open_global_settings)
-        self.dockwidget.btn_reload.clicked.connect(lambda: reloadQS2(self.iface))
-
-        # Icons
-        self.dockwidget.btn_settings.setIcon(QIcon(str(ICONS_DIR / "global_settings.svg")))
-        self.dockwidget.btn_create.setIcon(QIcon(str(ICONS_DIR / "add_data.svg")))
-        self.dockwidget.setWindowIcon(QIcon(str(ICONS_DIR / "Qsequoia.png")))
-
-        self._setup_project_suggestions()
-        self._setup_project_selection()
-        
-        self.iface.addDockWidget(Qt.RightDockWidgetArea, self.dockwidget)
-        self.dockwidget.show()
-
-    def _setup_project_suggestions(self):
-
-        root = get_global_variable("QS2_project_suggestions_root")
-        enabled = bool(get_global_variable("QS2_project_suggestions_enabled") or False)
-        combo = self.dockwidget.cb_seq_folder
-
-        projects = []
-        if enabled and root:
-            projects = find_seq_dir(root)
-
-        projects = sorted(projects, key=lambda p: p.name.lower())
-        project_names = [p.name for p in projects]
-
-        combo = self.dockwidget.cb_seq_folder
-        combo.clear()
-        combo.setPlaceholderText("Nom du projet")
-        combo.setEditable(True)
-
-        for p in projects:
-            combo.addItem(p.name, str(p))
-
-        completer = QCompleter(project_names, combo)
-        completer.setCaseSensitivity(Qt.CaseInsensitive)
-        completer.setFilterMode(Qt.MatchContains)
-
-        combo.setCompleter(completer)
-        combo.setCurrentIndex(-1)
-
-        if not project_names:
-            combo.setPlaceholderText("Aucun projet trouvé")
-
-        combo.currentIndexChanged.connect(self._on_project_suggested) 
-
-    def _on_project_suggested(self, index):
-
-        if index < 0:
-            return
-
-        combo = self.dockwidget.cb_seq_folder
-
-        project_name = combo.itemText(index)
-        project_folder = combo.itemData(index)
-
-        if not project_folder:
-            return
-
-        set_project_variable("QS2_project_name", project_name)
-        set_project_variable("QS2_project_folder", project_folder)
-
-        messageLog(f"Project name: {project_name}", "i")
-        messageLog(f"Project folder: {project_folder}", "i")
-
-    def _setup_project_selection(self):
-
-        root = get_global_variable("QS2_project_suggestions_root")
-        enabled = bool(get_global_variable("QS2_project_suggestions_enabled") or False)
-
-        self._default_project_root = root if enabled and root else ""
-
-        self.dockwidget.btn_select_seq_folder.clicked.connect(self._on_project_selected)
-
-    def _on_project_selected(self):
-
-        project_directory = QFileDialog.getExistingDirectory(
-            self.dockwidget,
-            "Sélectionner un dossier projet",
-            str(self._default_project_root)
-        )
-
-        if not project_directory:
-            return
-
-        combo = self.dockwidget.cb_seq_folder
-        project_name = Path(project_directory).name
-
-        combo.blockSignals(True)
-        combo.addItem(project_name, project_directory)
-        combo.setCurrentIndex(combo.count() - 1)
-        combo.blockSignals(False)
-
-        set_project_variable("QS2_project_name", project_name)
-        set_project_variable("QS2_project_folder", project_directory)
-
-        messageLog(f"Project name: {project_name}", "i")
-        messageLog(f"Project folder: {project_directory}", "i")
-            
-
-    ## fonction set_projectFolder
-    def set_projectFolder(self, path=None):
-        """
-        Définit le dossier de projet actif.
-
-        Cette fonction permet :
-        - de sélectionner manuellement un dossier de projet si aucun chemin n'est fourni,
-        - de déterminer automatiquement le nom du projet à partir des fichiers ou du nom du dossier,
-        - de mettre à jour les variables internes du plugin (nom et chemin du projet),
-        - de propager ces informations aux différents onglets du DockWidget,
-        - de redémarrer les mécanismes de surveillance (watchdog),
-        - de charger ou créer un projet QGIS (.qgz) si nécessaire,
-        - de vérifier la présence de données forestières (PARCA) et lancer les calculs associés si disponibles.
-        """
-
-        ### Selection des dossiers manuellement 
-
-        if path is None : # passe dans le cas ou un dossier de projet est créée
-            path = QFileDialog.getExistingDirectory(self.dockwidget, "Select project Directory")
-
-            if not path:
-                self.current_project_folder = None
-                self.current_project_name = None
-                return
-
-        messageLog(f"Selected directory: {path}","i")
-        self.current_project_folder = path
-        # SI chemin, on masque les suggestion de projet
-        if path:
-
-            self.suggestion_list.clear()
-            self.suggestion_list.setVisible(False)
-            self.suggestion_scroll.setVisible(False)
-        # on grise le boutton add_project
-        self.dockwidget.add_project.setEnabled(False)
-
-
-        # extraction du nom du projet
-
-        project_name = None
-
-        # test pour trouver le nom d eprojet depuis des fichiers
-        for root, dirs, files in os.walk(self.current_project_folder):
-            for filename in files:
-
-                if "_matrice" in filename:
-                    project_name = filename.split("_matrice")[0]
-                    break
-
-                if "_SEQ_PARCA_poly" in filename:
-                    project_name = filename.split("_SEQ_PARCA_poly")[0]
-                    break
-
-                if "_SEQ_PROJECT" in filename:
-                    project_name = filename.split("_SEQ_PROJECT")[0]
-
-            if project_name:
-                break
-
-        # fallback sur le dossier de projet si rien trouvé
-        if not project_name:
-            folder_name = os.path.basename(self.current_project_folder)
-            if "_SIG" in folder_name:
-                project_name = folder_name.split("_SIG")[0]
-            if "_SEQ" in folder_name:
-                project_name = folder_name.split("_SEQ")[0]
-            if "SEQ_SIG" in folder_name:
-                project_name = folder_name.split("_SEQ_SIG")[0]
-
-            # Pour les anciennes couches et anciens projets
-            if folder_name == "SIG":
-                for nom in os.listdir(self.current_project_folder):
-                    if "SEQ_PARCA_poly" in nom:
-                        continue
-                    if "PARCA" in nom:
-                        project_name = nom.split("_PARCA")[0]
-                        break
-
-        if not project_name:
-            project_name, ok = QInputDialog.getText(None,"Nom du projet", "Impossible de déterminer le nom du projet.\nVeuillez saisir le nom du projet :")
-
-            if not ok or not project_name.strip():
-                self.current_project_folder = None
-                raise Exception("Nom du projet non fourni. Opération annulée.")
-
-        self.current_project_name = project_name
-
-        # --- Propagation au DockWidget ---
-        if self.dockwidget:
-            self.dockwidget.current_project_name = self.current_project_name
-            self.dockwidget.current_project_folder = self.current_project_folder
-
-            # Afficher uniquement le nom du projet dans le champ
-            self.dockwidget.cb_seq_folder.blockSignals(True)
-            self.dockwidget.cb_seq_folder.setText(self.current_project_name)
-            self.dockwidget.cb_seq_folder.blockSignals(False)
-            self.dockwidget.cb_seq_folder.setEnabled(False)
-
-            # Propager aux onglets
-            if hasattr(self.dockwidget, "tools_tab"):
-                self.dockwidget.tools_tab.current_project_name = self.current_project_name
-                self.dockwidget.tools_tab.current_project_folder = self.current_project_folder
-
-            if hasattr(self.dockwidget, "data_settings_tab"):
-                self.dockwidget.data_settings_tab.current_project_name = self.current_project_name
-                self.dockwidget.data_settings_tab.current_project_folder = self.current_project_folder
-            
-            if hasattr(self.dockwidget, "LayoutDesigner_tab"):
-                self.dockwidget.LayoutDesigner_tab.current_project_name = self.current_project_name
-                self.dockwidget.LayoutDesigner_tab.current_project_folder = self.current_project_folder
-            
-            if hasattr(self.dockwidget, "forest_data_tab"):
-                self.dockwidget.forest_data_tab.current_project_name = self.current_project_name
-                self.dockwidget.forest_data_tab.current_project_folder = self.current_project_folder
-            
-            # --- Propagation aux addons chargés ---
-            if hasattr(self.dockwidget, "addons_tabs"):
-                for addon in self.dockwidget.addons_tabs:
-                    addon.current_project_name = self.current_project_name
-                    addon.current_project_folder = self.current_project_folder
-
-
-        # Mise à jour éventuelle du connect_dialog
-        if self.connect_dialog:
-            self.connect_dialog.update_watch_path_label()
-
-        # redémarrer le watcher
-        if self.dogwatcher:
-            self.dogwatcher.restart()
-
-            messageLog(f"Project name => {self.current_project_name}", "i")
-        
-        # Vérifier si dossier contient un projet QGZ, si non, on le crée, uniquement si variable utilisateur
-
-        project = QgsProject.instance()
-
-        if self.QSS2_default_project == "true" or True :
-            project_path = ensure_and_load_qgis_project(
-                project,
-                project_folder=self.current_project_folder,
-                project_name=self.current_project_name,
-                epsg="EPSG:2154")
-            
-            messageLog(f"Projet QGZ chargé : {project_path}", "i")
-        
-        messageBar(self.iface, f"Dossier {self.current_project_name} sélectionné avec succès : {self.current_project_folder}","s",10)
-        
-        # Vérifier s'il y a une couche PARCA dans le dossier projet
-
-        parca_files = any("PARCA" in name.upper()for root, dirs, files in os.walk(self.current_project_folder)for name in dirs + files)
-        
-        # Si une couche Parca existe, on lance le calcul des metadonnées de bases
-
-        if not parca_files:
-            messageLog("Aucune couche PARCA trouvée dans le dossier du projet. Calcul forestier annulé.","w")
-        else:
-            try:
-                forest_data = getForestdata(
-                    project_name=project_name,
-                    project_folder=self.current_project_folder,
-                    style_folder=self.current_style_folder,
-                    iface=self.iface)
-                
-                forest_data.run_all_calculations()
-            except Exception as e:
-                messageLog(f"Erreur lors du calcul des metadata : {e}","w")
-
-    ## on_project_name_changed
-    def on_project_name_changed(self, text):
-        """
-        Gère les modifications du nom de projet saisies par l'utilisateur.
-
-        Cette fonction :
-        - met à jour le nom du projet courant,
-        - propose automatiquement des dossiers de projet existants correspondant au texte saisi,
-        - affiche une liste de suggestions si des correspondances sont trouvées,
-        - active ou désactive le bouton de création de projet selon la validité du texte,
-        - propage le nom du projet aux composants du DockWidget,
-        - redémarre le système de surveillance si nécessaire.
-        """
-
-        # si le changement vient du code → on ignore
-        if self.updating_project_name:
-            return
-
-        self.current_project_name = text
-
-        # Activation du bouton
-        text_clean = text.strip()
-        text_valid = bool(text_clean)  # vrai uniquement si texte non vide
-
-        # Propager au DockWidget
-        if self.dockwidget:
-            self.dockwidget.current_project_name = self.current_project_name
-            self.dockwidget.cb_seq_folder.blockSignals(True)
-            self.dockwidget.cb_seq_folder.setText(self.current_project_name)
-            self.dockwidget.cb_seq_folder.blockSignals(False)
-
-            # Propager aux onglets si nécessaire
-            if hasattr(self.dockwidget, "tools_tab"):
-                self.dockwidget.tools_tab.current_project_name = self.current_project_name
-            
-            if hasattr(self.dockwidget, "data_settings_tab"):
-                self.dockwidget.data_settings_tab.current_project_name = self.current_project_name
-
-
-        if text:  # éviter de lancer sur vide
-            if self.dogwatcher:
-                self.dogwatcher.restart()
-
-            else:
-                messageLog("Watcher non initialisé, rien à redémarrer.","w")
-
-    ## add_project_clicked
-    def add_project_clicked(self):
-        """
-        Crée un nouveau dossier de projet à partir du nom saisi par l'utilisateur.
-
-        Si la création du dossier réussit :
-        - le dossier est défini comme dossier de projet actif,
-        - le processus de chargement du projet est lancé.
-
-        Si la création est annulée ou échoue, aucune modification n'est appliquée.
-        """
-
-        folder_path = create_new_folder(
-            project_name=self.current_project_name,
-            parent_widget=self.dockwidget,
-            log=None,
-            dockwidget=self.dockwidget,
-            iface=self.iface)
-
-        if folder_path and os.path.isdir(folder_path):
-            self.set_projectFolder(folder_path)
-
-    ## open_global_settings
-    def open_global_settings(self):
-        """Ouvre la fenêtre de configuration globale du plugin."""
-        self.global_settings_dialog = GlobalSettingsDialog(iface=self.iface, plugin=self)
-        self.global_settings_dialog.show()
-
-    ## get_watchdog_context
     def get_watchdog_context(self):
         """
         Retourne l'état courant du plugin utilisé par le système de surveillance (watchdog).
@@ -511,7 +170,246 @@ class Qsequoia2:
             "project_folder": self.current_project_folder,
             "downloads_path": self.downloads_path,
             "style_folder": self.current_style_folder,
-            "watch_mode": self.watch_mode}
-    
-    # endregion
+            "watch_mode": self.watch_mode
+        }
+   
+
+
+    # ## fonction set_projectFolder
+    # def set_projectFolder(self, path=None):
+    #     """
+    #     Définit le dossier de projet actif.
+
+    #     Cette fonction permet :
+    #     - de sélectionner manuellement un dossier de projet si aucun chemin n'est fourni,
+    #     - de déterminer automatiquement le nom du projet à partir des fichiers ou du nom du dossier,
+    #     - de mettre à jour les variables internes du plugin (nom et chemin du projet),
+    #     - de propager ces informations aux différents onglets du DockWidget,
+    #     - de redémarrer les mécanismes de surveillance (watchdog),
+    #     - de charger ou créer un projet QGIS (.qgz) si nécessaire,
+    #     - de vérifier la présence de données forestières (PARCA) et lancer les calculs associés si disponibles.
+    #     """
+
+    #     ### Selection des dossiers manuellement 
+
+    #     if path is None : # passe dans le cas ou un dossier de projet est créée
+    #         path = QFileDialog.getExistingDirectory(self.dockwidget, "Select project Directory")
+
+    #         if not path:
+    #             self.current_project_folder = None
+    #             self.current_project_name = None
+    #             return
+
+    #     messageLog(f"Selected directory: {path}","i")
+    #     self.current_project_folder = path
+    #     # SI chemin, on masque les suggestion de projet
+    #     if path:
+
+    #         self.suggestion_list.clear()
+    #         self.suggestion_list.setVisible(False)
+    #         self.suggestion_scroll.setVisible(False)
+    #     # on grise le boutton add_project
+    #     self.dockwidget.add_project.setEnabled(False)
+
+
+    #     # extraction du nom du projet
+
+    #     project_name = None
+
+    #     # test pour trouver le nom d eprojet depuis des fichiers
+    #     for root, dirs, files in os.walk(self.current_project_folder):
+    #         for filename in files:
+
+    #             if "_matrice" in filename:
+    #                 project_name = filename.split("_matrice")[0]
+    #                 break
+
+    #             if "_SEQ_PARCA_poly" in filename:
+    #                 project_name = filename.split("_SEQ_PARCA_poly")[0]
+    #                 break
+
+    #             if "_SEQ_PROJECT" in filename:
+    #                 project_name = filename.split("_SEQ_PROJECT")[0]
+
+    #         if project_name:
+    #             break
+
+    #     # fallback sur le dossier de projet si rien trouvé
+    #     if not project_name:
+    #         folder_name = os.path.basename(self.current_project_folder)
+    #         if "_SIG" in folder_name:
+    #             project_name = folder_name.split("_SIG")[0]
+    #         if "_SEQ" in folder_name:
+    #             project_name = folder_name.split("_SEQ")[0]
+    #         if "SEQ_SIG" in folder_name:
+    #             project_name = folder_name.split("_SEQ_SIG")[0]
+
+    #         # Pour les anciennes couches et anciens projets
+    #         if folder_name == "SIG":
+    #             for nom in os.listdir(self.current_project_folder):
+    #                 if "SEQ_PARCA_poly" in nom:
+    #                     continue
+    #                 if "PARCA" in nom:
+    #                     project_name = nom.split("_PARCA")[0]
+    #                     break
+
+    #     if not project_name:
+    #         project_name, ok = QInputDialog.getText(None,"Nom du projet", "Impossible de déterminer le nom du projet.\nVeuillez saisir le nom du projet :")
+
+    #         if not ok or not project_name.strip():
+    #             self.current_project_folder = None
+    #             raise Exception("Nom du projet non fourni. Opération annulée.")
+
+    #     self.current_project_name = project_name
+
+    #     # --- Propagation au DockWidget ---
+    #     if self.dockwidget:
+    #         self.dockwidget.current_project_name = self.current_project_name
+    #         self.dockwidget.current_project_folder = self.current_project_folder
+
+    #         # Afficher uniquement le nom du projet dans le champ
+    #         self.dockwidget.cb_seq_folder.blockSignals(True)
+    #         self.dockwidget.cb_seq_folder.setText(self.current_project_name)
+    #         self.dockwidget.cb_seq_folder.blockSignals(False)
+    #         self.dockwidget.cb_seq_folder.setEnabled(False)
+
+    #         # Propager aux onglets
+    #         if hasattr(self.dockwidget, "tools_tab"):
+    #             self.dockwidget.tools_tab.current_project_name = self.current_project_name
+    #             self.dockwidget.tools_tab.current_project_folder = self.current_project_folder
+
+    #         if hasattr(self.dockwidget, "data_settings_tab"):
+    #             self.dockwidget.data_settings_tab.current_project_name = self.current_project_name
+    #             self.dockwidget.data_settings_tab.current_project_folder = self.current_project_folder
+            
+    #         if hasattr(self.dockwidget, "LayoutDesigner_tab"):
+    #             self.dockwidget.LayoutDesigner_tab.current_project_name = self.current_project_name
+    #             self.dockwidget.LayoutDesigner_tab.current_project_folder = self.current_project_folder
+            
+    #         if hasattr(self.dockwidget, "forest_data_tab"):
+    #             self.dockwidget.forest_data_tab.current_project_name = self.current_project_name
+    #             self.dockwidget.forest_data_tab.current_project_folder = self.current_project_folder
+            
+    #         # --- Propagation aux addons chargés ---
+    #         if hasattr(self.dockwidget, "addons_tabs"):
+    #             for addon in self.dockwidget.addons_tabs:
+    #                 addon.current_project_name = self.current_project_name
+    #                 addon.current_project_folder = self.current_project_folder
+
+
+    #     # Mise à jour éventuelle du connect_dialog
+    #     if self.connect_dialog:
+    #         self.connect_dialog.update_watch_path_label()
+
+    #     # redémarrer le watcher
+    #     if self.dogwatcher:
+    #         self.dogwatcher.restart()
+
+    #         messageLog(f"Project name => {self.current_project_name}", "i")
+        
+    #     # Vérifier si dossier contient un projet QGZ, si non, on le crée, uniquement si variable utilisateur
+
+    #     project = QgsProject.instance()
+
+    #     if self.QSS2_default_project == "true" or True :
+    #         project_path = ensure_and_load_qgis_project(
+    #             project,
+    #             project_folder=self.current_project_folder,
+    #             project_name=self.current_project_name,
+    #             epsg="EPSG:2154")
+            
+    #         messageLog(f"Projet QGZ chargé : {project_path}", "i")
+        
+    #     messageBar(self.iface, f"Dossier {self.current_project_name} sélectionné avec succès : {self.current_project_folder}","s",10)
+        
+    #     # Vérifier s'il y a une couche PARCA dans le dossier projet
+
+    #     parca_files = any("PARCA" in name.upper()for root, dirs, files in os.walk(self.current_project_folder)for name in dirs + files)
+        
+    #     # Si une couche Parca existe, on lance le calcul des metadonnées de bases
+
+    #     if not parca_files:
+    #         messageLog("Aucune couche PARCA trouvée dans le dossier du projet. Calcul forestier annulé.","w")
+    #     else:
+    #         try:
+    #             forest_data = getForestdata(
+    #                 project_name=project_name,
+    #                 project_folder=self.current_project_folder,
+    #                 style_folder=self.current_style_folder,
+    #                 iface=self.iface)
+                
+    #             forest_data.run_all_calculations()
+    #         except Exception as e:
+    #             messageLog(f"Erreur lors du calcul des metadata : {e}","w")
+
+    # ## on_project_name_changed
+    # def on_project_name_changed(self, text):
+    #     """
+    #     Gère les modifications du nom de projet saisies par l'utilisateur.
+
+    #     Cette fonction :
+    #     - met à jour le nom du projet courant,
+    #     - propose automatiquement des dossiers de projet existants correspondant au texte saisi,
+    #     - affiche une liste de suggestions si des correspondances sont trouvées,
+    #     - active ou désactive le bouton de création de projet selon la validité du texte,
+    #     - propage le nom du projet aux composants du DockWidget,
+    #     - redémarre le système de surveillance si nécessaire.
+    #     """
+
+    #     # si le changement vient du code → on ignore
+    #     if self.updating_project_name:
+    #         return
+
+    #     self.current_project_name = text
+
+    #     # Activation du bouton
+    #     text_clean = text.strip()
+    #     text_valid = bool(text_clean)  # vrai uniquement si texte non vide
+
+    #     # Propager au DockWidget
+    #     if self.dockwidget:
+    #         self.dockwidget.current_project_name = self.current_project_name
+    #         self.dockwidget.cb_seq_folder.blockSignals(True)
+    #         self.dockwidget.cb_seq_folder.setText(self.current_project_name)
+    #         self.dockwidget.cb_seq_folder.blockSignals(False)
+
+    #         # Propager aux onglets si nécessaire
+    #         if hasattr(self.dockwidget, "tools_tab"):
+    #             self.dockwidget.tools_tab.current_project_name = self.current_project_name
+            
+    #         if hasattr(self.dockwidget, "data_settings_tab"):
+    #             self.dockwidget.data_settings_tab.current_project_name = self.current_project_name
+
+
+    #     if text:  # éviter de lancer sur vide
+    #         if self.dogwatcher:
+    #             self.dogwatcher.restart()
+
+    #         else:
+    #             messageLog("Watcher non initialisé, rien à redémarrer.","w")
+
+    # ## add_project_clicked
+    # def add_project_clicked(self):
+    #     """
+    #     Crée un nouveau dossier de projet à partir du nom saisi par l'utilisateur.
+
+    #     Si la création du dossier réussit :
+    #     - le dossier est défini comme dossier de projet actif,
+    #     - le processus de chargement du projet est lancé.
+
+    #     Si la création est annulée ou échoue, aucune modification n'est appliquée.
+    #     """
+
+    #     folder_path = create_new_folder(
+    #         project_name=self.current_project_name,
+    #         parent_widget=self.dockwidget,
+    #         log=None,
+    #         dockwidget=self.dockwidget,
+    #         iface=self.iface)
+
+    #     if folder_path and os.path.isdir(folder_path):
+    #         self.set_projectFolder(folder_path)
+
+    # ## get_watchdog_context
+ 
 

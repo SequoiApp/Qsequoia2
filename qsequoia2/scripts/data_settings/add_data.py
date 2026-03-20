@@ -337,12 +337,9 @@ class AddDataDialog(QDialog, FORM_CLASS):
             if layer_paths:
                 load_rasters(
                     layer_paths,
-                    project_name=self.current_project_name,
-                    project_folder=self.current_project_folder,
                     style_folder=self.current_style_folder,
-                    group_name="rasters",
-                    parent=self
-                )
+                    group_name="rasters"
+                    )
             if not layer_paths:
                 QMessageBox.information(self,"Couche non trouvée",f"Aucune couche trouvée pour {label} dans le dossier de projet.")
 
@@ -378,11 +375,8 @@ class AddDataDialog(QDialog, FORM_CLASS):
             if layer_paths:
                 load_vectors(
                     layer_paths,
-                    project_name=self.current_project_name,
-                    project_folder=self.current_project_folder,
                     style_folder=self.current_style_folder,
-                    group_name="vecteurs+SEQ",
-                    parent=self)
+                    group_name="vecteurs+SEQ")
                 
                 # Accrochage auto sur les couches importés
 

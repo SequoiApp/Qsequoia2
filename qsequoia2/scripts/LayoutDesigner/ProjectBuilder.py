@@ -193,11 +193,8 @@ class ProjectBuilder:
                     loader(
                         {layer_name_key: final_path},
                         style_folder=self.style_folder,
-                        project_folder=self.project_folder,
-                        project_name=self.project_name,
                         group_name=canvas_group_name,
-                        parent_group=subgroup,
-                        parent=self)
+                        parent_group=subgroup)
 
 
     # ==========================================================

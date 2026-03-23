@@ -266,6 +266,21 @@ def find_seq_dir(root_dir):
 # récupère l'identifiant de la forêt
 # ==================================
 
-def find_seq_identifiant():
-    """"""
-    
+def find_seq_identifiant(seq_dir):
+    """
+    Retourne l'identifiant du projet depuis la couche SEQ_PARCA_poly.
+    """
+    layer = seq_read("parca", seq_dir)
+
+    field_cfg = seq_field("identifier")
+    field_name = field_cfg.get("name") or "IDENTIFIANT"
+
+    for feat in layer.getFeatures():
+        seq_identifier = feat[field_name]
+        if seq_identifier:
+            return seq_identifier
+
+    raise RuntimeError(
+        f"No value found for field '{field_name}' in SEQ_PARCA_poly")
+
+

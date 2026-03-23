@@ -6,13 +6,13 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>488</width>
+    <width>518</width>
     <height>460</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>488</width>
+    <width>518</width>
     <height>460</height>
    </size>
   </property>
@@ -67,6 +67,12 @@
              <property name="toolTip">
               <string>Paramètres généraux</string>
              </property>
+             <property name="styleSheet">
+              <string notr="true">background-color: rgb(227, 227, 227);</string>
+             </property>
+             <property name="text">
+              <string>⚙️</string>
+             </property>
             </widget>
            </item>
            <item>
@@ -74,15 +80,24 @@
              <property name="toolTip">
               <string>Créer un nouveau projet</string>
              </property>
+             <property name="styleSheet">
+              <string notr="true">background-color: rgb(227, 227, 227);</string>
+             </property>
+             <property name="text">
+              <string>➕</string>
+             </property>
             </widget>
            </item>
            <item>
-            <widget class="QPushButton" name="btn_open_seq_dir">
+            <widget class="QPushButton" name="btn_open_seq_dir_2">
              <property name="enabled">
               <bool>false</bool>
              </property>
              <property name="toolTip">
               <string>Ouvrir le dossier courant</string>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">background-color: rgb(227, 227, 227);</string>
              </property>
              <property name="text">
               <string>📁</string>

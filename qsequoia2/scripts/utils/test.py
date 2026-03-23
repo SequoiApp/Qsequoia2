@@ -1,6 +1,9 @@
-import os
+from seq_config import *
 
-def test():
+def find_seq_identifiant():
+    """"""
+    #extraction du nom du projet
 
-    print("appel d'une fonction reussi")
+    seq_parca = seq_layer(key="SEQ_PARCA_poly")
 
+    print(seq_parca)

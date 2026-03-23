@@ -1,5 +1,6 @@
 import sys
 from pathlib import Path
+import os
 
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt
 from qgis.PyQt.QtGui import QIcon
@@ -102,14 +103,16 @@ class Qsequoia2:
         self.dockwidget.settingsClicked.connect(self._open_global_settings)
         self.dockwidget.reloadClicked.connect(self._reload_plugin)
 
-        # securité si le nom de projet est grisé
-        if not self.current_project_name :
-            self.dockwidget.name.setEnabled(True)
-        
-        if not self.current_project_folder:
-            self.dockwidget.btn_open_seq_dir.setEnabled(False)
+        self.seq_dir = None
 
-        self.dockwidget.btn_open_seq_dir.clicked.connect(self.open_seq_dir)
+        # securité si le nom de projet est grisé
+        #if not self.current_project_name :
+            #self.dockwidget.name.setEnabled(True)
+        
+        #if not self.current_project_folder:
+            #self.dockwidget.btn_open_seq_dir.setEnabled(False)
+
+        self.dockwidget.btn_open_seq_dir_2.clicked.connect(self.open_seq_dir)
 
         # Add to QGIS
         self.iface.addDockWidget(Qt.RightDockWidgetArea, self.dockwidget)
@@ -126,14 +129,19 @@ class Qsequoia2:
 
             self.dockwidget = None
 
-    def _on_project_changed(self, folderName, folder):
+    def _on_project_changed(self, seq_dirname, seq_dir):
         """Handle project selection from UI"""
 
-        set_project_variable("QS2_project_name", folderName)
-        set_project_variable("QS2_project_folder", folder)
+        set_project_variable("QS2_project_name", seq_dirname)
+        set_project_variable("QS2_project_folder", seq_dir)
+        self.seq_dirname = seq_dirname
+        self.seq_dir = seq_dir
 
-        messageLog(f"Project name: {folderName}", "i")
-        messageLog(f"Project folder: {folder}", "i")
+        if seq_dir :
+            self.dockwidget.btn_open_seq_dir_2.setEnabled(True)
+
+        messageLog(f"Project name: {seq_dirname}", "i")
+        messageLog(f"Project folder: {seq_dir}", "i")
 
     def _reload_plugin(self):
         """Reload plugin (wrapped for clarity)"""
@@ -179,7 +187,13 @@ class Qsequoia2:
             "style_folder": self.current_style_folder,
             "watch_mode": self.watch_mode
         }
-   
+    
+    def open_seq_dir(self):
+        """args:
+            - project_folder (str - sequoia dir)
+        """
+        os.startfile(self.seq_dir)
+    
 
 
     # ## fonction set_projectFolder

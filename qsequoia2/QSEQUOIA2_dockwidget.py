@@ -4,6 +4,7 @@ from qgis.PyQt import QtWidgets, uic
 from qgis.PyQt.QtCore import pyqtSignal, Qt
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QCompleter, QFileDialog
+from PyQt5.QtGui import QPixmap
 
 from qsequoia2.scripts.add_data.add_data import AddDataTabWidget
 from qsequoia2.scripts.forest_data.forest_data import ForestDataDialog
@@ -11,6 +12,7 @@ from qsequoia2.scripts.tools.tools import ToolsDialog
 from qsequoia2.scripts.add_on.addon_loader import load_addons
 from qsequoia2.scripts.utils.variable import get_global_variable
 from qsequoia2.scripts.utils.seq_config import *
+from qsequoia2.scripts.utils.messageBar import *
 
 PLUGIN_DIR = Path(__file__).resolve().parent
 UI_PATH = PLUGIN_DIR / "Qsequoia2_dockwidget.ui"
@@ -39,10 +41,17 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
     def _init_ui(self):
 
-        self.setWindowIcon(QIcon(str(PLUGIN_DIR / "icons" / "Qsequoia.png")))
+        self.cb_seq_folder.setEnabled(True)
 
-        self.btn_settings.setIcon(QIcon(str(PLUGIN_DIR / "icons" / "global_settings.svg")))
-        self.btn_create.setIcon(QIcon(str(PLUGIN_DIR / "icons" / "add_data.svg")))
+        self.setWindowIcon(QIcon(str(PLUGIN_DIR / "icons" / "Qsequoia.png")))
+        icon_path = str(PLUGIN_DIR / "icon.png")
+             
+        pixmap = QPixmap(icon_path)
+
+        self.icon.setPixmap(pixmap)
+        self.icon.setScaledContents(True)
+        self.icon.setFixedSize(128, 128)
+
 
         # Emit signals
         self.btn_settings.clicked.connect(self.settingsClicked)
@@ -88,11 +97,10 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             return
 
         combo = self.cb_seq_folder
-        folderName = combo.itemText(index)
-        folder = combo.itemData(index)
+        seq_dirname = combo.itemText(index)
+        seq_dir = combo.itemData(index)
 
-        if folder:
-            self.projectChanged.emit(folderName, folder)
+        self._apply_project_selection(seq_dirname, seq_dir)
 
     def _init_project_selection(self):
 
@@ -105,26 +113,38 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
     def _on_project_selected(self):
 
-        folder = QFileDialog.getExistingDirectory(
+        seq_dir = QFileDialog.getExistingDirectory(
             self,
             "Sélectionner un dossier projet",
             str(self._default_project_root)
         )
 
-        if not folder:
+        if not seq_dir:
             return
 
         combo = self.cb_seq_folder
-        folderName = Path(folder).name
-        project_name = find_seq_identifiant()
+        seq_dirname = Path(seq_dir).name
 
         combo.blockSignals(True)
-        combo.addItem(folderName, folder)
+        combo.addItem(seq_dirname, seq_dir)
         combo.setCurrentIndex(combo.count() - 1)
         combo.blockSignals(False)
 
-        if folder:
-            self.projectChanged.emit(folderName, folder)
+        self._apply_project_selection(seq_dirname, seq_dir)
+    
+
+    def _apply_project_selection(self, seq_dirname, seq_dir):
+        if not seq_dir:
+            return
+
+        self.projectChanged.emit(seq_dirname, seq_dir)
+        self.btn_open_seq_dir_2.setEnabled(True)
+        self.cb_seq_folder.setEnabled(False)
+        # récupération de l'identifiant de la forêt
+        self.seq_identifier = find_seq_identifiant(seq_dir)
+        
+        messageBar(self.iface, f"Selected directory: {seq_dir}", "s",10)
+
     # endregion
 
     def _init_tabs(self):

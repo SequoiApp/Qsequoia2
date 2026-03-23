@@ -39,6 +39,8 @@ from ..utils.config import *
 from datetime import datetime
 from qgis.PyQt.QtWidgets import QMessageBox,QFileDialog, QInputDialog, QListWidget, QScrollArea
 from ..utils.messageBar import *
+from ..utils.seq_config import *
+from ..utils.yaml_helper import *
 
 # endregion
 
@@ -46,12 +48,13 @@ from ..utils.messageBar import *
 # region getForestdata
 #===================================================
 
+_CACHE_DIR = Path(QgsApplication.qgisSettingsDirPath()) / "qsequoia2"
 
 class getForestdata:
     """Lecture depuis une couche PARCA des donénes sur la forêt. 
         Paramètre lu depuis la table forest_data.json"""
 
-    def __init__(self, project_name, project_folder, style_folder, iface):
+    def __init__(self, seq_identifier, seq_dir, iface):
         """Initialise l’objet getForestdata.
             Charge la configuration JSON et YAML, résout les définitions de champs,
             récupère les couches du projet et prépare la structure interne
@@ -59,13 +62,13 @@ class getForestdata:
         """
 
         self.iface = iface
-        self.project_name = project_name
-        self.project_folder = project_folder
-        self.style_folder = style_folder
+        self.seq_identifier = seq_identifier
+        self.seq_dir = seq_dir
 
-        self.script_dir = os.path.dirname(os.path.abspath(__file__))
-        self.json_path = os.path.join(self.script_dir, "forest_data.json")
-        self.yaml_file = os.path.join(self.script_dir,"..","..","inst","seq_fields.yaml")
+
+        self.script_dir = Path(__file__).parent
+        self.json_path = Path(self.script_dir / "forest_data.json")
+        self.yaml_file = Path(_CACHE_DIR / "seq_fields.yaml")
 
         # Charge YAML + JSON
         self.field_definitions = self.load_field_definitions(self.yaml_file)
@@ -693,14 +696,14 @@ class getForestdata:
             # -------------------------------
             # 4. Export JSON
             # -------------------------------
-            self.export_all_to_json()
+            self.export_all_to_yaml()
         
         except Exception as e:
             self.iface.messageBar().pushMessage("Qsequoia2",f"Erreur lors de la construction des metadata : {e}",level=Qgis.Warning, duration=10)
 
 
 
-    def export_all_to_json(self):
+    def export_all_to_yaml(self):
         """
         Exporte l’ensemble des données calculées
         dans le fichier forest_metadata.json.
@@ -710,21 +713,17 @@ class getForestdata:
         """
 
         # Chemin par défaut si non fourni
-        file_path = os.path.join(self.script_dir,"..", "..","data","_metadata","currentFolder","forest_metadata.json")
-        if file_path is None:
-            file_path = self.results_path
+        file_path = Path(_CACHE_DIR / "Qseq_forestMetadata")
 
         data_to_save = {
-            "project_name": self.project_name,
-            "project_folder": self.project_folder,
-            "style_folder": self.style_folder,
+            "project_name": self.seq_identifier,
+            "project_folder": self.seq_dir,
             "timestamp": datetime.now().isoformat(),
             "metadata": getattr(self, "_calculated_values", {})  # Résultats calculés
             }
 
         try:
-            with open(file_path, "w", encoding="utf-8") as f:
-                json.dump(data_to_save, f, indent=4, ensure_ascii=False)
-                messageLog(f"-- metadata build pour {self.project_folder} --!","i")
+            yaml_creator("Qseq_forestMetadata", data_to_save)  
+            messageLog(f"-- metadata build pour {self.seq_dir} --!","i")
         except Exception as e:
             messageBar(self.iface, f"Erreur lors de l'export JSON : {e}", "w", 10)

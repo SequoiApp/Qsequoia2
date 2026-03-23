@@ -44,7 +44,7 @@ class AddDataTabWidget(QTabWidget, FORM_CLASS):
         self.add_raster_tab()
         self.add_wmts_tab()
 
-    def add_vecteur_tab(self, folder=None):
+    def add_vecteur_tab(self, seq_dir=None):
 
         tab = QWidget()
         layout = QVBoxLayout(tab)
@@ -77,7 +77,7 @@ class AddDataTabWidget(QTabWidget, FORM_CLASS):
             item.setData(0, Qt.UserRole, l)
 
             # Grey if not available
-            if not self.is_available(l, folder):
+            if not self.is_available(l, seq_dir):
                 item.setDisabled(True)
 
             categories[family_key].addChild(item)
@@ -88,7 +88,7 @@ class AddDataTabWidget(QTabWidget, FORM_CLASS):
 
         return tab
 
-    def add_raster_tab(self, folder=None):
+    def add_raster_tab(self, seq_dir=None):
 
         tab = QWidget()
         layout = QVBoxLayout(tab)
@@ -121,7 +121,7 @@ class AddDataTabWidget(QTabWidget, FORM_CLASS):
             item.setData(0, Qt.UserRole, l)
 
             # Grey if not available
-            if not self.is_available(l, folder):
+            if not self.is_available(l, seq_dir):
                 item.setDisabled(True)
 
             categories[family_key].addChild(item)
@@ -183,7 +183,7 @@ class AddDataTabWidget(QTabWidget, FORM_CLASS):
     # region ADD LAYER TO QGIS
     def on_seq_layer_clicked(self, item, column):
 
-        project_folder = get_project_variable("QS2_project_folder")
+        project_folder = get_project_variable("QS2_seq_dir")
         style_folder = get_global_variable("QS2_styles_directory")
 
         data = item.data(0, Qt.UserRole)
@@ -253,26 +253,26 @@ class AddDataTabWidget(QTabWidget, FORM_CLASS):
     # endregion
 
     # region UPDATE FROM SIGNAL
-    def on_project_changed(self, name, folder):
-        self._reload_vecteur_tab(folder)
-        self._reload_raster_tab(folder)
+    def on_project_changed(self, seq_dirname, seq_dir):
+        self._reload_vecteur_tab(seq_dir)
+        self._reload_raster_tab(seq_dir)
 
-    def _reload_vecteur_tab(self, folder):
+    def _reload_vecteur_tab(self, seq_dir):
         # Find where is user
         current = self.currentIndex()
 
         self.removeTab(VTAB_INDEX)
-        self.add_vecteur_tab(folder)
+        self.add_vecteur_tab(seq_dir)
 
         # Restore user position
         self.setCurrentIndex(current)
 
-    def _reload_raster_tab(self, folder):
+    def _reload_raster_tab(self, seq_dir):
         # Find where is user
         current = self.currentIndex()
 
         self.removeTab(RTAB_INDEX)
-        self.add_vecteur_tab(folder)
+        self.add_raster_tab(seq_dir)
 
         # Restore user position
         self.setCurrentIndex(current)

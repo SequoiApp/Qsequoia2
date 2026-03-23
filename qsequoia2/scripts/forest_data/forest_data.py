@@ -1,6 +1,6 @@
 
 # ==========================================================================
-# region import
+# import
 # ==========================================================================
 
 # python 
@@ -24,12 +24,12 @@ from .get_final_data import getFinaldata
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'forest_data.ui'))
 
-# endregion
 # ==========================================================================
-# region ForestDataDialog
+# ForestDataDialog
 # ==========================================================================
 
 class ForestDataDialog(QDialog, FORM_CLASS):
+    """Classe principale du module Forestdata de Qsequoia2"""
     def __init__(self, current_project_name, current_style_folder, downloads_path, current_project_folder, iface, parent=None):
         super().__init__(parent)
 

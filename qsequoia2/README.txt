@@ -21,7 +21,7 @@ What's Next:
 
   * Create your own custom icon, replacing the default icon.png
 
-  * Modify your user interface by opening QSEQUOIA2_dockwidget_base.ui in Qt Designer
+  * Modify your user interface by opening QSEQUOIA2_dockwidget.ui in Qt Designer
 
   * You can use the Makefile to compile your Ui and resource files when
     you make changes. This requires GNU make (gmake)

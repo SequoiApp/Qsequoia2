@@ -46,7 +46,7 @@ PY_FILES = \
 	__init__.py \
 	QSEQUOIA2.py QSEQUOIA2_dockwidget.py
 
-UI_FILES = QSEQUOIA2_dockwidget_base.ui
+UI_FILES = QSEQUOIA2_dockwidget.ui
 
 EXTRAS = metadata.txt icon.png
 

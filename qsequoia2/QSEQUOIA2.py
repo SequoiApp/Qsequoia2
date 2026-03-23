@@ -361,6 +361,11 @@ class QSEQUOIA2:
             # securité si le nom de projet est grisé
             if not self.current_project_name :
                 self.dockwidget.name.setEnabled(True)
+            
+            if not self.current_project_folder:
+                self.dockwidget.btn_open_seq_dir.setEnabled(False)
+
+            self.dockwidget.btn_open_seq_dir.clicked.connect(self.open_seq_dir)
 
 
             # Reload the plugin 
@@ -553,6 +558,10 @@ class QSEQUOIA2:
             except Exception as e:
                 messageLog(f"Erreur lors du calcul des metadata : {e}","w")
 
+        # boutton pour ouvrir le dossier de projet
+        self.dockwidget.btn_open_seq_dir.setEnabled(True)
+
+
     ## on_project_name_changed
 
     def on_project_name_changed(self, text):
@@ -719,6 +728,14 @@ class QSEQUOIA2:
             "downloads_path": self.downloads_path,
             "style_folder": self.current_style_folder,
             "watch_mode": self.watch_mode}
+    
+    # ouvrir le dossier de projet
+
+    def open_seq_dir(self):
+        """args:
+            - project_folder (str - sequoia dir)
+        """
+        os.startfile(self.current_project_folder)
     
 
     # endregion

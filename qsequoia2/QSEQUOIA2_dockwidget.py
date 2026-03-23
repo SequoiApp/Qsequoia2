@@ -49,7 +49,7 @@ from.scripts.utils.variable import get_global_variable
 # import de l'UI
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'QSEQUOIA2_dockwidget_base.ui'))
+    os.path.dirname(__file__), 'QSEQUOIA2_dockwidget.ui'))
 
 # endregion
 

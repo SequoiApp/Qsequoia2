@@ -272,7 +272,7 @@ class AddDataTabWidget(QTabWidget, FORM_CLASS):
         current = self.currentIndex()
 
         self.removeTab(RTAB_INDEX)
-        self.add_vecteur_tab(seq_dir)
+        self.add_raster_tab(seq_dir)
 
         # Restore user position
         self.setCurrentIndex(current)

@@ -23,7 +23,7 @@ FORM_CLASS, _ = uic.loadUiType(str(UI_PATH))
 class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
     closingPlugin = pyqtSignal()
-    projectChanged = pyqtSignal(str, str)
+    projectChanged = pyqtSignal(str, str, str)
     settingsClicked = pyqtSignal()
     reloadClicked = pyqtSignal()
 
@@ -136,13 +136,12 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
     def _apply_project_selection(self, seq_dirname, seq_dir):
         if not seq_dir:
             return
-
-        self.projectChanged.emit(seq_dirname, seq_dir)
+        # récupération de l'identifiant de la forêt
+        self.seq_identifier = find_seq_identifier(seq_dir)
+        self.projectChanged.emit(seq_dirname, seq_dir,self.seq_identifier)
         self.btn_open_seq_dir_2.setEnabled(True)
         self.cb_seq_folder.setEnabled(False)
-        # récupération de l'identifiant de la forêt
-        self.seq_identifier = find_seq_identifiant(seq_dir)
-        
+
         messageBar(self.iface, f"Selected directory: {seq_dir}", "s",10)
 
     # endregion

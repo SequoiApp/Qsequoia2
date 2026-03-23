@@ -266,7 +266,7 @@ def find_seq_dir(root_dir):
 # récupère l'identifiant de la forêt
 # ==================================
 
-def find_seq_identifiant(seq_dir):
+def find_seq_identifier(seq_dir):
     """
     Retourne l'identifiant du projet depuis la couche SEQ_PARCA_poly.
     """

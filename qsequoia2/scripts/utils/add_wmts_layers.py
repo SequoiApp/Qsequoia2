@@ -11,12 +11,22 @@ Fonctionnalité :
 - Ajouter les couches au projet QGIS
 - Créer un groupe optionnel pour les couches
 """
+# ==================================================================================
+# Import
+# ==================================================================================
 
+# Python 
+import re
+
+# QGIS
 from qgis.core import (QgsProject, QgsRasterLayer,QgsMessageLog,Qgis)
 
+# QSEQUOIA2
 from .config import get_wmts
 
-
+# ==================================================================================
+# load_wmts
+# ==================================================================================
 
 def load_wmts(label, group_name = None):
     """
@@ -32,6 +42,11 @@ def load_wmts(label, group_name = None):
     Args:
         label (list[str]): liste des clés des couches WMTS à charger
         group_name (str, optional): nom du groupe QGIS où ajouter les couches
+    
+    dependances : 
+        - QGIS > 3.40
+        - QS2Function : get_wmts
+        - QS2Function : messageLog & messageBar
 
     """
     project = QgsProject.instance()
@@ -45,7 +60,7 @@ def load_wmts(label, group_name = None):
     for key in label:
         display_name, url_params = get_wmts(key)
         # Extraire l'URL réelle après le dernier "url="
-        import re
+
         match = re.search(r"url=(.+)$", url_params)
         base_url = match.group(1) if match else url_params
 

@@ -5,20 +5,29 @@ Auteur : Alexandre Le Bars - Comité des Forêts, Paul Carteron - Racines expert
 Email : alexlb329@gmail.com
 """
 
+# ==================================================================================
+# Import
+# ==================================================================================
+
+# python
 import os
 
-from qgis.core import (
-    QgsProject,
-    QgsRasterLayer,
-    QgsMessageLog,
-    Qgis)
+# QGIS
+
+from qgis.core import (QgsProject,QgsRasterLayer,QgsMessageLog,Qgis)
 from qgis.core import QgsRasterLayer
+
+# Qsequoia2
+
 from .config import get_style
+from .messageBar import *
+
+# ==================================================================================
+# load_rasters
+# ==================================================================================
 
 
-
-
-def load_rasters(layer_path, project_folder, project_name, style_folder, group_name=None, parent=None):
+def load_rasters(layer_path, style_folder, group_name=None, parent_group=None):
     """
     Charge des couches raster dans le projet QGIS.
 
@@ -30,11 +39,14 @@ def load_rasters(layer_path, project_folder, project_name, style_folder, group_n
 
     Args:
         layer_path (dict): dictionnaire {label: chemin_fichier} des rasters à charger
-        project_folder (str): dossier racine du projet
-        project_name (str): nom du projet courant
         style_folder (str): dossier contenant les styles (.qml)
         group_name (str, optional): nom du groupe QGIS où ajouter les couches
-        parent (QWidget, optional): widget parent pour les messages (non utilisé ici)
+        parent_group : (str, optional) nom du groupe principal de la mise en page (se fait auto)
+    
+    dependances : 
+        - QGIS > 3.40
+        - QS2Function : get_style
+        - QS2Function : messageLog & messageBar
 
     Returns:
         list: liste des clés (labels) des rasters chargés avec succès
@@ -51,17 +63,16 @@ def load_rasters(layer_path, project_folder, project_name, style_folder, group_n
 
         # --- Charger le raster correctement ---
         layer = QgsRasterLayer(path, layer_name, "gdal")
-        print(f"\nload_rasters : adding {layer}")
+        messageLog(f"\nload_rasters : adding {layer}", "i")
 
         if not layer.isValid():
-            QgsMessageLog.logMessage(
-                f"Failed to load raster '{key}' from {path}",
-                "Qsequoia2",
-                Qgis.Warning
-            )
+            messageLog(f"Failed to load raster '{key}' from {path}", "w")
             continue
 
         # --- Créer le groupe si nécessaire ---
+        if group_name is not None :
+            group = parent_group
+
         if group_name and group is None:
             group = root.findGroup(group_name) or root.addGroup(group_name)
 
@@ -74,12 +85,12 @@ def load_rasters(layer_path, project_folder, project_name, style_folder, group_n
             try:
                 res, msg = layer.loadNamedStyle(str(style))
                 if not res:
-                    QgsMessageLog.logMessage(f"Impossible d'appliquer le style '{key}': {msg}", "Qsequoia2", Qgis.Warning)
+                    messageLog(f"Impossible d'appliquer le style '{key}': {msg}", "w")
                 else:
                     # Appliquer immédiatement le style chargé
                     layer.triggerRepaint()
             except Exception as e:
-                QgsMessageLog.logMessage(f"Erreur lors de l'application du style '{key}': {e}", "Qsequoia2", Qgis.Warning)
+                messageLog(f"Erreur lors de l'application du style '{key}': {e}", "w")
 
         # --- Ajouter la couche au projet ---
         project.addMapLayer(layer, not bool(group))

@@ -18,7 +18,6 @@ sys.path.insert(0, watchdog_path)
 
 from watchdog.events import FileSystemEventHandler
 
-
 class DownloadEventHandler(FileSystemEventHandler):
     """
     Gestionnaire d'événements pour le DogWatcher.

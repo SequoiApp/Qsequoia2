@@ -5,18 +5,27 @@ avec application automatique des styles.
 Auteur : Alexandre Le Bars - Comité des Forêts, Paul Carteron - Racines experts forestiers associés, Matthieu Chevereau - Caisse des dépôts et consignation
 Email : alexlb329@gmail.com
 """
+
+# ==================================================================================
+# Import
+# ==================================================================================
+
+# python
 import os
 from pathlib import Path
-from qgis.core import (
-    QgsProject,
-    QgsVectorLayer,
-    QgsMessageLog,
-    Qgis)
 
+# QGIS
+from qgis.core import (QgsProject,QgsVectorLayer,QgsMessageLog,Qgis)
+
+# QSEQUOIA2
 from .config import get_style
+from .messageBar import *
 
+# ==================================================================================
+# load_vectors
+# ==================================================================================
 
-def load_vectors(layer_path, style_folder, project_folder, project_name, group_name=None, parent_group=None,parent=None):
+def load_vectors(layer_path, style_folder, group_name=None, parent_group=None):
     """
     Charge des couches vecteur dans le projet QGIS.
 
@@ -29,13 +38,16 @@ def load_vectors(layer_path, style_folder, project_folder, project_name, group_n
     Args:
         layer_path (dict): dictionnaire {label: chemin_fichier} des vecteurs à charger
         style_folder (str): dossier contenant les styles (.qml)
-        project_folder (str): dossier racine du projet
-        project_name (str): nom du projet courant
         group_name (str, optional): nom du groupe QGIS où ajouter les couches
-        parent (QWidget, optional): widget parent pour les messages (non utilisé ici)
+        parent_group : (str, optional) nom du groupe principal de la mise en page (se fait auto)
 
     Returns:
         list: liste des clés (labels) des vecteurs chargés avec succès
+
+    dependances : 
+        - QGIS > 3.40
+        - QS2Function : get_style
+        - QS2Function : messageLog & messageBar
 
     Auteur : Alexandre Le Bars - Comité des Forêts
     """
@@ -51,14 +63,10 @@ def load_vectors(layer_path, style_folder, project_folder, project_name, group_n
         layer_name = os.path.splitext(os.path.basename(path))[0]
 
         layer = QgsVectorLayer(path, layer_name, "ogr")
-        print(f"\nload_vectors : adding {layer}")
+        messageLog(f"\nload_vectors : adding {layer}","i")
 
         if not layer.isValid():
-            QgsMessageLog.logMessage(
-                f"Failed to load vector '{key}' from {path}",
-                "Qsequoia2",
-                Qgis.Warning
-            )
+            messageLog(f"Failed to load vector '{key}' from {path}","w")
             continue
 
         # Créer le groupe si nécessaire
@@ -76,12 +84,12 @@ def load_vectors(layer_path, style_folder, project_folder, project_name, group_n
             try:
                 res, msg = layer.loadNamedStyle(str(style))
                 if not res:
-                    QgsMessageLog.logMessage(f"Impossible d'appliquer le style '{key}': {msg}", "Qsequoia2", Qgis.Warning)
+                    messageLog(f"Impossible d'appliquer le style '{key}': {msg}", "w")
                 else:
                     # Appliquer immédiatement le style chargé
                     layer.triggerRepaint()
             except Exception as e:
-                QgsMessageLog.logMessage(f"Erreur lors de l'application du style '{key}': {e}", "Qsequoia2", Qgis.Warning)
+                messageLog(f"Erreur lors de l'application du style '{key}': {e}", "w")
 
         # --- Ajouter la couche au projet ---
         project.addMapLayer(layer, not bool(group))

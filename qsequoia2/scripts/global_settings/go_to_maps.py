@@ -4,9 +4,9 @@ from qgis.PyQt.QtCore import QUrl
 
 def open_maps(adress):
     """
-    Docstring for open_maps
+    Open google map with the adress of your organisation
     
-    :param adress: Description
+    :param adress: adress of your organisation
     """
     
     if adress:

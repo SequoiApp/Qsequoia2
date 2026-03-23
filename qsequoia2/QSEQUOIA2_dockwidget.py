@@ -15,10 +15,9 @@ from qsequoia2.scripts.utils.seq_config import *
 from qsequoia2.scripts.utils.messageBar import *
 
 PLUGIN_DIR = Path(__file__).resolve().parent
+
 UI_PATH = PLUGIN_DIR / "Qsequoia2_dockwidget.ui"
-
 FORM_CLASS, _ = uic.loadUiType(str(UI_PATH))
-
 
 class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 

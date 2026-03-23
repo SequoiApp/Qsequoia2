@@ -196,7 +196,6 @@ class Qsequoia2:
         os.startfile(self.seq_dir)
     
 
-
     # ## fonction set_projectFolder
     # def set_projectFolder(self, path=None):
     #     """

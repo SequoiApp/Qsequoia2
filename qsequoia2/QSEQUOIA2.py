@@ -102,6 +102,15 @@ class Qsequoia2:
         self.dockwidget.settingsClicked.connect(self._open_global_settings)
         self.dockwidget.reloadClicked.connect(self._reload_plugin)
 
+        # securité si le nom de projet est grisé
+        if not self.current_project_name :
+            self.dockwidget.name.setEnabled(True)
+        
+        if not self.current_project_folder:
+            self.dockwidget.btn_open_seq_dir.setEnabled(False)
+
+        self.dockwidget.btn_open_seq_dir.clicked.connect(self.open_seq_dir)
+
         # Add to QGIS
         self.iface.addDockWidget(Qt.RightDockWidgetArea, self.dockwidget)
         self.dockwidget.show()
@@ -117,15 +126,13 @@ class Qsequoia2:
 
             self.dockwidget = None
 
-    def _on_project_changed(self, name, folder):
+    def _on_project_changed(self, folderName, folder):
         """Handle project selection from UI"""
 
-        messageLog("_on_project_changed")
-
-        set_project_variable("QS2_project_name", name)
+        set_project_variable("QS2_project_name", folderName)
         set_project_variable("QS2_project_folder", folder)
 
-        messageLog(f"Project name: {name}", "i")
+        messageLog(f"Project name: {folderName}", "i")
         messageLog(f"Project folder: {folder}", "i")
 
     def _reload_plugin(self):

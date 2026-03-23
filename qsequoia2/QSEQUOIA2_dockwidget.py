@@ -10,7 +10,7 @@ from qsequoia2.scripts.forest_data.forest_data import ForestDataDialog
 from qsequoia2.scripts.tools.tools import ToolsDialog
 from qsequoia2.scripts.add_on.addon_loader import load_addons
 from qsequoia2.scripts.utils.variable import get_global_variable
-from qsequoia2.scripts.utils.seq_config import find_seq_dir
+from qsequoia2.scripts.utils.seq_config import *
 
 PLUGIN_DIR = Path(__file__).resolve().parent
 UI_PATH = PLUGIN_DIR / "Qsequoia2_dockwidget.ui"
@@ -88,11 +88,11 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             return
 
         combo = self.cb_seq_folder
-        name = combo.itemText(index)
+        folderName = combo.itemText(index)
         folder = combo.itemData(index)
 
         if folder:
-            self.projectChanged.emit(name, folder)
+            self.projectChanged.emit(folderName, folder)
 
     def _init_project_selection(self):
 
@@ -115,15 +115,16 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             return
 
         combo = self.cb_seq_folder
-        name = Path(folder).name
+        folderName = Path(folder).name
+        project_name = find_seq_identifiant()
 
         combo.blockSignals(True)
-        combo.addItem(name, folder)
+        combo.addItem(folderName, folder)
         combo.setCurrentIndex(combo.count() - 1)
         combo.blockSignals(False)
 
         if folder:
-            self.projectChanged.emit(name, folder)
+            self.projectChanged.emit(folderName, folder)
     # endregion
 
     def _init_tabs(self):

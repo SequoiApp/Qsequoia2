@@ -2,15 +2,23 @@
 <ui version="4.0">
  <class>Qsequoia2</class>
  <widget class="QgsDockWidget" name="Qsequoia2">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>488</width>
+    <height>460</height>
+   </rect>
+  </property>
   <property name="minimumSize">
    <size>
-    <width>182</width>
-    <height>256</height>
+    <width>488</width>
+    <height>460</height>
    </size>
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>icons/Qsequoia.png</normaloff>icons/Qsequoia.png</iconset>
+    <normaloff>../../../../../../../Downloads/icons/Qsequoia.png</normaloff>../../../../../../../Downloads/icons/Qsequoia.png</iconset>
   </property>
   <property name="windowTitle">
    <string>Qsequoia2</string>
@@ -18,62 +26,97 @@
   <widget class="QWidget" name="dockWidgetContents">
    <layout class="QVBoxLayout" name="main_layout">
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_4">
-      <property name="topMargin">
-       <number>6</number>
+     <widget class="QGroupBox" name="groupBox_3">
+      <property name="title">
+       <string/>
       </property>
-      <item>
-       <widget class="QToolButton" name="btn_select_seq_folder">
-        <property name="text">
-         <string>...</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QComboBox" name="cb_seq_folder">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="editable">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </item>
-    <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_5">
-      <item>
-       <widget class="QPushButton" name="btn_settings">
-        <property name="text">
-         <string>Paramètres</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="btn_create">
-        <property name="text">
-         <string>Ajouter</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <spacer name="horizontalSpacer">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-     </layout>
+      <layout class="QHBoxLayout" name="projectLayout">
+       <item>
+        <layout class="QVBoxLayout" name="projectLeft">
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout">
+           <item>
+            <widget class="QToolButton" name="btn_select_seq_folder">
+             <property name="toolTip">
+              <string>Choisir un dossier de projet</string>
+             </property>
+             <property name="text">
+              <string>...</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QComboBox" name="cb_seq_folder">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="editable">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <item>
+            <widget class="QPushButton" name="btn_settings">
+             <property name="toolTip">
+              <string>Paramètres généraux</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="btn_create">
+             <property name="toolTip">
+              <string>Créer un nouveau projet</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="btn_open_seq_dir">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="toolTip">
+              <string>Ouvrir le dossier courant</string>
+             </property>
+             <property name="text">
+              <string>📁</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QLabel" name="icon">
+         <property name="minimumSize">
+          <size>
+           <width>128</width>
+           <height>128</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>128</width>
+           <height>128</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>icon</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
     </item>
     <item>
      <widget class="QTabWidget" name="tabWidget">

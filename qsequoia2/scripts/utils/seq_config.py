@@ -11,6 +11,7 @@ from qgis.core import (
     QgsProject
 )
 
+
 _BASE_URL = "https://raw.githubusercontent.com/SequoiApp/Rsequoia2/main/inst/config"
 
 _SEQ_CONFIG_URLS = {
@@ -21,6 +22,8 @@ _SEQ_CONFIG_URLS = {
 _CACHE_DIR = Path(QgsApplication.qgisSettingsDirPath()) / "qsequoia2"
 
 _CONFIG_CACHE = {}
+
+# TODO plus propre dans une class
 
 def sync_seq_configs(timeout: int = 3) -> None:
     """
@@ -178,6 +181,11 @@ def get_style(layer_key, style_folder):
 
     return None
 
+# ==================================
+# Lecture d'une couche et ajout dans qgis
+# ==================================
+
+
 def seq_read(key, project_folder, add_to_project=False, group_name=None, style_folder=None):
 
     meta = seq_layer(key)
@@ -252,3 +260,12 @@ def find_seq_dir(root_dir):
     }
 
     return projects
+
+
+# ==================================
+# récupère l'identifiant de la forêt
+# ==================================
+
+def find_seq_identifiant():
+    """"""
+    

@@ -129,11 +129,12 @@ class Qsequoia2:
 
             self.dockwidget = None
 
-    def _on_project_changed(self, seq_dirname, seq_dir):
+    def _on_project_changed(self, seq_dirname, seq_dir, seq_identifier):
         """Handle project selection from UI"""
 
-        set_project_variable("QS2_project_name", seq_dirname)
-        set_project_variable("QS2_project_folder", seq_dir)
+        set_project_variable("QS2_seq_dirname", seq_dirname)
+        set_project_variable("QS2_seq_dir", seq_dir)
+        set_project_variable("QS2_seq_identifier", seq_identifier)
         self.seq_dirname = seq_dirname
         self.seq_dir = seq_dir
 

@@ -1,37 +1,284 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>forest_data</class>
- <widget class="QWidget" name="forest_data">
+ <class>ForestDataDialog</class>
+ <widget class="QWidget" name="ForestDataDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>324</width>
-    <height>300</height>
+    <width>622</width>
+    <height>495</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>forest_data</string>
+   <string>Choix de forêt</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+  <layout class="QVBoxLayout" name="rootLayout">
    <item>
-    <widget class="QPushButton" name="btn_update">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="toolTip">
-      <string>Actualisation des données</string>
-     </property>
-     <property name="text">
-      <string/>
-     </property>
-    </widget>
+    <layout class="QHBoxLayout" name="refreshLayout">
+     <item>
+      <widget class="QPushButton" name="actu">
+       <property name="toolTip">
+        <string>Actualiser les données</string>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">background-color: rgb(0, 128, 128);
+</string>
+       </property>
+       <property name="text">
+        <string>🔄</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
    </item>
    <item>
-    <widget class="QTextBrowser" name="txt_html"/>
+    <widget class="QScrollArea" name="scrollArea">
+     <property name="widgetResizable">
+      <bool>true</bool>
+     </property>
+     <widget class="QWidget" name="scrollAreaWidgetContents">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>598</width>
+        <height>434</height>
+       </rect>
+      </property>
+      <layout class="QFormLayout" name="formLayout">
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_forest_name">
+         <property name="text">
+          <string>Nom de la forêt :</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLineEdit" name="forest_name_edit">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="font">
+          <font>
+           <family>Garamond</family>
+           <pointsize>9</pointsize>
+           <weight>9</weight>
+           <italic>false</italic>
+           <bold>false</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(241, 241, 241);
+border-color: rgb(241, 241, 241);
+font: 75 9pt &quot;Garamond&quot;;</string>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_departement">
+         <property name="text">
+          <string>Département :</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="departement_edit">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="font">
+          <font>
+           <family>Garamond</family>
+           <pointsize>9</pointsize>
+           <weight>50</weight>
+           <italic>false</italic>
+           <bold>false</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(241, 241, 241);
+border-color: rgb(241, 241, 241);
+font: 9pt &quot;Garamond&quot;;</string>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_city">
+         <property name="text">
+          <string>Commune :</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QLineEdit" name="city_edit">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="font">
+          <font>
+           <family>Garamond</family>
+           <pointsize>9</pointsize>
+           <weight>50</weight>
+           <italic>false</italic>
+           <bold>false</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(241, 241, 241);
+border-color: rgb(241, 241, 241);
+font: 9pt &quot;Garamond&quot;;</string>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_surface">
+         <property name="text">
+          <string>Surface totale :</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QLineEdit" name="surface_edit">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(241, 241, 241);
+border-color: rgb(241, 241, 241);
+font: 9pt &quot;Garamond&quot;;</string>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QLabel" name="label_surface_boisee">
+         <property name="text">
+          <string>Surface boisée (ha) :</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="QLineEdit" name="surface_boisee_edit">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(241, 241, 241);
+border-color: rgb(241, 241, 241);
+font: 9pt &quot;Garamond&quot;;</string>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0">
+        <widget class="QLabel" name="label_surface_non_boisee">
+         <property name="text">
+          <string>Surface non boisée (ha) :</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="1">
+        <widget class="QLineEdit" name="surface_non_boisee_edit">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(241, 241, 241);
+border-color: rgb(241, 241, 241);
+font: 9pt &quot;Garamond&quot;;</string>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="0">
+        <widget class="QLabel" name="label_owner">
+         <property name="text">
+          <string>Propriétaire :</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="1">
+        <widget class="QLineEdit" name="owner_edit">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(241, 241, 241);
+border-color: rgb(241, 241, 241);
+font: 9pt &quot;Garamond&quot;;</string>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="0">
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item row="9" column="0">
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <item>
+          <widget class="QLabel" name="label_2">
+           <property name="text">
+            <string>Parcelles : </string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="cb_parcelle"/>
+         </item>
+        </layout>
+       </item>
+       <item row="10" column="0" colspan="2">
+        <widget class="QTableWidget" name="forestTable"/>
+       </item>
+       <item row="8" column="0" colspan="2">
+        <layout class="QHBoxLayout" name="horizontalLayout_4">
+         <item>
+          <widget class="Line" name="line_2">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+    </widget>
    </item>
   </layout>
  </widget>

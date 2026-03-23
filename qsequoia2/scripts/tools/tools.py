@@ -84,7 +84,7 @@ class ToolsDialog(QWidget, FORM_CLASS):
 
     def _call_function(self, action):
 
-        project_name = get_global_variable("QS2_project_name")
+        project_name = get_global_variable("QS2_seq_dirname")
         style_folder = get_global_variable("QS2_styles_directory")
 
         skip_check = action.get("skip_check", False)

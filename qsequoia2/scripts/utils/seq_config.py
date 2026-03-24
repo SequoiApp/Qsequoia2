@@ -181,11 +181,6 @@ def get_style(layer_key, style_folder):
 
     return None
 
-# ==================================
-# Lecture d'une couche et ajout dans qgis
-# ==================================
-
-
 def seq_read(key, project_folder, add_to_project=False, group_name=None, style_folder=None):
 
     meta = seq_layer(key)
@@ -240,7 +235,7 @@ def seq_read(key, project_folder, add_to_project=False, group_name=None, style_f
 
     return layer
 
-def find_seq_dir(root_dir):
+def find_all_seq_dir(root_dir):
 
     if not root_dir:
         return []
@@ -261,26 +256,25 @@ def find_seq_dir(root_dir):
 
     return projects
 
-
-# ==================================
-# récupère l'identifiant de la forêt
-# ==================================
-
 def find_seq_identifier(seq_dir):
-    """
-    Retourne l'identifiant du projet depuis la couche SEQ_PARCA_poly.
-    """
     layer = seq_read("parca", seq_dir)
+    field_name = seq_field("identifier")["name"]
 
-    field_cfg = seq_field("identifier")
-    field_name = field_cfg.get("name") or "IDENTIFIANT"
-
+    # set() ensure uniqueness
+    identifiers = set()
     for feat in layer.getFeatures():
-        seq_identifier = feat[field_name]
-        if seq_identifier:
-            return seq_identifier
+        value = feat[field_name]
+        if value:
+            identifiers.add(value)
 
-    raise RuntimeError(
-        f"No value found for field '{field_name}' in SEQ_PARCA_poly")
+    if not identifiers:
+        raise RuntimeError(
+            f"Aucun identifiant trouvé dans le champ '{field_name}'."
+        )
 
+    if len(identifiers) > 1:
+        raise RuntimeError(
+            f"Plusieurs identifiants trouvés dans le champ '{field_name}' : {identifiers}"
+    )
 
+    return identifiers.pop()

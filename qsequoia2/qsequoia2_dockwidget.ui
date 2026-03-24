@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>345</width>
-    <height>459</height>
+    <width>261</width>
+    <height>288</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -25,6 +25,18 @@
   </property>
   <widget class="QWidget" name="dockWidgetContents">
    <layout class="QVBoxLayout" name="main_layout">
+    <property name="leftMargin">
+     <number>10</number>
+    </property>
+    <property name="topMargin">
+     <number>10</number>
+    </property>
+    <property name="rightMargin">
+     <number>10</number>
+    </property>
+    <property name="bottomMargin">
+     <number>10</number>
+    </property>
     <item>
      <layout class="QHBoxLayout" name="hbox_button_container">
       <property name="topMargin">
@@ -141,6 +153,13 @@
         </property>
         <property name="editable">
          <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="lbl_seq_dir_status">
+        <property name="text">
+         <string>seq_dir_status</string>
         </property>
        </widget>
       </item>

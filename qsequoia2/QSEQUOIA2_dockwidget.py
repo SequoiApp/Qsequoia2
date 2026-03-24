@@ -48,6 +48,11 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.btn_settings.setIcon(QgsApplication.getThemeIcon("/mActionOptions.svg"))
         self.btn_open_seq_dir.setIcon(QgsApplication.getThemeIcon("/mActionFileOpen.svg"))
         self.btn_issue.setIcon(github_icon)
+        
+        # Sequoia dir status
+        self.lbl_seq_dir_status.clear()
+        self.lbl_seq_dir_status.setFixedSize(16, 16)
+        self._set_seq_dir_status(False, "Aucun dossier sélectionné")
 
     # region PROJECT
     ## TO-DO extract to specific class
@@ -58,7 +63,7 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         projects = []
         if enabled and root:
-            projects = find_seq_dir(root)
+            projects = find_all_seq_dir(root)
 
         projects = sorted(projects, key=lambda p: p.name.lower())
         project_names = [p.name for p in projects]
@@ -126,14 +131,31 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
     
     def _apply_project_selection(self, seq_dirname, seq_dir):
         if not seq_dir:
+            self.lbl_seq_dir_status.clear()
             return
-        # récupération de l'identifiant de la forêt
-        self.seq_identifier = find_seq_identifier(seq_dir)
-        self.projectChanged.emit(seq_dirname, seq_dir, self.seq_identifier)
 
-        messageBar(self.iface, f"Selected directory: {seq_dir}", "s",10)
+        try:
+            seq_identifier = find_seq_identifier(seq_dir)
+
+        except Exception as e:
+            self._set_seq_dir_status(False, f"Dossier invalide")
+            messageBar(self.iface, f"Dossier invalide : {e}", "c", 10)
+            return
+
+        self._set_seq_dir_status(True, f"Dossier valide")  
+        self.projectChanged.emit(seq_dirname, seq_dir, seq_identifier)
+
+        messageBar(self.iface, f"Dossier valide : {seq_dir}", "s", 10)
 
     # endregion
+
+    def _set_seq_dir_status(self, valid: bool, message: str):
+        icon = QgsApplication.getThemeIcon("/mIconWarning.svg")
+        if valid:
+            icon = QgsApplication.getThemeIcon("/mIconSuccess.svg")
+
+        self.lbl_seq_dir_status.setPixmap(icon.pixmap(16, 16))
+        self.lbl_seq_dir_status.setToolTip(message)
 
     def _init_tabs(self):
 

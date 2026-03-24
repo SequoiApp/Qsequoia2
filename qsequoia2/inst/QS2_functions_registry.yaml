@@ -161,10 +161,10 @@ load_wmts:
   args:
   - label
   - group_name
-get_plugin_root:
+get_PLUGIN_DIR:
   type: function
   path: qsequoia2.scripts.utils.config
-  name: get_plugin_root
+  name: get_PLUGIN_DIR
   args: []
 get_config_path:
   type: function

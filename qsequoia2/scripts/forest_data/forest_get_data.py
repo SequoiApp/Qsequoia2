@@ -187,7 +187,6 @@ class getForestdata:
     # --------------------------------------------------------
     # Définition de la ville et du propriétaire
     # --------------------------------------------------------
-
     def _set_city_and_owner(self, parca_path):
         """
         Calcule les surfaces par commune et par propriétaire

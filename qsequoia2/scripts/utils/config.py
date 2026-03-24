@@ -28,7 +28,7 @@ from .messageBar import *
 
 # region PLUGIN PATH
 
-def get_plugin_root() -> Path:
+def get_PLUGIN_DIR() -> Path:
     """
     Retourne le répertoire racine du plugin (deux niveaux au-dessus de ce fichier).
 
@@ -48,7 +48,7 @@ def get_config_path(filename: str) -> Path:
     Returns:
         Path: chemin complet du fichier
     """
-    return get_plugin_root() / ".." / "inst" / filename
+    return get_PLUGIN_DIR() / ".." / "inst" / filename
 
 # endregion
 

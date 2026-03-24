@@ -2,8 +2,8 @@ import sys
 from pathlib import Path
 import os
 
-from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt
-from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt, QUrl
+from qgis.PyQt.QtGui import QIcon, QDesktopServices
 from qgis.PyQt.QtWidgets import QAction
 
 from qsequoia2.scripts.global_settings.global_settings import GlobalSettingsDialog
@@ -12,29 +12,27 @@ from qsequoia2.scripts.utils.get_download_folder import get_download_folder
 from qsequoia2.scripts.utils.seq_config import sync_seq_configs
 from qsequoia2.scripts.utils.messageBar import messageLog
 from qsequoia2.scripts.utils.reloader import reloadQS2
-from qsequoia2.scripts.utils.variable import set_project_variable
+from qsequoia2.scripts.utils.variable import set_project_variable, get_project_variable
 
 from .qsequoia2_dockwidget import Qsequoia2DockWidget
 
-PLUGIN_ROOT = Path(__file__).resolve().parent
-ICONS_DIR = PLUGIN_ROOT / "icons"
+PLUGIN_DIR = Path(__file__).resolve().parent
+ICONS_DIR = PLUGIN_DIR / "icons"
 
-watchdog_path = str(PLUGIN_ROOT / "inst" / "lib")
+watchdog_path = str(PLUGIN_DIR / "inst" / "lib")
 if watchdog_path not in sys.path:
     sys.path.insert(0, watchdog_path)
 
 class Qsequoia2:
 
     def __init__(self, iface):
-        """Constructor."""
-
         self.iface = iface
 
         # Locale
         locale_value = QSettings().value('locale/userLocale', 'en')
         locale = str(locale_value or "en")[:2]
 
-        locale_path = PLUGIN_ROOT / 'i18n' / f'Qsequoia2_{locale}.qm'
+        locale_path = PLUGIN_DIR / 'i18n' / f'Qsequoia2_{locale}.qm'
 
         if locale_path.exists():
             self.translator = QTranslator()
@@ -100,19 +98,13 @@ class Qsequoia2:
         # Signals wiring
         self.dockwidget.closingPlugin.connect(self._on_closed_plugin)
         self.dockwidget.projectChanged.connect(self._on_project_changed)
-        self.dockwidget.settingsClicked.connect(self._open_global_settings)
-        self.dockwidget.reloadClicked.connect(self._reload_plugin)
 
-        self.seq_dir = None
-
-        # securité si le nom de projet est grisé
-        #if not self.current_project_name :
-            #self.dockwidget.name.setEnabled(True)
-        
-        #if not self.current_project_folder:
-            #self.dockwidget.btn_open_seq_dir.setEnabled(False)
-
-        self.dockwidget.btn_open_seq_dir_2.clicked.connect(self.open_seq_dir)
+        # Button wiring
+        self.dockwidget.btn_sequoia.clicked.connect(self._open_sequoia_website)
+        self.dockwidget.btn_settings.clicked.connect(self._open_global_settings)
+        self.dockwidget.btn_reload.clicked.connect(self._reload_plugin)
+        self.dockwidget.btn_open_seq_dir.clicked.connect(self._open_seq_dir)
+        self.dockwidget.btn_issue.clicked.connect(self._open_qsequoia_issue)
 
         # Add to QGIS
         self.iface.addDockWidget(Qt.RightDockWidgetArea, self.dockwidget)
@@ -135,24 +127,37 @@ class Qsequoia2:
         set_project_variable("QS2_seq_dirname", seq_dirname)
         set_project_variable("QS2_seq_dir", seq_dir)
         set_project_variable("QS2_seq_identifier", seq_identifier)
-        self.seq_dirname = seq_dirname
-        self.seq_dir = seq_dir
-
-        if seq_dir :
-            self.dockwidget.btn_open_seq_dir_2.setEnabled(True)
 
         messageLog(f"Project name: {seq_dirname}", "i")
         messageLog(f"Project folder: {seq_dir}", "i")
-
-    def _reload_plugin(self):
-        """Reload plugin (wrapped for clarity)"""
-        reloadQS2(self.iface)
 
     def _open_global_settings(self):
         """Ouvre la fenêtre de configuration globale du plugin."""
         self.global_settings_dialog = GlobalSettingsDialog(iface=self.iface, plugin=self)
         self.global_settings_dialog.show()
 
+    def _reload_plugin(self):
+        """Reload plugin (wrapped for clarity)"""
+        reloadQS2(self.iface)
+
+    def _open_seq_dir(self):
+
+        seq_dir = get_project_variable("QS2_seq_dir") or ""
+        if not seq_dir:
+            return
+
+        path = Path(seq_dir)
+        if path.exists():
+            QDesktopServices.openUrl(QUrl.fromLocalFile(str(path)))
+
+    def _open_sequoia_website(self):
+        url = QUrl("https://sequoiapp.github.io/Rsequoia2/index.html")
+        QDesktopServices.openUrl(url)
+    
+    def _open_qsequoia_issue(self):
+        url = QUrl("https://github.com/SequoiApp/Qsequoia2/issues")
+        QDesktopServices.openUrl(url)
+        
     def unload(self):
 
         # Remove actions
@@ -188,12 +193,6 @@ class Qsequoia2:
             "style_folder": self.current_style_folder,
             "watch_mode": self.watch_mode
         }
-    
-    def open_seq_dir(self):
-        """args:
-            - project_folder (str - sequoia dir)
-        """
-        os.startfile(self.seq_dir)
     
 
 

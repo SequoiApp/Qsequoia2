@@ -15,17 +15,15 @@ from qsequoia2.scripts.utils.seq_config import *
 from qsequoia2.scripts.utils.messageBar import *
 
 PLUGIN_DIR = Path(__file__).resolve().parent
+ICONS_DIR = PLUGIN_DIR / "icons"
+
 UI_PATH = PLUGIN_DIR / "Qsequoia2_dockwidget.ui"
-
 FORM_CLASS, _ = uic.loadUiType(str(UI_PATH))
-
 
 class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
     closingPlugin = pyqtSignal()
     projectChanged = pyqtSignal(str, str, str)
-    settingsClicked = pyqtSignal()
-    reloadClicked = pyqtSignal()
 
     def __init__(self, iface, parent=None):
         super().__init__(parent)
@@ -41,21 +39,15 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
     def _init_ui(self):
 
-        self.cb_seq_folder.setEnabled(True)
+        qsequoia2_icon = QIcon(str(ICONS_DIR / "Qsequoia2.svg"))
+        github_icon = QIcon(str(ICONS_DIR / "github.svg"))
 
-        self.setWindowIcon(QIcon(str(PLUGIN_DIR / "icons" / "Qsequoia.png")))
-        icon_path = str(PLUGIN_DIR / "icon.png")
-             
-        pixmap = QPixmap(icon_path)
-
-        self.icon.setPixmap(pixmap)
-        self.icon.setScaledContents(True)
-        self.icon.setFixedSize(128, 128)
-
-
-        # Emit signals
-        self.btn_settings.clicked.connect(self.settingsClicked)
-        self.btn_reload.clicked.connect(self.reloadClicked)
+        # button container
+        self.btn_sequoia.setIcon(qsequoia2_icon)
+        self.btn_reload.setIcon(QgsApplication.getThemeIcon("/mActionRefresh.svg"))
+        self.btn_settings.setIcon(QgsApplication.getThemeIcon("/mActionOptions.svg"))
+        self.btn_open_seq_dir.setIcon(QgsApplication.getThemeIcon("/mActionFileOpen.svg"))
+        self.btn_issue.setIcon(github_icon)
 
     # region PROJECT
     ## TO-DO extract to specific class
@@ -109,7 +101,7 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         self._default_project_root = root if enabled and root else ""
 
-        self.btn_select_seq_folder.clicked.connect(self._on_project_selected)
+        self.btn_select_seq_dir.clicked.connect(self._on_project_selected)
 
     def _on_project_selected(self):
 
@@ -132,15 +124,12 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         self._apply_project_selection(seq_dirname, seq_dir)
     
-
     def _apply_project_selection(self, seq_dirname, seq_dir):
         if not seq_dir:
             return
         # récupération de l'identifiant de la forêt
         self.seq_identifier = find_seq_identifier(seq_dir)
-        self.projectChanged.emit(seq_dirname, seq_dir,self.seq_identifier)
-        self.btn_open_seq_dir_2.setEnabled(True)
-        self.cb_seq_folder.setEnabled(False)
+        self.projectChanged.emit(seq_dirname, seq_dir, self.seq_identifier)
 
         messageBar(self.iface, f"Selected directory: {seq_dir}", "s",10)
 

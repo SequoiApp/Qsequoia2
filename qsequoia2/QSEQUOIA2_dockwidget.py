@@ -131,7 +131,6 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         self._apply_project_selection(seq_dirname, seq_dir)
     
-
     def _apply_project_selection(self, seq_dirname, seq_dir):
         if not seq_dir:
             return

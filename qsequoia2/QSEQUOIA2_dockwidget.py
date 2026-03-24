@@ -4,7 +4,6 @@ from qgis.PyQt import QtWidgets, uic
 from qgis.PyQt.QtCore import pyqtSignal, Qt
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QCompleter, QFileDialog
-from PyQt5.QtGui import QPixmap
 
 from qsequoia2.scripts.add_data.add_data import AddDataTabWidget
 from qsequoia2.scripts.forest_data.forest_data import ForestDataDialog
@@ -58,36 +57,50 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
     ## TO-DO extract to specific class
     def _init_project_suggestions(self):
 
-        root = get_global_variable("QS2_project_suggestions_root")
-        enabled = bool(get_global_variable("QS2_project_suggestions_enabled"))
-
-        projects = []
-        if enabled and root:
-            projects = find_all_seq_dir(root)
-
-        projects = sorted(projects, key=lambda p: p.name.lower())
-        project_names = [p.name for p in projects]
+        suggestion_enabled = bool(get_global_variable("QS2_project_suggestions_enabled"))
+        folders = get_global_variable("QS2_project_suggestions") or []
 
         combo = self.cb_seq_folder
         combo.clear()
-        combo.setPlaceholderText("Nom du projet")
         combo.setEditable(True)
+
+        line_edit = combo.lineEdit()
+        line_edit.clear()
+        line_edit.setPlaceholderText("Chemin du projet...")
+
+        if not suggestion_enabled:
+            combo.setCompleter(None)
+            combo.currentIndexChanged.connect(self._on_project_suggested)
+            return
+
+        projects = []
+        for folder in folders:
+            try:
+                projects.extend(find_all_seq_dir(folder))
+            except RuntimeError:
+                message = """
+                La recherche automatique des dossiers Sequoia est trop étendue. Modifiez les 
+                dossiers de recherche dans les paramètres.
+                """
+                messageBar(self.iface, message, "c", 10)
+
+
+        projects = sorted(set(projects), key=lambda p: p.name.lower())
 
         for p in projects:
             combo.addItem(p.name, str(p))
 
-        completer = QCompleter(project_names, combo)
-        completer.setCaseSensitivity(Qt.CaseInsensitive)
-        completer.setFilterMode(Qt.MatchContains)
+        if projects:
+            completer = QCompleter([p.name for p in projects], combo)
+            completer.setCaseSensitivity(Qt.CaseInsensitive)
+            completer.setFilterMode(Qt.MatchContains)
+            combo.setCompleter(completer)
+        else:
+            combo.setCompleter(None)
 
-        combo.setCompleter(completer)
         combo.setCurrentIndex(-1)
-
-        if not project_names:
-            combo.setPlaceholderText("Aucun projet trouvé")
-
-        combo.currentIndexChanged.connect(self._on_project_suggested) 
-
+        combo.currentIndexChanged.connect(self._on_project_suggested)
+        
     def _on_project_suggested(self, index):
 
         if index < 0:

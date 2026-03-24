@@ -1,14 +1,14 @@
 from pathlib import Path
 
+from qgis.PyQt import uic
 from qgis.PyQt.QtWidgets import QDialog, QFileDialog, QMessageBox
-from PyQt5 import uic
-from qgis.core import QgsProject
+from qgis.PyQt.QtCore import pyqtSignal
+from qgis.core import QgsProject, QgsApplication
 
-# Import from utils folder
+# Utils
 from ..utils.variable import get_global_variable, set_global_variable
-from ..utils.reloader import reloadQS2
-from..add_on.addon_creator import addonCreator
-
+from ..utils.messageBar import messageLog
+from ..add_on.addon_creator import addonCreator
 from .go_to_maps import open_maps
 
 FORM_CLASS, _ = uic.loadUiType(
@@ -16,200 +16,148 @@ FORM_CLASS, _ = uic.loadUiType(
 )
 
 class GlobalSettingsDialog(QDialog, FORM_CLASS):
+
+    settingsUpdated = pyqtSignal()
+
     def __init__(self, iface, plugin, parent=None):
-        """
-        Initialise la fenêtre des paramètres globaux du plugin.
-
-        Cette boîte de dialogue permet de configurer différents paramètres
-        utilisés par le plugin, comme les dossiers de styles, de modèles
-        ou les informations utilisateur.
-
-        :param plugin: Instance principale du plugin QSequoia2.
-        :type plugin: object
-
-        :param parent: Widget parent Qt.
-        :type parent: QWidget | None
-        """
         super().__init__(parent)
         self.setupUi(self)
+
         self.plugin = plugin
         self.parent = parent
         self.iface = iface
 
-        # Charger les paramètres existants
+        # Style button
+        self.btn_add_project_suggestion.setIcon(QgsApplication.getThemeIcon("/mActionAdd.svg"))
+        self.btn_rm_project_suggestion.setIcon(QgsApplication.getThemeIcon("/mActionRemove.svg"))
+
+        # Load settings
         self.load_settings()
 
-        # Connecter le bouton OK
+        # Connections
         self.buttonBox.accepted.connect(self.save_settings)
         self.stylesButton.clicked.connect(self.select_styles_directory)
         self.modelsButton.clicked.connect(self.select_models_directory)
-        self.btn_project_root.clicked.connect(self.select_project_root)
+        self.btn_add_project_suggestion.clicked.connect(self._on_add_suggestion)
+        self.btn_rm_project_suggestion.clicked.connect(self._on_rm_suggestion)
+        
+        self.cb_suggest_enabled.toggled.connect(self.list_seq_suggestions.setEnabled)
+        self.cb_suggest_enabled.toggled.connect(self.btn_add_project_suggestion.setEnabled)
+        self.cb_suggest_enabled.toggled.connect(self.btn_rm_project_suggestion.setEnabled)
+
         try:
             self.addon.clicked.disconnect()
-        except:
+        except Exception:
             pass
+
         self.addon.clicked.connect(self.open_addonCreator)
         self.find_addon_folder.clicked.connect(self.select_addon_folder)
 
     def load_settings(self):
-        """
-        Charge les paramètres globaux enregistrés et met à jour les champs
-        de l'interface utilisateur.
-
-        Les paramètres récupérés incluent :
-        - les dossiers de styles et de modèles,
-        - les informations utilisateur et organisation,
-        - les options de création automatique de projet,
-        - les paramètres de suggestion de dossiers de projet.
-
-        :return: None
-        """
-        # Répertoire de styles
         styles_dir = get_global_variable("QS2_styles_directory") or ""
         self.stylesInput.setText(styles_dir)
-            
-        # Répertoire de modèles
+
         models_dir = get_global_variable("QS2_models_directory") or ""
         self.modelsInput.setText(models_dir)
-        
-        # Utilisateur
-        user = get_global_variable("QS2_user_full_name")
-        self.userInput.setText(user)
 
-        # Organisation
-        orga_name = get_global_variable("QS2_organisation")
-        self.orga.setText(orga_name)
+        self.userInput.setText(get_global_variable("QS2_user_full_name") or "")
+        self.orga.setText(get_global_variable("QS2_organisation") or "")
+        self.adress.setText(get_global_variable("QS2_adress_organisation") or "")
 
-        # Adresse de l'organisation
-        adress = get_global_variable("QS2_adress_organisation")
-        self.adress.setText(adress)
+        self.open_maps.clicked.connect(lambda: open_maps(self.adress.text()))
 
-        self.open_maps.clicked.connect(lambda : open_maps(adress))
+        self.open_project.setChecked(bool(get_global_variable("QS2_default_project")))
 
-        QS2_default_project_state = get_global_variable("QS2_default_project")
-
-        if not QS2_default_project_state:
-            self.open_project.setChecked(False)
-        else:
-            self.open_project.setChecked(True)
-
-        # Proposition des projets
-        project_root = get_global_variable("QS2_project_suggestions_root") or ""
         suggest_enabled = bool(get_global_variable("QS2_project_suggestions_enabled"))
-
-        self.project_root.setText(project_root)
         self.cb_suggest_enabled.setChecked(suggest_enabled)
+        self.list_seq_suggestions.setEnabled(suggest_enabled)
 
-        self.project_root.setEnabled(suggest_enabled)
-        self.btn_project_root.setEnabled(suggest_enabled)
+        suggestions = list(get_global_variable("QS2_project_suggestions") or [])
+        for folder in suggestions:
+            self._add_suggestion(folder)
 
-        self.cb_suggest_enabled.toggled.connect(self._toggle_project_root)
-
-        # Dossier des Addons
-        addon_folder = get_global_variable("QS2_addon_folder")
-        if not addon_folder:
-            self.addon.setEnabled(False)
+        addon_folder = get_global_variable("QS2_addon_folder") or ""
         self.addon_folder.setText(addon_folder)
-
-    def _toggle_project_root(self, state):
-        self.project_root.setEnabled(state)
-        self.btn_project_root.setEnabled(state)
+        self.addon.setEnabled(bool(addon_folder))
 
     def save_settings(self):
-        """
-        Enregistre les paramètres saisis dans la fenêtre de configuration.
-
-        Les valeurs des champs de l'interface sont stockées dans les variables
-        globales du plugin puis le plugin est rechargé afin d'appliquer les
-        modifications immédiatement.
-
-        :return: None
-        """
-        # Récupère les paramètres
-
-        styles_dir = self.stylesInput.text()
-        models_dir = self.modelsInput.text()
-        user = self.userInput.text()
-        adress = self.adress.text()
-        orga_name = self.orga.text()
-        QS2_default_project = self.open_project.isChecked()
-        addon_folder = self.addon_folder.text()
-        
-        set_global_variable("QS2_styles_directory", styles_dir)
-        set_global_variable("QS2_models_directory", models_dir)
-        set_global_variable("QS2_user_full_name", user)
-        set_global_variable("QS2_adress_organisation", adress)
-        set_global_variable("QS2_organisation", orga_name)
-        set_global_variable("QS2_default_project", QS2_default_project)
-        set_global_variable("QS2_addon_folder", addon_folder)
-
-        project_root = self.project_root.text()
-        set_global_variable("QS2_project_suggestions_root", project_root)
+        set_global_variable("QS2_styles_directory", self.stylesInput.text())
+        set_global_variable("QS2_models_directory", self.modelsInput.text())
+        set_global_variable("QS2_user_full_name", self.userInput.text())
+        set_global_variable("QS2_adress_organisation", self.adress.text())
+        set_global_variable("QS2_organisation", self.orga.text())
+        set_global_variable("QS2_default_project", self.open_project.isChecked())
+        set_global_variable("QS2_addon_folder", self.addon_folder.text())
 
         suggest_enabled = self.cb_suggest_enabled.isChecked()
-        set_global_variable("QS2_project_suggestions_enabled", suggest_enabled)
+        set_global_variable("QS2_project_suggestions_enabled",suggest_enabled)
         
-        # Je mets en commentaire pour le moment car cela à un gros coût
-        # reloadQS2(plugin=self.plugin, plug = "qsequoia2")
+        suggestion = self.list_seq_suggestions
+        folders = [str(Path(suggestion.item(i).text()).resolve()) for i in range(suggestion.count())]
+        set_global_variable("QS2_project_suggestions", folders)
+
+        self.settingsUpdated.emit()
 
     def select_styles_directory(self):
-        """
-        Ouvre une boîte de dialogue permettant de sélectionner un dossier
-        contenant les styles QGIS (.qml).
+        base_path = QgsProject.instance().homePath() or str(Path.home())
 
-        Après sélection, le chemin est inséré dans le champ correspondant.
-        La fonction vérifie également que le dossier existe et contient
-        au moins un fichier de style.
+        folder = QFileDialog.getExistingDirectory(
+            self,
+            "Sélectionner le répertoire de styles",
+            base_path
+        )
 
-        :return: bool | None
-        :raises: Aucun, mais affiche des messages d'avertissement si le
-                dossier est invalide ou ne contient aucun style.
-        """
-        modeles_path = QgsProject.instance().homePath() or str(Path.home())
+        if not folder:
+            return
 
-        dir_path = QFileDialog.getExistingDirectory(self, "Sélectionner le répertoire de travail", str(modeles_path))
-        if dir_path:
-            self.stylesInput.setText(dir_path)
-        
-        dir_path = Path(dir_path) 
+        folder_path = Path(folder)
 
-        if not any(dir_path.glob("*.qml")):
+        if not any(folder_path.glob("*.qml")):
             QMessageBox.warning(
                 self.iface.mainWindow(),
                 "Aucun style trouvé",
-                f"Le dossier sélectionné ne contient aucun fichier .qml :\n{dir_path}")
-            return False
+                f"Le dossier ne contient aucun fichier .qml :\n{folder}"
+            )
+            return
+
+        self.stylesInput.setText(folder)
 
     def select_models_directory(self):
-        """
-        Permet à l'utilisateur de sélectionner le dossier contenant les
-        modèles de traitement QGIS.
+        base_path = QgsProject.instance().homePath() or str(Path.home())
 
-        Le chemin choisi est inséré dans le champ correspondant de
-        l'interface.
+        folder = QFileDialog.getExistingDirectory(
+            self,
+            "Sélectionner le répertoire des modèles",
+            base_path
+        )
 
-        :return: None
-        """
-        modeles_path = QgsProject.instance().homePath() or str(Path.home())
-        dir_path = QFileDialog.getExistingDirectory(self, "Sélectionner le répertoire de travail", str(modeles_path))
-        if dir_path:
-            self.modelsInput.setText(dir_path)
+        if folder:
+            self.modelsInput.setText(folder)
 
-    def select_project_root(self):
-        """
-        Permet de sélectionner le dossier racine utilisé pour rechercher
-        ou proposer automatiquement des dossiers de projets.
+    def _add_suggestion(self, folder_path):
+        folder_path = str(Path(folder_path).resolve())
 
-        Le chemin sélectionné est enregistré dans le champ correspondant
-        de l'interface.
+        # Avoid duplicate
+        for i in range(self.list_seq_suggestions.count()):
+            if self.list_seq_suggestions.item(i).text() == folder_path:
+                return
 
-        :return: None
-        """
-        work_path = QgsProject.instance().homePath() or str(Path.home())
-        dir_path = QFileDialog.getExistingDirectory(self, "Sélectionner le répertoire de travail", str(work_path))
-        if dir_path:
-            self.project_root.setText(dir_path)
-    
+        self.list_seq_suggestions.addItem(folder_path)
+
+    def _on_add_suggestion(self):
+        base_path = QgsProject.instance().homePath() or str(Path.home())
+        folder = QFileDialog.getExistingDirectory(self, "Sélectionner un dossier", base_path, QFileDialog.ShowDirsOnly)
+
+        if not folder:
+            return
+
+        self._add_suggestion(folder)
+
+    def _on_rm_suggestion(self):
+        for item in self.list_seq_suggestions.selectedItems():
+            row = self.list_seq_suggestions.row(item)
+            self.list_seq_suggestions.takeItem(row)
+
     def generate_addon(self):
         """affiche la fenetre de création des addons"""
 

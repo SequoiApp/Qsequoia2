@@ -1,8 +1,7 @@
 from pathlib import Path
 import urllib.request
 import yaml
-
-from .variable import get_global_variable
+import os
 
 from qgis.core import (
     QgsApplication,
@@ -235,7 +234,15 @@ def seq_read(key, project_folder, add_to_project=False, group_name=None, style_f
 
     return layer
 
-def find_all_seq_dir(root_dir):
+def find_all_seq_dir(root_dir, max_dirs=5000):
+    """
+    Efficiently find Sequoia project directories.
+
+    - Limits traversal to `max_dirs` to avoid scanning huge trees
+    - Detects Sequoia folders early (no need to descend into them)
+    - Assumes no Sequoia folder is nested inside another
+
+    """
 
     if not root_dir:
         return []
@@ -245,14 +252,35 @@ def find_all_seq_dir(root_dir):
     parca = seq_layer("parca")
     filename = parca["filename"]
     folder = parca["path"]
-    
-    if not folder:
-        return []
+    folder_name = Path(folder).name
 
-    projects = {
-        file.parents[1]
-        for file in root_dir.rglob(f"*/{folder}/*{filename}")
-    }
+    projects = set()
+    visited = 0
+
+    for root, dirs, _ in os.walk(root_dir):
+
+        visited += 1
+        if visited >= max_dirs:
+            raise RuntimeError(
+                f"Search aborted: more than {max_dirs} directories visited. "
+                "Please narrow the search root."
+            )
+
+        root_path = Path(root)
+
+        #  detect Sequoia folder early
+        if folder_name in dirs:
+            seq_path = root_path / folder_name
+
+            # prevent descending into Sequoia folder
+            dirs.remove(folder_name)
+
+            for f in seq_path.iterdir():
+                if f.is_file() and f.name.endswith(filename):
+                    try:
+                        projects.add(root_path)
+                    except IndexError:
+                        pass
 
     return projects
 

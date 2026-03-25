@@ -3,19 +3,24 @@ from pathlib import Path
 from qgis.core import *
 
 _CACHE_DIR = Path(QgsApplication.qgisSettingsDirPath()) / "qsequoia2"
+_CONFIG_DIR = Path(__file__).parent / "inst"
 
-def yaml_loader(name : str, level: str) -> dict:
+def yaml_loader(name : str, level: str, dir = None) -> dict:
     """
     Load a YAML file in config cache and return data at the specified level.
 
     Args:
         name (str): name of the YAML file in cache.
         level (str): Top-level key in the YAML to extract.
+        dir : défault _CACHE_DIR, but he take _CONFIG_DIR or custom path
 
     Returns:
         dict: Data under the specified level, or {} if missing.
     """
-    path = Path(_CACHE_DIR) / name
+    if dir == None:
+        dir = _CACHE_DIR
+
+    path = Path(dir) / name
 
     if not path.exists():
         return
@@ -26,18 +31,22 @@ def yaml_loader(name : str, level: str) -> dict:
 
 
 
-def yaml_creator(name: str, data_to_save: dict):
+def yaml_creator(name: str, data_to_save: dict, dir = None):
     """
     Create or overwrite a YAML file in _CACHE_DIR.
 
     Args:
         name (str): name of the YAML file (e.g., "forest_metadata.yaml")
         data_to_save (dict): data to save in YAML
+        dir : défault _CACHE_DIR, but he take _CONFIG_DIR or custom path
 
     Returns:
         Path: path to the created YAML file
     """
-    path = Path(_CACHE_DIR) / name
+    if dir == None:
+        dir = _CACHE_DIR
+
+    path = Path(dir) / name
 
     if not path.exists():
         return

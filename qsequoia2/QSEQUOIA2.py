@@ -84,32 +84,32 @@ class Qsequoia2:
     def run(self):
 
         # Handle DockWidget
-        ## If already created:  show
+        ## If already created
         if self.dockwidget:
             self.dockwidget.show()
             self.dockwidget.raise_()
             return
 
-        self.pluginIsActive = True
-
         ## Else: create
         self.dockwidget = Qsequoia2DockWidget(iface=self.iface)
 
-        # Signals wiring
-        self.dockwidget.closingPlugin.connect(self._on_closed_plugin)
-        self.dockwidget.projectChanged.connect(self._on_project_changed)
+        self._connect_dockwidget()
 
-        # Button wiring
-        self.dockwidget.btn_sequoia.clicked.connect(self._open_sequoia_website)
-        self.dockwidget.btn_settings.clicked.connect(self._open_global_settings)
-        self.dockwidget.btn_reload.clicked.connect(self._reload_plugin)
-        self.dockwidget.btn_open_seq_dir.clicked.connect(self._open_seq_dir)
-        self.dockwidget.btn_issue.clicked.connect(self._open_qsequoia_issue)
-
-        # Add to QGIS
         self.iface.addDockWidget(Qt.RightDockWidgetArea, self.dockwidget)
-        self.dockwidget.show()
 
+    def _connect_dockwidget(self):
+
+        dw = self.dockwidget
+
+        dw.closingPlugin.connect(self._on_closed_plugin)
+        dw.projectChanged.connect(self._on_project_changed)
+
+        dw.btn_sequoia.clicked.connect(self._open_sequoia_website)
+        dw.btn_settings.clicked.connect(self._open_global_settings)
+        dw.btn_reload.clicked.connect(self._reload_plugin)
+        dw.btn_open_seq_dir.clicked.connect(self._open_seq_dir)
+        dw.btn_issue.clicked.connect(self._open_qsequoia_issue)
+    
     def _on_closed_plugin(self):
         """Cleanup when dockwidget is closed"""
 
@@ -134,7 +134,10 @@ class Qsequoia2:
     def _open_global_settings(self):
         """Ouvre la fenêtre de configuration globale du plugin."""
         self.global_settings_dialog = GlobalSettingsDialog(iface=self.iface, plugin=self)
-        self.global_settings_dialog.settingsUpdated.connect(self.dockwidget._init_project_suggestions)
+        if self.dockwidget:
+            self.global_settings_dialog.settingsUpdated.connect(
+                self.dockwidget.refresh
+            )
         self.global_settings_dialog.show()
 
     def _reload_plugin(self):

@@ -31,10 +31,13 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.setupUi(self)
 
         self._init_ui()
-        self._init_project_suggestions()
-        self._init_project_selection()
+        self._build_project_suggestions()
         self._init_tabs()
         self._load_addons()
+
+        # Connection
+        self.btn_select_seq_dir.clicked.connect(self._on_project_selected)
+        self.cb_seq_folder.currentIndexChanged.connect(self._on_project_suggested)
 
     def _init_ui(self):
 
@@ -47,118 +50,95 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.btn_settings.setIcon(QgsApplication.getThemeIcon("/mActionOptions.svg"))
         self.btn_open_seq_dir.setIcon(QgsApplication.getThemeIcon("/mActionFileOpen.svg"))
         self.btn_issue.setIcon(github_icon)
-        
+    
         # Sequoia dir status
         self.lbl_seq_dir_status.clear()
         self.lbl_seq_dir_status.setFixedSize(16, 16)
         self._set_seq_dir_status(False, "Aucun dossier sélectionné")
 
     # region PROJECT
-    ## TO-DO extract to specific class
-    def _init_project_suggestions(self):
-
-        suggestion_enabled = bool(get_global_variable("QS2_project_suggestions_enabled"))
-        folders = get_global_variable("QS2_project_suggestions") or []
-
+    def _build_project_suggestions(self):
+        """Pure UI"""
         combo = self.cb_seq_folder
         combo.clear()
-        combo.setEditable(True)
-
-        line_edit = combo.lineEdit()
-        line_edit.clear()
-        line_edit.setPlaceholderText("Chemin du projet...")
-
-        if not suggestion_enabled:
-            combo.setCompleter(None)
-            combo.currentIndexChanged.connect(self._on_project_suggested)
+        combo.setEnabled(True)
+        
+        suggest_enabled = bool(get_global_variable("QS2_project_suggestions_enabled"))
+        messageLog(f"suggest_enabled _build_project_suggestions: {suggest_enabled}")
+        if not suggest_enabled:
+            combo.setEnabled(False)
             return
+
+        folders = get_global_variable("QS2_project_suggestions") or []
 
         projects = []
         for folder in folders:
             try:
                 projects.extend(find_all_seq_dir(folder))
             except RuntimeError:
-                message = """
-                La recherche automatique des dossiers Sequoia est trop étendue. Modifiez les 
-                dossiers de recherche dans les paramètres.
-                """
-                messageBar(self.iface, message, "c", 10)
-
+                messageBar(self.iface, "Recherche trop étendue...", "c", 10)
 
         projects = sorted(set(projects), key=lambda p: p.name.lower())
 
         for p in projects:
             combo.addItem(p.name, str(p))
 
-        if projects:
-            completer = QCompleter([p.name for p in projects], combo)
-            completer.setCaseSensitivity(Qt.CaseInsensitive)
-            completer.setFilterMode(Qt.MatchContains)
-            combo.setCompleter(completer)
-        else:
-            combo.setCompleter(None)
+        self._setup_completer(projects)
 
         combo.setCurrentIndex(-1)
-        combo.currentIndexChanged.connect(self._on_project_suggested)
-        
-    def _on_project_suggested(self, index):
 
-        if index < 0:
+    def _setup_completer(self, projects):
+        combo = self.cb_seq_folder
+
+        if not projects:
+            combo.setCompleter(None)
             return
 
-        combo = self.cb_seq_folder
-        seq_dirname = combo.itemText(index)
-        seq_dir = combo.itemData(index)
+        completer = QCompleter([p.name for p in projects], combo)
+        completer.setCaseSensitivity(Qt.CaseInsensitive)
+        completer.setFilterMode(Qt.MatchContains)
+        combo.setCompleter(completer)
 
-        self._apply_project_selection(seq_dirname, seq_dir)
-
-    def _init_project_selection(self):
-
-        root = get_global_variable("QS2_project_suggestions_root")
-        enabled = bool(get_global_variable("QS2_project_suggestions_enabled") or False)
-
-        self._default_project_root = root if enabled and root else ""
-
-        self.btn_select_seq_dir.clicked.connect(self._on_project_selected)
+    def _on_project_suggested(self, index):
+        if index < 0:
+            return
+        self._select_project(self.cb_seq_folder.itemData(index))
 
     def _on_project_selected(self):
-
-        seq_dir = QFileDialog.getExistingDirectory(
-            self,
-            "Sélectionner un dossier projet",
-            str(self._default_project_root)
-        )
-
+        seq_dir = QFileDialog.getExistingDirectory(self, "Sélectionner un dossier projet")
         if not seq_dir:
             return
 
         combo = self.cb_seq_folder
-        seq_dirname = Path(seq_dir).name
 
         combo.blockSignals(True)
-        combo.addItem(seq_dirname, seq_dir)
+        combo.addItem(Path(seq_dir).name, seq_dir)
         combo.setCurrentIndex(combo.count() - 1)
         combo.blockSignals(False)
 
-        self._apply_project_selection(seq_dirname, seq_dir)
+        self._select_project(seq_dir)
     
-    def _apply_project_selection(self, seq_dirname, seq_dir):
+    def _select_project(self, seq_dir: str):
         if not seq_dir:
-            self.lbl_seq_dir_status.clear()
+            self._set_seq_dir_status(False, "Aucun dossier sélectionné")
             return
+
+        seq_dirname = Path(seq_dir).name
 
         try:
             seq_identifier = find_seq_identifier(seq_dir)
-
         except Exception as e:
-            self._set_seq_dir_status(False, f"Dossier invalide")
+            self._set_seq_dir_status(False, "Dossier invalide")
             messageBar(self.iface, f"Dossier invalide : {e}", "c", 10)
             return
 
-        self._set_seq_dir_status(True, f"Dossier valide")  
+        self._set_seq_dir_status(True, "Dossier valide")
         self.projectChanged.emit(seq_dirname, seq_dir, seq_identifier)
-
         messageBar(self.iface, f"Dossier valide : {seq_dir}", "s", 10)
+
+    def refresh(self):
+        self._build_project_suggestions()
+        self._select_project(None)
 
     # endregion
 

@@ -72,6 +72,8 @@ class GlobalSettingsDialog(QDialog, FORM_CLASS):
         self.cb_suggest_enabled.setChecked(suggest_enabled)
         self.list_seq_suggestions.setEnabled(suggest_enabled)
 
+        messageLog(f"suggest_enabled load: {suggest_enabled}")
+
         suggestions = list(get_global_variable("QS2_project_suggestions") or [])
         for folder in suggestions:
             self._add_suggestion(folder)
@@ -89,9 +91,11 @@ class GlobalSettingsDialog(QDialog, FORM_CLASS):
         set_global_variable("QS2_default_project", self.open_project.isChecked())
         set_global_variable("QS2_addon_folder", self.addon_folder.text())
 
-        suggest_enabled = self.cb_suggest_enabled.isChecked()
-        set_global_variable("QS2_project_suggestions_enabled",suggest_enabled)
-        
+        suggest_enabled = bool(self.cb_suggest_enabled.isChecked())
+        messageLog(f"suggest_enabled before save: {suggest_enabled}")
+        set_global_variable("QS2_project_suggestions_enabled", suggest_enabled)
+        messageLog(f"suggest_enabled after save: {get_global_variable("QS2_project_suggestions_enabled")}")
+
         suggestion = self.list_seq_suggestions
         folders = [str(Path(suggestion.item(i).text()).resolve()) for i in range(suggestion.count())]
         set_global_variable("QS2_project_suggestions", folders)

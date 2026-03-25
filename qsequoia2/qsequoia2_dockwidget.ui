@@ -6,13 +6,13 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>261</width>
-    <height>288</height>
+    <width>516</width>
+    <height>506</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>261</width>
+    <width>392</width>
     <height>288</height>
    </size>
   </property>
@@ -56,9 +56,9 @@
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="btn_reload">
+       <widget class="QPushButton" name="btn_issue">
         <property name="toolTip">
-         <string>Recharger le plugin</string>
+         <string>Signaler un problème</string>
         </property>
         <property name="styleSheet">
          <string notr="true">background-color: rgb(227, 227, 227);</string>
@@ -82,9 +82,9 @@
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="btn_open_seq_dir">
+       <widget class="QPushButton" name="btn_reload">
         <property name="toolTip">
-         <string>Ouvrir le dossier sélectionné</string>
+         <string>Recharger le plugin</string>
         </property>
         <property name="styleSheet">
          <string notr="true">background-color: rgb(227, 227, 227);</string>
@@ -95,9 +95,28 @@
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="btn_issue">
+       <widget class="QPushButton" name="btn_select_seq_dir">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="toolTip">
-         <string>Signaler un problème</string>
+         <string>Sélectionner un dosssier</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">background-color: rgb(227, 227, 227);</string>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btn_open_seq_dir">
+        <property name="toolTip">
+         <string>Ouvrir le dossier sélectionné</string>
         </property>
         <property name="styleSheet">
          <string notr="true">background-color: rgb(227, 227, 227);</string>
@@ -120,6 +139,20 @@
         </property>
        </spacer>
       </item>
+      <item>
+       <widget class="QLabel" name="btn_forest_id">
+        <property name="text">
+         <string>forest_id</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="lbl_seq_dir_status">
+        <property name="text">
+         <string>seq_dir_status</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </item>
     <item>
@@ -127,22 +160,6 @@
       <property name="topMargin">
        <number>0</number>
       </property>
-      <item>
-       <widget class="QToolButton" name="btn_select_seq_dir">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="styleSheet">
-         <string notr="true">background-color: rgb(227, 227, 227);</string>
-        </property>
-        <property name="text">
-         <string>...</string>
-        </property>
-       </widget>
-      </item>
       <item>
        <widget class="QComboBox" name="cb_seq_folder">
         <property name="sizePolicy">
@@ -153,13 +170,6 @@
         </property>
         <property name="editable">
          <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="lbl_seq_dir_status">
-        <property name="text">
-         <string>seq_dir_status</string>
         </property>
        </widget>
       </item>

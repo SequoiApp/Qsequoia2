@@ -48,7 +48,8 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.btn_sequoia.setIcon(qsequoia2_icon)
         self.btn_reload.setIcon(QgsApplication.getThemeIcon("/mActionRefresh.svg"))
         self.btn_settings.setIcon(QgsApplication.getThemeIcon("/mActionOptions.svg"))
-        self.btn_open_seq_dir.setIcon(QgsApplication.getThemeIcon("/mActionFileOpen.svg"))
+        self.btn_select_seq_dir.setIcon(QgsApplication.getThemeIcon("/mActionFileOpen.svg"))
+        self.btn_open_seq_dir.setIcon(QgsApplication.getThemeIcon("/mActionLink.svg"))
         self.btn_issue.setIcon(github_icon)
     
         # Sequoia dir status

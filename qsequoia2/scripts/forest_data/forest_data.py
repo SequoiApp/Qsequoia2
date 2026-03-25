@@ -40,43 +40,17 @@ class ForestDataDialog(QDialog, FORM_CLASS):
         self.iface = iface
         self.parent = parent
         self.project = QgsProject.instance()
-
         self.setupUi(self)
-
         # Chargement des variables
-
         self.seq_dir = get_project_variable("QS2_seq_dir")
         self.seq_identifier= get_project_variable("QS2_seq_identifier")
         self.current_style_folder = get_global_variable("QS2_styles_directory")
         
-        
-
-        # Chargement des paramètres 
-        self.script_dir = os.path.dirname(__file__)
-        json_path = os.path.join(self.script_dir, "forest_data.json")
-
-        with open(json_path, "r", encoding="utf-8") as f:
-            self.setting = json.load(f)
-
-
         # appel de la fonction de refresh
         self.actu.clicked.connect(self.actu_data)
 
         # réaction au changement du numéro de parcelle dans le tableau
         self.cb_parcelle.currentTextChanged.connect(self.on_cb_parcelle_changed)
-
-
-    def get_base_metadata(self):
-        # appel du calcul des metadonnées
-        try:
-            forest_data = getForestdata(
-                seq_identifier=self.seq_identifier,
-                seq_dir=self.seq_dir,
-                iface=self.iface)
-            
-            forest_data.run_all_calculations()
-        except Exception as e:
-            messageLog(f"Erreur lors du calcul des metadata : {e}","w")
 
     def actu_data(self):
         """relance les fonctions de chargement des data pour actualiser l'affichage"""
@@ -97,12 +71,33 @@ class ForestDataDialog(QDialog, FORM_CLASS):
             messageBar(self.parent,e,"w",10)
 
 
+    def get_base_metadata(self):
+        # appel du calcul des metadonnées
+        seq_metadata = self.run_calculation()
+        self.save_metadata(seq_metadata)
+
+
+    def run_calculation(self):
+        #try : 
+        seq_metadata = getForestdata(
+            seq_identifier=self.seq_identifier,
+            seq_dir=self.seq_dir,
+            iface=self.iface)
+        return seq_metadata.build()
+        
+        #except Exception as e :
+            #messageBar(self.iface, f"Erreur lors de la construction des metadata : {e}","w",10)
+            #return {"vide"}
+        
+    def save_metadata(self, seq_metadata):
+        try:
+            yaml_creator("Qseq_forestMetadata", seq_metadata)  
+            messageLog(f"-- metadata build pour {self.seq_dir} --!","i")
+        except Exception as e:
+            messageBar(self.iface, f"Erreur lors de l'export : {e}", "w", 10)
+
+
     def display_base_metadata(self):
-
-        template_path = Path(__file__).parent / "html" / "metadata_display.html"
-
-        with open(template_path, "r", encoding="utf-8") as f:
-            template = f.read()
 
         if "forest_name" in self.metadata:
             forest_name = self.metadata.get("forest_name", self.project_name)

@@ -205,6 +205,8 @@ def seq_read(key, seq_dir, add_to_project=False, group_name=None, style_folder=N
         layer = QgsVectorLayer(str(path), layer_name, "ogr")
     elif layer_type == "rast":
         layer = QgsRasterLayer(str(path), layer_name)
+    elif layer_type == "xlsx":
+        layer = QgsVectorLayer(str(path), layer_name, "ogr")
     else:
         raise ValueError(f"Unsupported layer type: {layer_type}")
 

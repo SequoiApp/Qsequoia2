@@ -204,7 +204,7 @@ class AddDataTabWidget(QTabWidget, FORM_CLASS):
         try:
             seq_read(
                 key=key,
-                project_folder=project_folder,
+                seq_dir=project_folder,
                 add_to_project=True,
                 group_name=group_name,
                 style_folder=style_folder

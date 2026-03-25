@@ -16,98 +16,76 @@ from ..utils.config import *
 from ..utils.messageBar import *
 from ..utils.seq_config import *
 from ..utils.yaml_helper import *
+from ..utils.variable import *
 
+DEFAULT_FORMATTING = {"separator": ", ", "last_separator": " & "}
+DEFAULT_SURFACE = {
+    "text_total": "Surface totale",
+    "text_boisee": "Surface boisée"
+}
 
 #===================================================
 # region getForestdata
 #===================================================
 
 class getForestdata:
-    """Lecture depuis une couche PARCA des donénes sur la forêt. 
-        Paramètre lu depuis la table forest_data.json"""
+    """
+    Centralise la lecture, le traitement et l'agrégation des données forestières
+    depuis les couches SIG PARCA et UA dans QGIS.
 
-    def __init__(self, seq_identifier, seq_dir, iface):
-        """Initialise l’objet getForestdata.
-            Charge la configuration JSON et YAML, résout les définitions de champs,
-            récupère les couches du projet et prépare la structure interne
-            pour stocker les valeurs calculées destinées à l’export JSON.
-        """
+    Méthodes principales :
+    - build() : construit toutes les métadonnées forestières et retourne un dict.
+    - set_city_data() : calcule les surfaces par commune.
+    - set_owner_data() : calcule les surfaces par propriétaire.
+    - forest_departements() : récupère et agrège les départements des parcelles.
+    - _set_surface() : calcule surfaces boisées, non boisées et totale.
+    """
+
+    def __init__(self, iface, seq_dir):
+
         self.iface = iface
-        self.seq_identifier = seq_identifier
         self.seq_dir = seq_dir
-        self.script_dir = Path(__file__).parent
-
-        # Charge YAML
-
-        self.config = yaml_loader("forest_data.yaml","",Path(self.script_dir))
-
-        self._calculated_values = {}
 
     # ================================================================================================
-    # appel des fonctions et mise en forme
+    # appel des fonctions
     # ================================================================================================
 
-
-    def build(self):
+    def build(self) -> dict :
         """Construit toutes les metadata et retourne un dict"""
         parca_layer = seq_read("parca", self.seq_dir)
         ua_layer = seq_read("ua", self.seq_dir)
         
-        if not ua_layer:
+        if not ua_layer or not parca_layer :
             messageBar(self.iface, "layer 'UA not found in project","w",10)
             return
+
+        city_list, city_str = self.set_city_data(parca_layer)
+        owner_list, owner_str = self.set_owner_data(parca_layer)
+        dep_str, dep_list = self.forest_departements(parca_layer)
+        surface_boisee, surface_non_boisee, surface_totale, surface_formatted = self._set_surface(ua_layer, parca_layer)
+
+        seq_metadata = {
+                            "city_list": city_list,
+                            "city_str": city_str,
+                            "owner_list": owner_list,
+                            "owner_str": owner_str,
+                            "departement_str": dep_str,
+                            "departement_list": dep_list,
+                            "surface_boisee": surface_boisee,
+                            "surface_non_boisee": surface_non_boisee,
+                            "surface_totale": surface_totale,
+                            "surface_formatted": surface_formatted
+                        }
         
-        if not parca_layer:
-            messageBar(self.iface, "layer 'PARCA' not found in project","c",10)
-            return
-
-        self.set_city_data(parca_layer)
-        self.set_owner_data(parca_layer)
-        self.forest_departements(parca_layer)
-        self._set_surface(ua_layer, parca_layer)
-
-        # regroupement global
-        layer_for_group = ua_layer if ua_layer else parca_layer
-        self._calculated_values["grouped_values"] = self.get_grouped_values(layer_for_group)
-
-        return self.export_to_dict()
+        return seq_metadata
         
-    def export_to_dict(self):
-        """met en forme les données dans le dict"""
-        result = {
-            "city": {
-                "list": self._calculated_values.get("city_list", []),
-                "str": self._calculated_values.get("city_str", "")
-            },
-            "owner": {
-                "list": self._calculated_values.get("owner_list", []),
-                "str": self._calculated_values.get("owner_str", "")
-            },
-            "departments": {
-                "list": self._calculated_values.get("departement_list", []),
-                "str": self._calculated_values.get("departement_str", "")
-            },
-            "surfaces": {
-                "boisee_ha": self._calculated_values.get("surface_boisee_ha", 0.0),
-                "non_boisee_ha": self._calculated_values.get("surface_non_boisee_ha", 0.0),
-                "totale_ha": self._calculated_values.get("surface_totale_ha", 0.0),
-                "formatted": self._calculated_values.get("surface_formatted", "")
-            },
-            "grouped_values": self._calculated_values.get("grouped_values", "")
-            }
-        return result
-    
     
     # ================================================================================================
     # Calcul des métadonnées
     # ================================================================================================
 
-    # --------------------------------------------------------
-    # Définition de la ville et du propriétaire
-    # --------------------------------------------------------
-
     def set_city_data(self, parca_layer):
-        """Extrait et calcule les villes + surfaces"""
+        """résout les villes"""
         city_field = seq_field("com_name")["name"]
         surface_field = seq_field("cad_area")["name"]
 
@@ -118,17 +96,16 @@ class getForestdata:
             city_dict[commune] += surface
 
         city_list = [{"commune": k, "surface_ha": v} for k, v in city_dict.items()]
-        cfg_format = self.config["formatting"]
         city_values = [f"{c['commune']} ({c['surface_ha']:.4f} ha)" for c in city_list]
-        city_str = (f"{cfg_format['separator'].join(city_values[:-1])}{cfg_format['last_separator']}{city_values[-1]}"
+        city_str = (f"{DEFAULT_FORMATTING['separator'].join(city_values[:-1])}{DEFAULT_FORMATTING['last_separator']}{city_values[-1]}"
                     if len(city_values) > 1 else city_values[0])
 
-        self._calculated_values["city_list"] = city_list
-        self._calculated_values["city_str"] = city_str
+        return city_list, city_str
+
 
     
     def set_owner_data(self, parca_layer):
-        """Extrait et calcule les propriétaires + surfaces"""
+        """résout le nom des villes"""
         owner_field = seq_field("owner")["name"]
         city_field = seq_field("com_name")["name"]
         surface_field = seq_field("cad_area")["name"]
@@ -143,17 +120,16 @@ class getForestdata:
                 owner_dict[(commune, owner)]["surface_ha"] += surface
 
         owner_list = [{"commune": k[0], "owner": k[1], "surface_ha": v["surface_ha"]} for k, v in owner_dict.items()]
-        cfg_format = self.config["formatting"]
         owner_values = list(dict.fromkeys(o["owner"] for o in owner_list))
-        owner_str = (f"{cfg_format['separator'].join(owner_values[:-1])}{cfg_format['last_separator']}{owner_values[-1]}"
+        owner_str = (f"{DEFAULT_FORMATTING['separator'].join(owner_values[:-1])}{DEFAULT_FORMATTING['last_separator']}{owner_values[-1]}"
                     if len(owner_values) > 1 else owner_values[0])
 
-        self._calculated_values["owner_list"] = owner_list
-        self._calculated_values["owner_str"] = owner_str
+        return owner_list, owner_str
 
     # --------------------------------------------------------
     # Récupération du ou des départements de la forêt
     # --------------------------------------------------------
+
     def forest_departements(self, parca_layer):
         """Récupère et agrège les départements de la propriété"""
         try:
@@ -166,25 +142,30 @@ class getForestdata:
 
             # version liste simple
             dep_list = [d.strip() for d in dep_str.replace("&", ",").split(",")]
-            self._calculated_values["departement_list"] = dep_list
 
-            return dep_list
+            return dep_str, dep_list
 
         except Exception as e:
             raise TypeError(f"Erreur dans forest_departements : {e}")
 
 
-    def _aggregate_values(self, layer_or_path, value_field, surface_field, filter_field=None, result_key=None):
+    def _aggregate_values(self, parca_layer, value_field, surface_field, filter_field=None, result_key=None):
         """
         Agrège les surfaces par valeur d’un champ, éventuellement groupé par filtre.
 
-        Retourne une chaîne formatée et stocke le résultat dans _calculated_values.
+        Args:
+            parca_layer (QgsVectorLayer): couche contenant les parcelles
+            value_field (str): nom du champ à agréger (ex: propriétaire, département)
+            surface_field (str): nom du champ contenant la surface
+            filter_field (str, optional): champ utilisé pour filtrer/groupes. Defaults to None.
+            result_key (str, optional): clé pour stocker le résultat dans _calculated_values. Defaults to None.
+
+        Returns:
+            str: chaîne formatée des valeurs agrégées, ex: "Propriétaire1 & Propriétaire2 (Dept1); Propriétaire3 (Dept2)"
         """
         from collections import defaultdict
 
-        layer = self._resolve_layer(layer_or_path)
-        field_names = layer.fields().names()
-
+        field_names = parca_layer.fields().names()
         if value_field not in field_names or surface_field not in field_names:
             raise ValueError(f"Champ introuvable : {value_field} ou {surface_field}")
 
@@ -192,8 +173,7 @@ class getForestdata:
             filter_field = None
 
         groups = defaultdict(list)
-
-        for feat in layer.getFeatures():
+        for feat in parca_layer.getFeatures():
             group = feat[filter_field] if filter_field else "No Filter"
             value = feat[value_field]
             surface = float(feat[surface_field] or 0.0)
@@ -201,22 +181,16 @@ class getForestdata:
                 groups[group].append((value, surface))
 
         result_strings = []
-
         for group, values in groups.items():
             agg = defaultdict(float)
             for val, surf in values:
                 agg[val] += surf
 
+            # Tri par surface décroissante
             sorted_vals = sorted(agg.items(), key=lambda x: x[1], reverse=True)
             value_list = [v[0] for v in sorted_vals]
 
-            if len(value_list) == 2:
-                result_string = f"{value_list[0]} & {value_list[1]}"
-            elif len(value_list) > 2:
-                result_string = f"{', '.join(value_list[:-1])} & {value_list[-1]}"
-            else:
-                result_string = value_list[0]
-
+            result_string = self._format_value_list(value_list)
             if group != "No Filter":
                 result_strings.append(f"{result_string} ({group})")
             else:
@@ -224,11 +198,16 @@ class getForestdata:
 
         final_result = "; ".join(result_strings)
 
-        if not hasattr(self, "_calculated_values"):
-            self._calculated_values = {}
-        self._calculated_values[result_key or "grouped_values"] = final_result
-
         return final_result
+    
+    def _format_value_list(self, value_list):
+        if not value_list:
+            return ""
+        if len(value_list) == 2:
+            return " & ".join(value_list)
+        if len(value_list) > 2:
+            return ", ".join(value_list[:-1]) + " & " + value_list[-1]
+        return value_list[0]
 
 
     def _set_surface(self, ua_layer, parca_layer):
@@ -258,12 +237,9 @@ class getForestdata:
 
         surface_totale = surface_boisee + surface_non_boisee
 
-        self._calculated_values.update({
-            "surface_boisee_ha": surface_boisee,
-            "surface_non_boisee_ha": surface_non_boisee,
-            "surface_totale_ha": surface_totale,
-            "surface_formatted": self.get_formated_surface(surface_boisee, surface_non_boisee)
-        })
+        surface_formatted = self.get_formated_surface(surface_boisee, surface_non_boisee)
+        
+        return surface_boisee, surface_non_boisee, surface_totale, surface_formatted
 
     def _is_feature_wooded(self, value):
         if isinstance(value, bool):
@@ -307,24 +283,16 @@ class getForestdata:
         Retourne une chaîne prête pour affichage.
         """
 
-        cfg = self.config["surface"]
-        decimals = cfg["round_decimals"]
+        decimals = int(4)
 
         surface_totale = surface_boisee + surface_non_boisee
 
-        # -------------------------------
-        # CAS 1 : surface non boisée > 0
-        # -------------------------------
         if surface_non_boisee > 0:
 
             formatted_surface = (
-                f"{cfg['text_total']} {surface_totale:.{decimals}f} {cfg['ha_label']} | "
-                f"{cfg['text_boisee']} {surface_boisee:.{decimals}f} {cfg['ha_label']}"
-            )
+                f"{DEFAULT_SURFACE['text_total']} {surface_totale:.{decimals}f} ha | "
+                f"{DEFAULT_SURFACE['text_boisee']} {surface_boisee:.{decimals}f} ha")
 
-        # -------------------------------
-        # CAS 2 : uniquement surface boisée
-        # -------------------------------
         else:
 
             hectares = int(surface_totale)
@@ -332,11 +300,13 @@ class getForestdata:
             centiares = int(round((((surface_totale - hectares) * 100) - ares) * 100))
 
             formatted_surface = (
-                f"{cfg['text_total']} "
-                f"{hectares} {cfg['ha_label']} "
-                f"{ares:02} {cfg['a_label']} "
-                f"{centiares:02} {cfg['ca_label']}"
+                f"{DEFAULT_SURFACE['text_total']} "
+                f"{hectares} ha "
+                f"{ares:02} a "
+                f"{centiares:02} ca"
             )
 
         return formatted_surface
+    
+
     

@@ -1,28 +1,14 @@
-{
-
-  "ui": {
-    "city": "lineEdit_city",
-    "owner": "lineEdit_owner",
-    "surface_boisee": "doubleSpinBox_1",
-    "surface_non_boisee": "doubleSpinBox_2",
-    "name": "lineEdit_name"},
+"config" :
 
   "surface": {
-    "null_value": 0.0,
-    "unit_divider": 10000,
     "round_decimals": 4,
-    "display_mode": "auto", 
-    "ha_label": "ha",
-    "a_label": "a",
-    "ca_label": "ca",
     "text_total": "Surface totale:",
     "text_boisee": "Surface boisée:",
-    "no_filter_label": "No Filter"},
+  }
 
   "formatting": {
     "separator": ", ",
     "last_separator": " & ",
     "group_separator": "; "
-  },
+  }
 
-}

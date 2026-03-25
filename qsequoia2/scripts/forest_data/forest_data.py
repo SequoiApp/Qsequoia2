@@ -43,6 +43,7 @@ class ForestDataDialog(QDialog, FORM_CLASS):
         self.setupUi(self)
         # Chargement des variables
         self.seq_dir = get_project_variable("QS2_seq_dir")
+        self.seq_dirname = get_project_variable("QS2_seq_dirname")
         self.seq_identifier= get_project_variable("QS2_seq_identifier")
         self.current_style_folder = get_global_variable("QS2_styles_directory")
         
@@ -57,89 +58,102 @@ class ForestDataDialog(QDialog, FORM_CLASS):
         if not self.seq_dir :
             messageBar(self.iface,"Pas de dossier de projet !","w",10)
             return
-        self.get_base_metadata()
+        # création des métadata 
+        seq_metadata = self.run_calculation()
+        self.export_to_project_variables(seq_metadata)
 
         # lecture des metadata
-        self.metadata = yaml_loader("Qseq_forestMetadata","metadata")
-        print(self.metadata)
-
+        self.get_base_metadata()
         self.display_base_metadata()
         try:
             self.setFinaldata()
         
         except Exception as e :
-            messageBar(self.parent,e,"w",10)
-
-
-    def get_base_metadata(self):
-        # appel du calcul des metadonnées
-        seq_metadata = self.run_calculation()
-        self.save_metadata(seq_metadata)
+            messageBar(self.iface, str(e),"w",10)
 
 
     def run_calculation(self):
         #try : 
         seq_metadata = getForestdata(
-            seq_identifier=self.seq_identifier,
-            seq_dir=self.seq_dir,
-            iface=self.iface)
+                                    iface=self.iface,
+                                    seq_dir=self.seq_dir,
+                                    )
+        
         return seq_metadata.build()
         
         #except Exception as e :
             #messageBar(self.iface, f"Erreur lors de la construction des metadata : {e}","w",10)
             #return {"vide"}
         
-    def save_metadata(self, seq_metadata):
-        try:
-            yaml_creator("Qseq_forestMetadata", seq_metadata)  
-            messageLog(f"-- metadata build pour {self.seq_dir} --!","i")
-        except Exception as e:
-            messageBar(self.iface, f"Erreur lors de l'export : {e}", "w", 10)
+    def export_to_project_variables(self, seq_metadata):
+        """ajoute les données dans les varaibles projets"""
+        for key, value in seq_metadata.items():
+            if isinstance(value, (list, dict)):
+                value = json.dumps(value)
+            set_project_variable(f"QS2_{key}", value)
+        messageLog(f"-- metadata build pour {self.seq_dir} --!","i")
+        #try :
+
+        #except Exception as e:
+            #messageBar(self.iface, f"Erreur lors de l'export : {e}", "w", 10)
+
+    def get_base_metadata(self):
+        def load_var(key):
+            val = get_project_variable(f"QS2_{key}")
+            try:
+                return json.loads(val)
+            except (TypeError, json.JSONDecodeError):
+                return val
+
+        self.city_list = load_var("city_list")
+        self.city_str = load_var("city_str")
+        self.owner_list = load_var("owner_list")
+        self.owner_str = load_var("owner_str")
+        self.dep_list = load_var("departement_list")
+        self.dep_str = load_var("departement_str")
+        self.surface_boisee = load_var("surface_boisee")
+        self.surface_non_boisee = load_var("surface_non_boisee")
+        self.surface_totale = load_var("surface_totale")
+        self.surface_formatted = load_var("surface_formatted")
+        self.forest_name = load_var("seq_forest_name")
 
 
     def display_base_metadata(self):
-
-        if "forest_name" in self.metadata:
-            forest_name = self.metadata.get("forest_name", self.project_name)
+        
+        if self.forest_name:
+            forest_name = self.forest_name
         else : 
-            forest_name = self.project_name
-
-        departement_str = self.metadata.get("departement_str", "")
-        city_str = self.metadata.get("city_str", "")
-        surface_formatted = self.metadata.get("surface_formatted","")
-        surface_boisee_ha = self.metadata.get("surface_boisee_ha","")
-        surface_non_boisee_ha = self.metadata.get("surface_non_boisee_ha","")
-        owner_str = self.metadata.get("owner_str","")
+            forest_name = self.seq_identifier
 
         self.forest_name_edit.setText(str(forest_name))
-        self.departement_edit.setText(str(departement_str))
-        self.city_edit.setText(str(city_str))
-        self.surface_edit.setText(str(surface_formatted))
-        self.surface_boisee_edit.setText(str(surface_boisee_ha))
-        self.surface_non_boisee_edit.setText(str(surface_non_boisee_ha))
-        self.owner_edit.setText(str(owner_str))
+        self.departement_edit.setText(str(self.dep_str))
+        self.city_edit.setText(str(self.city_str))
+        self.surface_edit.setText(str(self.surface_formatted))
+        self.surface_boisee_edit.setText(str(self.surface_boisee))
+        self.surface_non_boisee_edit.setText(str(self.surface_non_boisee))
+        self.owner_edit.setText(str(self.owner_str))
 
 
 
     def setFinaldata(self):
-        synthesePath = self.findSynthese()
+        """"""
+        synthese = seq_read("summary", self.seq_dir)
 
-        if not synthesePath:
+        if not synthese:
             return
         
-        synthesePath = str(synthesePath)
 
-        data = getFinaldata(synthesePath)
+        final_data = getFinaldata(synthese)
 
         # Stocker la couche mémoire pour les sélections
-        self.final_layer = data
+        self.final_layer = final_data
 
         # Remplir la combo des parcelles
-        self.populate_cb_parcelle(data)
+        self.populate_cb_parcelle(final_data)
 
         # --- Remplir le tableau ---
-        fields = data.fields()
-        features = list(data.getFeatures())
+        fields = final_data.fields()
+        features = list(final_data.getFeatures())
 
         self.forestTable.setColumnCount(len(fields))
         self.forestTable.setHorizontalHeaderLabels([f.name() for f in fields])
@@ -211,23 +225,6 @@ class ForestDataDialog(QDialog, FORM_CLASS):
                 item = QTableWidgetItem(str(val))
                 item.setFlags(item.flags() ^ Qt.ItemIsEditable)
                 self.forestTable.setItem(row, col, item)
-
-
-    # fonction provisoire pour trouver la synthèse de finalisation
-
-    def findSynthese(self):
-        name = "SYNTHESE"
-
-        # Parcourir tous les fichiers du dossier
-        for file in Path(self.current_project_folder).iterdir():
-            if file.is_file() and name in file.name:
-                return file  # retourne un Path complet
-
-        return None  # si rien trouvé
-
-
-
-
 
 
 

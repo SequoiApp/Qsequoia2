@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>406</width>
-    <height>363</height>
+    <height>441</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -141,7 +141,7 @@
       </widget>
      </item>
      <item row="5" column="1">
-      <widget class="QCheckBox" name="open_project">
+      <widget class="QCheckBox" name="cb_open_project">
        <property name="toolTip">
         <string>Ouvre ou créé un projet QGIS lors du chargement d'un dossier </string>
        </property>

@@ -1,8 +1,9 @@
 from pathlib import Path
+from enum import Enum
 
 from qgis.PyQt import QtWidgets, uic
 from qgis.PyQt.QtCore import pyqtSignal, Qt
-from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtGui import QIcon, QFontMetrics
 from qgis.PyQt.QtWidgets import QCompleter, QFileDialog
 
 from qsequoia2.scripts.add_data.add_data import AddDataTabWidget
@@ -18,6 +19,11 @@ ICONS_DIR = PLUGIN_DIR / "icons"
 
 UI_PATH = PLUGIN_DIR / "Qsequoia2_dockwidget.ui"
 FORM_CLASS, _ = uic.loadUiType(str(UI_PATH))
+
+class SeqDirState(Enum):
+    EMPTY = 0
+    INVALID = 1
+    VALID = 2
 
 class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
@@ -55,7 +61,7 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         # Sequoia dir status
         self.lbl_seq_dir_status.clear()
         self.lbl_seq_dir_status.setFixedSize(16, 16)
-        self._set_seq_dir_status(False, "Aucun dossier sélectionné")
+        self._set_seq_dir_status(SeqDirState.EMPTY)
 
     # region PROJECT
     def _build_project_suggestions(self):
@@ -121,7 +127,7 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
     
     def _select_project(self, seq_dir: str):
         if not seq_dir:
-            self._set_seq_dir_status(False, "Aucun dossier sélectionné")
+            self._set_seq_dir_status(SeqDirState.EMPTY)
             return
 
         seq_dirname = Path(seq_dir).name
@@ -129,11 +135,11 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         try:
             seq_identifier = find_seq_identifier(seq_dir)
         except Exception as e:
-            self._set_seq_dir_status(False, "Dossier invalide")
+            self._set_seq_dir_status(SeqDirState.INVALID)
             messageBar(self.iface, f"Dossier invalide : {e}", "c", 10)
             return
 
-        self._set_seq_dir_status(True, "Dossier valide")
+        self._set_seq_dir_status(SeqDirState.VALID, seq_identifier)
         self.projectChanged.emit(seq_dirname, seq_dir, seq_identifier)
         messageBar(self.iface, f"Dossier valide : {seq_dir}", "s", 10)
 
@@ -142,14 +148,38 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self._select_project(None)
 
     # endregion
+            
+    def _set_seq_dir_status(self, state: SeqDirState, forest_id: str | None = None):
+        # --- EMPTY STATE ---
+        if state == SeqDirState.EMPTY:
+            self.lbl_seq_dir_status.clear()
+            self.lbl_seq_dir_status.setToolTip("")
+            self.lbl_forest_id.clear()
+            self.lbl_forest_id.hide()
+            return
+        
+        if state == SeqDirState.VALID:
+            icon = "/mIconSuccess.svg"
+            tooltip = "Dossier valide"
 
-    def _set_seq_dir_status(self, valid: bool, message: str):
-        icon = QgsApplication.getThemeIcon("/mIconWarning.svg")
-        if valid:
-            icon = QgsApplication.getThemeIcon("/mIconSuccess.svg")
+        if state== SeqDirState.INVALID:
+            icon = "/mIconWarning.svg"
+            tooltip = "Dossier invalide"
 
-        self.lbl_seq_dir_status.setPixmap(icon.pixmap(16, 16))
-        self.lbl_seq_dir_status.setToolTip(message)
+        self.lbl_seq_dir_status.setPixmap(QgsApplication.getThemeIcon(icon).pixmap(16, 16))
+        self.lbl_seq_dir_status.setToolTip(tooltip)
+
+        # --- LABEL ---
+        if state == SeqDirState.VALID and forest_id:
+            fm = self.lbl_forest_id.fontMetrics()
+            self.lbl_forest_id.setText(
+                fm.elidedText(forest_id, Qt.ElideRight, 150)
+            )
+            self.lbl_forest_id.setToolTip(forest_id)
+            self.lbl_forest_id.show()
+        else:
+            self.lbl_forest_id.clear()
+            self.lbl_forest_id.hide()
 
     def _init_tabs(self):
 

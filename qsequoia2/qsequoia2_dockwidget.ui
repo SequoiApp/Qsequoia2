@@ -140,7 +140,7 @@
        </spacer>
       </item>
       <item>
-       <widget class="QLabel" name="btn_forest_id">
+       <widget class="QLabel" name="lbl_forest_id">
         <property name="text">
          <string>forest_id</string>
         </property>

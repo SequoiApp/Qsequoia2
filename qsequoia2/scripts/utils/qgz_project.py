@@ -28,7 +28,7 @@ def Load_qgis_project(seq_dir, seq_dirname):
     """load a qgis project from seq_dir"""
     seq_dir = Path(seq_dir)
     project = project = QgsProject.instance()
-    project_path = seq_dir / f"{seq_dirname}_SEQ_PROJECT.qgz"
+    project_path = seq_dir / f"{seq_dirname}_SEQUOIA.qgz"
     project.read(str(project_path))
 
 def create_qgis_project(seq_dir, seq_dirname, datum="EPSG:2154"):
@@ -36,7 +36,7 @@ def create_qgis_project(seq_dir, seq_dirname, datum="EPSG:2154"):
 
     seq_dir = Path(seq_dir)
     project = QgsProject.instance()
-    project_path = seq_dir / f"{seq_dirname}_SEQ_PROJECT.qgz"
+    project_path = seq_dir / f"{seq_dirname}_SEQUOIA.qgz"
     crs = QgsCoordinateReferenceSystem(datum)
     project.setCrs(crs)
     project.setDirty(True)

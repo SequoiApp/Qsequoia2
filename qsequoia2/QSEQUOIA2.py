@@ -12,7 +12,8 @@ from qsequoia2.scripts.utils.get_download_folder import get_download_folder
 from qsequoia2.scripts.utils.seq_config import sync_seq_configs
 from qsequoia2.scripts.utils.messageBar import messageLog
 from qsequoia2.scripts.utils.reloader import reloadQS2
-from qsequoia2.scripts.utils.variable import set_project_variable, get_project_variable
+from qsequoia2.scripts.utils.variable import *
+from qsequoia2.scripts.utils.qgz_project import *
 
 from .qsequoia2_dockwidget import Qsequoia2DockWidget
 
@@ -128,8 +129,16 @@ class Qsequoia2:
         set_project_variable("QS2_seq_dir", seq_dir)
         set_project_variable("QS2_seq_identifier", seq_identifier)
 
-        messageLog(f"Project name: {seq_dirname}", "i")
-        messageLog(f"Project folder: {seq_dir}", "i")
+        messageLog(f"SEQ_DIRNAME: {seq_dirname}", "i")
+        messageLog(f"SEQ_DIR: {seq_dir}", "i")
+
+        # TODO corriger le bug des nom de projet définit des le lancement selon la proposition de projet
+
+        seq_qgz_project = bool(get_global_variable("QS2_default_project"))
+
+        if seq_qgz_project is True :
+            if self.dockwidget.cb_seq_folder.currentText() == seq_dirname:
+                find_qgis_project(seq_dir, seq_dirname)
 
     def _open_global_settings(self):
         """Ouvre la fenêtre de configuration globale du plugin."""

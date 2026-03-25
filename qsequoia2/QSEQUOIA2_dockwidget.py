@@ -60,6 +60,7 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
     def _build_project_suggestions(self):
         """Pure UI"""
         combo = self.cb_seq_folder
+        combo.blockSignals(True)
         combo.clear()
         combo.setEnabled(True)
         
@@ -67,6 +68,7 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         messageLog(f"suggest_enabled _build_project_suggestions: {suggest_enabled}")
         if not suggest_enabled:
             combo.setEnabled(False)
+            combo.blockSignals(False)
             return
 
         folders = get_global_variable("QS2_project_suggestions") or []
@@ -86,6 +88,7 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self._setup_completer(projects)
 
         combo.setCurrentIndex(-1)
+        combo.blockSignals(False) 
 
     def _setup_completer(self, projects):
         combo = self.cb_seq_folder

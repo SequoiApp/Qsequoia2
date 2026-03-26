@@ -1,14 +1,14 @@
 from pathlib import Path
+from enum import Enum
 
 from qgis.PyQt import QtWidgets, uic
 from qgis.PyQt.QtCore import pyqtSignal, Qt
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QCompleter, QFileDialog
+from qgis.PyQt.QtWidgets import QCompleter, QFileDialog, QApplication
 
 from qsequoia2.scripts.add_data.add_data import AddDataTabWidget
 from qsequoia2.scripts.forest_data.forest_data import ForestDataDialog
 from qsequoia2.scripts.tools.tools import ToolsDialog
-from qsequoia2.scripts.add_on.addon_loader import load_addons
 from qsequoia2.scripts.utils.variable import get_global_variable
 from qsequoia2.scripts.utils.seq_config import *
 from qsequoia2.scripts.utils.messageBar import *
@@ -18,6 +18,13 @@ ICONS_DIR = PLUGIN_DIR / "icons"
 
 UI_PATH = PLUGIN_DIR / "Qsequoia2_dockwidget.ui"
 FORM_CLASS, _ = uic.loadUiType(str(UI_PATH))
+
+
+class SeqDirState(Enum):
+    EMPTY = 0
+    INVALID = 1
+    VALID = 2
+
 
 class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
@@ -30,151 +37,151 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.iface = iface
         self.setupUi(self)
 
+        self._project_paths = {}
+
         self._init_ui()
+        self._connect_signals()
+        self._update_project_visibility()
         self._build_project_suggestions()
         self._init_tabs()
-        self._load_addons()
-
-        # Connection
-        self.btn_select_seq_dir.clicked.connect(self._on_project_selected)
-        self.cb_seq_folder.currentIndexChanged.connect(self._on_project_suggested)
 
     def _init_ui(self):
+        icons = {
+            self.btn_sequoia: QIcon(str(ICONS_DIR / "Qsequoia2.svg")),
+            self.btn_issue: QIcon(str(ICONS_DIR / "github.svg")),
+            self.btn_reload: QgsApplication.getThemeIcon("/mActionRefresh.svg"),
+            self.btn_settings: QgsApplication.getThemeIcon("/mActionOptions.svg"),
+            self.btn_select_seq_dir: QgsApplication.getThemeIcon("/mActionFileOpen.svg"),
+            self.btn_open_seq_dir: QgsApplication.getThemeIcon("/mActionLink.svg"),
+        }
 
-        qsequoia2_icon = QIcon(str(ICONS_DIR / "Qsequoia2.svg"))
-        github_icon = QIcon(str(ICONS_DIR / "github.svg"))
+        for btn, icon in icons.items():
+            btn.setIcon(icon)
 
-        # button container
-        self.btn_sequoia.setIcon(qsequoia2_icon)
-        self.btn_reload.setIcon(QgsApplication.getThemeIcon("/mActionRefresh.svg"))
-        self.btn_settings.setIcon(QgsApplication.getThemeIcon("/mActionOptions.svg"))
-        self.btn_open_seq_dir.setIcon(QgsApplication.getThemeIcon("/mActionFileOpen.svg"))
-        self.btn_issue.setIcon(github_icon)
-    
-        # Sequoia dir status
+        self.le_seq_search.setPlaceholderText("Chercher un dossier Sequoia...")
+
         self.lbl_seq_dir_status.clear()
         self.lbl_seq_dir_status.setFixedSize(16, 16)
-        self._set_seq_dir_status(False, "Aucun dossier sélectionné")
+        self._set_seq_dir_status(SeqDirState.EMPTY)
 
-    # region PROJECT
+    def _connect_signals(self):
+        self.btn_select_seq_dir.clicked.connect(self._on_project_selected)
+
+    def _update_project_visibility(self):
+        enabled = bool(get_global_variable("QS2_project_suggestions_enabled"))
+        self.le_seq_search.setVisible(enabled)
+
     def _build_project_suggestions(self):
-        """Pure UI"""
-        combo = self.cb_seq_folder
-        combo.clear()
-        combo.setEnabled(True)
-        
-        suggest_enabled = bool(get_global_variable("QS2_project_suggestions_enabled"))
-        messageLog(f"suggest_enabled _build_project_suggestions: {suggest_enabled}")
-        if not suggest_enabled:
-            combo.setEnabled(False)
+        enabled = bool(get_global_variable("QS2_project_suggestions_enabled"))
+
+        if not enabled:
+            self._setup_completer([])
             return
 
         folders = get_global_variable("QS2_project_suggestions") or []
 
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+        try:
+            projects = self._find_projects(folders)
+        finally:
+            QApplication.restoreOverrideCursor()
+
+        self._setup_completer(projects)
+
+    def _find_projects(self, folders):
         projects = []
+
         for folder in folders:
             try:
                 projects.extend(find_all_seq_dir(folder))
             except RuntimeError:
                 messageBar(self.iface, "Recherche trop étendue...", "c", 10)
 
-        projects = sorted(set(projects), key=lambda p: p.name.lower())
-
-        for p in projects:
-            combo.addItem(p.name, str(p))
-
-        self._setup_completer(projects)
-
-        combo.setCurrentIndex(-1)
+        return sorted(set(projects), key=lambda p: p.name.lower())
 
     def _setup_completer(self, projects):
-        combo = self.cb_seq_folder
-
         if not projects:
-            combo.setCompleter(None)
+            self.le_seq_search.setCompleter(None)
             return
 
-        completer = QCompleter([p.name for p in projects], combo)
+        self._project_paths = {p.name: str(p) for p in projects}
+
+        completer = QCompleter(list(self._project_paths.keys()), self)
         completer.setCaseSensitivity(Qt.CaseInsensitive)
         completer.setFilterMode(Qt.MatchContains)
-        combo.setCompleter(completer)
 
-    def _on_project_suggested(self, index):
-        if index < 0:
-            return
-        self._select_project(self.cb_seq_folder.itemData(index))
+        self.le_seq_search.setCompleter(completer)
+        completer.activated.connect(self._on_project_selected_from_search)
+
+    def _on_project_selected_from_search(self, name):
+        path = self._project_paths.get(name)
+        if path:
+            self._select_project(path)
 
     def _on_project_selected(self):
         seq_dir = QFileDialog.getExistingDirectory(self, "Sélectionner un dossier projet")
-        if not seq_dir:
-            return
+        if seq_dir:
+            self._select_project(seq_dir)
 
-        combo = self.cb_seq_folder
-
-        combo.blockSignals(True)
-        combo.addItem(Path(seq_dir).name, seq_dir)
-        combo.setCurrentIndex(combo.count() - 1)
-        combo.blockSignals(False)
-
-        self._select_project(seq_dir)
-    
     def _select_project(self, seq_dir: str):
+        self.le_seq_search.clear()
+        self.le_seq_search.clearFocus()
+
         if not seq_dir:
-            self._set_seq_dir_status(False, "Aucun dossier sélectionné")
+            self._set_seq_dir_status(SeqDirState.EMPTY)
+            self.projectChanged.emit("", None, None)
             return
 
-        seq_dirname = Path(seq_dir).name
+        name = Path(seq_dir).name
 
         try:
-            seq_identifier = find_seq_identifier(seq_dir)
+            identifier = find_seq_identifier(seq_dir)
+            state = SeqDirState.VALID
+            label = identifier
+
         except Exception as e:
-            self._set_seq_dir_status(False, "Dossier invalide")
-            messageBar(self.iface, f"Dossier invalide : {e}", "c", 10)
-            return
+            state = SeqDirState.INVALID
+            identifier = None
+            label = name
+            messageBar(self.iface, str(e), "c", 10)
 
-        self._set_seq_dir_status(True, "Dossier valide")
-        self.projectChanged.emit(seq_dirname, seq_dir, seq_identifier)
-        messageBar(self.iface, f"Dossier valide : {seq_dir}", "s", 10)
+        self._set_seq_dir_status(state, label)
+        self.projectChanged.emit(name, seq_dir, identifier)
 
-    def refresh(self):
-        self._build_project_suggestions()
-        self._select_project(None)
+        if state == SeqDirState.VALID:
+            messageBar(self.iface, f"Dossier valide : {seq_dir}", "s", 10)
 
-    # endregion
+    def _set_seq_dir_status(self, state: SeqDirState, label: str | None = None):
+        status_map = {
+            SeqDirState.VALID: ("/mIconSuccess.svg", "Dossier valide"),
+            SeqDirState.INVALID: ("/mIconWarning.svg", "Dossier invalide"),
+            SeqDirState.EMPTY: ("/mIconInfo.svg", "Aucun dossier sélectionné"),
+        }
 
-    def _set_seq_dir_status(self, valid: bool, message: str):
-        icon = QgsApplication.getThemeIcon("/mIconWarning.svg")
-        if valid:
-            icon = QgsApplication.getThemeIcon("/mIconSuccess.svg")
+        icon, tooltip = status_map[state]
 
-        self.lbl_seq_dir_status.setPixmap(icon.pixmap(16, 16))
-        self.lbl_seq_dir_status.setToolTip(message)
+        self.lbl_seq_dir_status.setPixmap(QgsApplication.getThemeIcon(icon).pixmap(16, 16))
+        self.lbl_seq_dir_status.setToolTip(tooltip)
+
+        if state == SeqDirState.EMPTY:
+            self.lbl_forest_id.clear()
+            self.lbl_forest_id.hide()
+        else:
+            fm = self.lbl_forest_id.fontMetrics()
+            self.lbl_forest_id.setText(fm.elidedText(label, Qt.ElideRight, 150))
+            self.lbl_forest_id.setToolTip(label)
+            self.lbl_forest_id.show()
 
     def _init_tabs(self):
-
         def add_tab(widget, icon_name, tooltip):
-            icon = QIcon(str(PLUGIN_DIR / "icons" / icon_name))
+            icon = QIcon(str(ICONS_DIR / icon_name))
             self.tabWidget.addTab(widget, icon, "")
             self.tabWidget.setTabToolTip(self.tabWidget.count() - 1, tooltip)
 
-        forest_tab = ForestDataDialog(iface=self.iface,parent=self, )
-        add_tab(forest_tab, "forest_data.svg", "Metadonnées sur la propriété")
-        
-        add_data_tab = AddDataTabWidget(iface=self.iface, parent=self, )
-        self.projectChanged.connect(add_data_tab.on_project_changed)
-        add_tab(add_data_tab, "add_data.svg", "Ajout de données")
+        add_tab(ForestDataDialog(iface=self.iface, parent=self), "forest_data.svg", "Métadonnées")
+        add_tab(AddDataTabWidget(iface=self.iface, parent=self), "add_data.svg", "Ajout de données")
+        add_tab(ToolsDialog(iface=self.iface, parent=self), "tools.svg", "Outils")
 
-        tools_tab = ToolsDialog(iface=self.iface,parent=self)
-        add_tab(tools_tab, "tools.svg", "Outils et fonctions")
-
-        # layout_tab = LayoutDesignerDialog(iface=self.iface,parent=self, )
-        # _add_tab(layout_tab, "layout.svg", "Création de carte thématique")
-
-    def _load_addons(self):
-        addon_folder = get_global_variable("QS2_addon_folder")
-        if addon_folder:
-            load_addons(plugin=self, iface=self.iface)
-
-    def closeEvent(self, event):
-        self.closingPlugin.emit()
-        event.accept()
+    def refresh(self):
+        self._update_project_visibility()
+        self._build_project_suggestions()

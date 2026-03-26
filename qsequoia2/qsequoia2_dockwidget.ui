@@ -156,24 +156,7 @@
      </layout>
     </item>
     <item>
-     <layout class="QHBoxLayout" name="hbox_select_dir">
-      <property name="topMargin">
-       <number>0</number>
-      </property>
-      <item>
-       <widget class="QComboBox" name="cb_seq_folder">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="editable">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-     </layout>
+     <widget class="QLineEdit" name="le_seq_search"/>
     </item>
     <item>
      <widget class="QTabWidget" name="tabWidget">

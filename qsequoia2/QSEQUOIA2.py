@@ -135,9 +135,7 @@ class Qsequoia2:
         """Ouvre la fenêtre de configuration globale du plugin."""
         self.global_settings_dialog = GlobalSettingsDialog(iface=self.iface, plugin=self)
         if self.dockwidget:
-            self.global_settings_dialog.settingsUpdated.connect(
-                self.dockwidget.refresh
-            )
+            self.global_settings_dialog.settingsUpdated.connect(self.dockwidget.refresh)
         self.global_settings_dialog.show()
 
     def _reload_plugin(self):

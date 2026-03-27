@@ -138,8 +138,7 @@ class getForestdata:
 
             # Départements formatés en chaîne
             dep_str = self._aggregate_values(parca_layer, value_field=dep_field, surface_field=surface_field)
-            self._calculated_values["departement_str"] = dep_str
-
+  
             # version liste simple
             dep_list = [d.strip() for d in dep_str.replace("&", ",").split(",")]
 
@@ -307,6 +306,4 @@ class getForestdata:
             )
 
         return formatted_surface
-    
-
     

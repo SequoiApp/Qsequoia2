@@ -10,22 +10,24 @@ from pathlib import Path
 from qgis.core import (QgsProject,QgsCoordinateReferenceSystem)
 
 def find_qgis_project(seq_dir, seq_dirname):
-    """"""
     seq_dir = Path(seq_dir)
-    qgz_file = list(seq_dir.glob("**/*.qgz"))
+    qgz_files = list(seq_dir.glob("**/*.qgz"))
 
-    for files in qgz_file :
-        if seq_dirname in files.name:
-            return Load_qgis_project(seq_dir,seq_dirname)
-        
-        create_qgis_project(seq_dir, seq_dirname)
-        
-        return Load_qgis_project(seq_dir,seq_dirname)
+    for f in qgz_files:
+        if seq_dirname in f.name:
+
+            return Load_qgis_project(seq_dir, seq_dirname)
+
+    create_qgis_project(seq_dir, seq_dirname)
+
+    return Load_qgis_project(seq_dir, seq_dirname)
+
         
 # create_QGIS_project
 
 def Load_qgis_project(seq_dir, seq_dirname):
     """load a qgis project from seq_dir"""
+
     seq_dir = Path(seq_dir)
     project = project = QgsProject.instance()
     project_path = seq_dir / f"{seq_dirname}_SEQUOIA.qgz"

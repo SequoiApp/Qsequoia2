@@ -134,11 +134,12 @@ class Qsequoia2:
 
         # TODO corriger le bug des nom de projet définit des le lancement selon la proposition de projet
 
-        seq_qgz_project = bool(get_global_variable("QS2_default_project"))
+        seq_qgz_project = str(get_global_variable("QS2_default_project")).strip().lower()
 
-        if seq_qgz_project is True :
+        if seq_qgz_project == "true":
             if self.dockwidget.cb_seq_folder.currentText() == seq_dirname:
                 find_qgis_project(seq_dir, seq_dirname)
+
 
     def _open_global_settings(self):
         """Ouvre la fenêtre de configuration globale du plugin."""

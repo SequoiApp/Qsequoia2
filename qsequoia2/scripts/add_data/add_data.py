@@ -253,7 +253,7 @@ class AddDataTabWidget(QTabWidget, FORM_CLASS):
     # endregion
 
     # region UPDATE FROM SIGNAL
-    def on_project_changed(self, seq_dirname, seq_dir):
+    def on_project_changed(self, seq_dirname ,seq_dir: str, seq_identifier):
         self._reload_vecteur_tab(seq_dir)
         self._reload_raster_tab(seq_dir)
 

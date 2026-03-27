@@ -7,7 +7,7 @@ from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QCompleter, QFileDialog, QApplication
 
 from qsequoia2.scripts.add_data.add_data import AddDataTabWidget
-from qsequoia2.scripts.forest_data.forest_data import ForestDataDialog
+from qsequoia2.scripts.forest_data.forest_data import ForestDataTabs
 from qsequoia2.scripts.tools.tools import ToolsDialog
 from qsequoia2.scripts.utils.variable import get_global_variable
 from qsequoia2.scripts.utils.seq_config import *
@@ -63,6 +63,7 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.lbl_seq_dir_status.clear()
         self.lbl_seq_dir_status.setFixedSize(16, 16)
         self._set_seq_dir_status(SeqDirState.EMPTY)
+        self.btn_update_plugin.setVisible(False)
 
     def _connect_signals(self):
         self.btn_select_seq_dir.clicked.connect(self._on_project_selected)
@@ -114,9 +115,9 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         completer.activated.connect(self._on_project_selected_from_search)
 
     def _on_project_selected_from_search(self, name):
-        path = self._project_paths.get(name)
-        if path:
-            self._select_project(path)
+        seq_dir = self._project_paths.get(name)
+        if seq_dir:
+            self._select_project(seq_dir)
 
     def _on_project_selected(self):
         seq_dir = QFileDialog.getExistingDirectory(self, "Sélectionner un dossier projet")
@@ -132,24 +133,31 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.projectChanged.emit("", None, None)
             return
 
-        name = Path(seq_dir).name
+        seq_dirname = Path(seq_dir).name
 
         try:
-            identifier = find_seq_identifier(seq_dir)
+            seq_identifier = find_seq_identifier(seq_dir)
             state = SeqDirState.VALID
-            label = identifier
+            label = seq_identifier
 
         except Exception as e:
             state = SeqDirState.INVALID
-            identifier = None
-            label = name
+            seq_identifier = None
+            label = seq_dirname
             messageBar(self.iface, str(e), "c", 10)
 
         self._set_seq_dir_status(state, label)
-        self.projectChanged.emit(name, seq_dir, identifier)
+
+        self.projectChanged.emit(seq_dirname, seq_dir, seq_identifier)
+
 
         if state == SeqDirState.VALID:
+            self.forest_tab.actu_data(seq_dirname, seq_dir, seq_identifier)
+            self.add_data_tab.on_project_changed(seq_dirname, seq_dir, seq_identifier)
+            
             messageBar(self.iface, f"Dossier valide : {seq_dir}", "s", 10)
+            self.btn_update_plugin.setVisible(True)
+
 
     def _set_seq_dir_status(self, state: SeqDirState, label: str | None = None):
         status_map = {
@@ -173,14 +181,20 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.lbl_forest_id.show()
 
     def _init_tabs(self):
+        self.forest_tab = ForestDataTabs(iface=self.iface, parent=self)
+        self.add_data_tab = AddDataTabWidget(iface=self.iface, parent=self)
+        self.tools_tab = ToolsDialog(iface=self.iface, parent=self)
+
         def add_tab(widget, icon_name, tooltip):
             icon = QIcon(str(ICONS_DIR / icon_name))
             self.tabWidget.addTab(widget, icon, "")
             self.tabWidget.setTabToolTip(self.tabWidget.count() - 1, tooltip)
 
-        add_tab(ForestDataDialog(iface=self.iface, parent=self), "forest_data.svg", "Métadonnées")
-        add_tab(AddDataTabWidget(iface=self.iface, parent=self), "add_data.svg", "Ajout de données")
-        add_tab(ToolsDialog(iface=self.iface, parent=self), "tools.svg", "Outils")
+        add_tab(self.forest_tab, "forest_data.svg", "Métadonnées")
+        add_tab(self.add_data_tab, "add_data.svg", "Ajout de données")
+        add_tab(self.tools_tab, "tools.svg", "Outils")
+
+
 
     def refresh(self):
         self._update_project_visibility()

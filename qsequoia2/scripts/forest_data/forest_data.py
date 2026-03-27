@@ -29,10 +29,10 @@ UI_PATH = Path(__file__).parent / 'forest_data.ui'
 FORM_CLASS, _ = uic.loadUiType(str(UI_PATH))
 
 # ==========================================================================
-# ForestDataDialog
+# ForestDataTabs
 # ==========================================================================
 
-class ForestDataDialog(QDialog, FORM_CLASS):
+class ForestDataTabs(QDialog, FORM_CLASS):
     """Classe principale du module Forestdata de Qsequoia2"""
     def __init__(self, iface, parent=None):
         super().__init__(parent)
@@ -41,63 +41,57 @@ class ForestDataDialog(QDialog, FORM_CLASS):
         self.parent = parent
         self.project = QgsProject.instance()
         self.setupUi(self)
-        # Chargement des variables
-        self.seq_dir = get_project_variable("QS2_seq_dir")
-        self.seq_dirname = get_project_variable("QS2_seq_dirname")
-        self.seq_identifier= get_project_variable("QS2_seq_identifier")
-        self.current_style_folder = get_global_variable("QS2_styles_directory")
-        
-        # appel de la fonction de refresh
-        self.actu.clicked.connect(self.actu_data)
 
         # réaction au changement du numéro de parcelle dans le tableau
         self.cb_parcelle.currentTextChanged.connect(self.on_cb_parcelle_changed)
 
-    def actu_data(self):
-        """relance les fonctions de chargement des data pour actualiser l'affichage"""
-        if not self.seq_dir :
+    def actu_data(self, seq_dirname, seq_dir, seq_identifier):
+        """relance les fonctions de chargement des data pour actualiser l'affichage"""  
+        seq_dir = Path(seq_dir)
+
+        if not seq_dir :
             messageBar(self.iface,"Pas de dossier de projet !","w",10)
             return
+        
         # création des métadata 
-        seq_metadata = self.run_calculation()
-        self.export_to_project_variables(seq_metadata)
+        seq_metadata = self.run_calculation(seq_dir)
+        self.export_to_project_variables(seq_metadata, seq_dir)
 
         # lecture des metadata
         self.get_base_metadata()
         self.display_base_metadata()
+
         try:
-            self.setFinaldata()
+            self.setFinaldata(seq_dir)
         
         except Exception as e :
             messageBar(self.iface, str(e),"w",10)
 
+    def run_calculation(self, seq_dir):
+        try : 
+            seq_metadata = getForestdata(
+                                        self.iface,
+                                        seq_dir,
+                                        )
+            return seq_metadata.build()
 
-    def run_calculation(self):
-        #try : 
-        seq_metadata = getForestdata(
-                                    iface=self.iface,
-                                    seq_dir=self.seq_dir,
-                                    )
+        except Exception as e :
+            messageBar(self.iface, f"Erreur lors de la construction des metadata : {e}","w",10)
+            return {"vide"}
         
-        return seq_metadata.build()
-        
-        #except Exception as e :
-            #messageBar(self.iface, f"Erreur lors de la construction des metadata : {e}","w",10)
-            #return {"vide"}
-        
-    def export_to_project_variables(self, seq_metadata):
+    def export_to_project_variables(self, seq_metadata, seq_dir):
         """ajoute les données dans les varaibles projets"""
         for key, value in seq_metadata.items():
             if isinstance(value, (list, dict)):
                 value = json.dumps(value)
             set_project_variable(f"QS2_{key}", value)
-        messageLog(f"-- metadata build pour {self.seq_dir} --!","i")
-        #try :
+        messageLog(f"-- metadata build pour {seq_dir} --!","i")
 
-        #except Exception as e:
-            #messageBar(self.iface, f"Erreur lors de l'export : {e}", "w", 10)
+    # Lecture des metadata et affichage
 
     def get_base_metadata(self):
+        """récupère les metadata"""
+
         def load_var(key):
             val = get_project_variable(f"QS2_{key}")
             try:
@@ -117,13 +111,10 @@ class ForestDataDialog(QDialog, FORM_CLASS):
         self.surface_formatted = load_var("surface_formatted")
         self.forest_name = load_var("seq_forest_name")
 
-
     def display_base_metadata(self):
-        
-        if self.forest_name:
-            forest_name = self.forest_name
-        else : 
-            forest_name = self.seq_identifier
+        """Affiche les metadata"""
+
+        forest_name = self.forest_name or get_global_variable("QS2_seq_identifier")
 
         self.forest_name_edit.setText(str(forest_name))
         self.departement_edit.setText(str(self.dep_str))
@@ -135,9 +126,9 @@ class ForestDataDialog(QDialog, FORM_CLASS):
 
 
 
-    def setFinaldata(self):
+    def setFinaldata(self, seq_dir):
         """"""
-        synthese = seq_read("summary", self.seq_dir)
+        synthese = seq_read("summary", seq_dir)
 
         if not synthese:
             return

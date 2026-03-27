@@ -4,16 +4,18 @@ import os
 
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt, QUrl
 from qgis.PyQt.QtGui import QIcon, QDesktopServices
-from qgis.PyQt.QtWidgets import QAction
+from qgis.PyQt.QtWidgets import QAction, QApplication
+from qgis.core import *
 
 from qsequoia2.scripts.global_settings.global_settings import GlobalSettingsDialog
 from qsequoia2.scripts.watchdog.dogwatcher import DogWatcher
 from qsequoia2.scripts.utils.get_download_folder import get_download_folder
 from qsequoia2.scripts.utils.seq_config import sync_seq_configs
-from qsequoia2.scripts.utils.messageBar import messageLog
+from qsequoia2.scripts.utils.messageBar import *
 from qsequoia2.scripts.utils.reloader import reloadQS2
 from qsequoia2.scripts.utils.variable import *
 from qsequoia2.scripts.utils.qgz_project import *
+
 
 from .qsequoia2_dockwidget import Qsequoia2DockWidget
 
@@ -110,6 +112,7 @@ class Qsequoia2:
         dw.btn_reload.clicked.connect(self._reload_plugin)
         dw.btn_open_seq_dir.clicked.connect(self._open_seq_dir)
         dw.btn_issue.clicked.connect(self._open_qsequoia_issue)
+        dw.btn_update_plugin.clicked.connect(self._update_plugin)
     
     def _on_closed_plugin(self):
         """Cleanup when dockwidget is closed"""
@@ -124,7 +127,7 @@ class Qsequoia2:
 
     def _on_project_changed(self, seq_dirname, seq_dir, seq_identifier):
         """Handle project selection from UI"""
-
+        
         set_project_variable("QS2_seq_dirname", seq_dirname)
         set_project_variable("QS2_seq_dir", seq_dir)
         set_project_variable("QS2_seq_identifier", seq_identifier)
@@ -137,7 +140,6 @@ class Qsequoia2:
         seq_qgz_project = str(get_global_variable("QS2_default_project")).strip().lower()
 
         if seq_qgz_project == "true":
-            if self.dockwidget.cb_seq_folder.currentText() == seq_dirname:
                 find_qgis_project(seq_dir, seq_dirname)
 
 
@@ -169,6 +171,18 @@ class Qsequoia2:
     def _open_qsequoia_issue(self):
         url = QUrl("https://github.com/SequoiApp/Qsequoia2/issues")
         QDesktopServices.openUrl(url)
+
+    def _update_plugin(self, seq_dir):
+        """force plugin to reload the data in seq_dir and qgis project"""
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+        try:
+            seq_dir = get_project_variable("QS2_seq_dir") or ""
+            if seq_dir:
+                self.dockwidget._select_project(seq_dir)
+                messageBar(self.iface, f"seq_dir reload : {seq_dir}","i",10)
+        finally:
+            QApplication.restoreOverrideCursor()
+
         
     def unload(self):
 

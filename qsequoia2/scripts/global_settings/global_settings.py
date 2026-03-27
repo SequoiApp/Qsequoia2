@@ -68,7 +68,7 @@ class GlobalSettingsDialog(QDialog, FORM_CLASS):
 
         open_qgz_projet = bool(get_global_variable("QS2_default_project"))
         self.cb_open_project.setChecked(open_qgz_projet)
-        self.cb_open_project.setEnabled(open_qgz_projet)
+
 
         suggest_enabled = bool(get_global_variable("QS2_project_suggestions_enabled"))
         self.cb_suggest_enabled.setChecked(suggest_enabled)

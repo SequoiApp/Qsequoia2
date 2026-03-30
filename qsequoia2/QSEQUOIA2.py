@@ -135,7 +135,6 @@ class Qsequoia2:
         messageLog(f"SEQ_DIRNAME: {seq_dirname}", "i")
         messageLog(f"SEQ_DIR: {seq_dir}", "i")
 
-        # TODO corriger le bug des nom de projet définit des le lancement selon la proposition de projet
 
         seq_qgz_project = str(get_global_variable("QS2_default_project")).strip().lower()
 

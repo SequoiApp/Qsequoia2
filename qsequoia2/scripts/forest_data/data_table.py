@@ -63,3 +63,11 @@ def getFinaldata(synthese):
         table += 1
 
     return baseLayer
+
+
+
+# endregion
+# ================================================
+# region vérificateur
+# ================================================
+

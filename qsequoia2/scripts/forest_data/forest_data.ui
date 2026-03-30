@@ -60,14 +60,14 @@ font: 75 9pt &quot;Garamond&quot;;</string>
          </property>
         </widget>
        </item>
-       <item row="1" column="0">
+       <item row="2" column="0">
         <widget class="QLabel" name="label_departement">
          <property name="text">
           <string>Département :</string>
          </property>
         </widget>
        </item>
-       <item row="1" column="1">
+       <item row="2" column="1">
         <widget class="QLineEdit" name="departement_edit">
          <property name="enabled">
           <bool>true</bool>
@@ -91,14 +91,14 @@ font: 9pt &quot;Garamond&quot;;</string>
          </property>
         </widget>
        </item>
-       <item row="2" column="0">
+       <item row="3" column="0">
         <widget class="QLabel" name="label_city">
          <property name="text">
           <string>Commune :</string>
          </property>
         </widget>
        </item>
-       <item row="2" column="1">
+       <item row="3" column="1">
         <widget class="QLineEdit" name="city_edit">
          <property name="enabled">
           <bool>true</bool>
@@ -122,14 +122,14 @@ font: 9pt &quot;Garamond&quot;;</string>
          </property>
         </widget>
        </item>
-       <item row="3" column="0">
+       <item row="4" column="0">
         <widget class="QLabel" name="label_surface">
          <property name="text">
           <string>Surface totale :</string>
          </property>
         </widget>
        </item>
-       <item row="3" column="1">
+       <item row="4" column="1">
         <widget class="QLineEdit" name="surface_edit">
          <property name="enabled">
           <bool>true</bool>
@@ -144,14 +144,14 @@ font: 9pt &quot;Garamond&quot;;</string>
          </property>
         </widget>
        </item>
-       <item row="4" column="0">
+       <item row="5" column="0">
         <widget class="QLabel" name="label_surface_boisee">
          <property name="text">
           <string>Surface boisée (ha) :</string>
          </property>
         </widget>
        </item>
-       <item row="4" column="1">
+       <item row="5" column="1">
         <widget class="QLineEdit" name="surface_boisee_edit">
          <property name="enabled">
           <bool>true</bool>
@@ -166,14 +166,14 @@ font: 9pt &quot;Garamond&quot;;</string>
          </property>
         </widget>
        </item>
-       <item row="5" column="0">
+       <item row="6" column="0">
         <widget class="QLabel" name="label_surface_non_boisee">
          <property name="text">
           <string>Surface non boisée (ha) :</string>
          </property>
         </widget>
        </item>
-       <item row="5" column="1">
+       <item row="6" column="1">
         <widget class="QLineEdit" name="surface_non_boisee_edit">
          <property name="enabled">
           <bool>true</bool>
@@ -188,14 +188,14 @@ font: 9pt &quot;Garamond&quot;;</string>
          </property>
         </widget>
        </item>
-       <item row="6" column="0">
+       <item row="7" column="0">
         <widget class="QLabel" name="label_owner">
          <property name="text">
           <string>Propriétaire :</string>
          </property>
         </widget>
        </item>
-       <item row="6" column="1">
+       <item row="7" column="1">
         <widget class="QLineEdit" name="owner_edit">
          <property name="enabled">
           <bool>true</bool>
@@ -210,14 +210,14 @@ font: 9pt &quot;Garamond&quot;;</string>
          </property>
         </widget>
        </item>
-       <item row="7" column="0">
+       <item row="8" column="0">
         <widget class="QLabel" name="label">
          <property name="text">
           <string/>
          </property>
         </widget>
        </item>
-       <item row="9" column="0">
+       <item row="10" column="0">
         <layout class="QHBoxLayout" name="horizontalLayout_3">
          <item>
           <widget class="QLabel" name="label_2">
@@ -231,15 +231,47 @@ font: 9pt &quot;Garamond&quot;;</string>
          </item>
         </layout>
        </item>
-       <item row="10" column="0" colspan="2">
+       <item row="11" column="0" colspan="2">
         <widget class="QTableWidget" name="forestTable"/>
        </item>
-       <item row="8" column="0" colspan="2">
+       <item row="9" column="0" colspan="2">
         <layout class="QHBoxLayout" name="horizontalLayout_4">
          <item>
           <widget class="Line" name="line_2">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="1" column="1">
+        <layout class="QHBoxLayout" name="typeLayout_2">
+         <item>
+          <widget class="QCheckBox" name="checkBox_massif">
+           <property name="text">
+            <string>Massif</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="checkBox_domaine">
+           <property name="text">
+            <string>Domaine</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="checkBox_foret">
+           <property name="text">
+            <string>Forêt</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="checkBox_bois">
+           <property name="text">
+            <string>Bois</string>
            </property>
           </widget>
          </item>

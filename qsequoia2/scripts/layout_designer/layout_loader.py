@@ -1,6 +1,5 @@
 from dataclasses import dataclass, field
 from pathlib import Path
-from tomlkit import key
 import yaml
 
 @dataclass
@@ -14,6 +13,11 @@ class ProjectCanvas:
 class ProjectLayout:
     theme: str = ""
     legends: list = field(default_factory=list)
+
+@dataclass
+class ProjectLayers:
+    sequoia: list = field(default_factory=list)
+    wmts: list = field(default_factory=list)
 
 class LayoutLoader:
 
@@ -55,12 +59,10 @@ class LayoutLoader:
             legends=raw.get("legends", [])
         )
     
-    def get_layers_by_type(self, key: str, layer_type: str):
-        canvas = self.get_canvas(key)
-        return canvas.layers.get(layer_type, [])
+    def get_layers(self, key: str) -> ProjectLayers:
+        raw = self._load().get(key, {}).get("layers", {})
 
-    def get_seq_layers(self, key: str):
-        return self.get_layers_by_type(key, "seq")
-    
-    def get_wmts_layers(self, key: str):
-        return self.get_layers_by_type(key, "wmts")
+        return ProjectLayers(
+            sequoia=raw.get("sequoia", []),
+            wmts=raw.get("wmts", [])
+        )

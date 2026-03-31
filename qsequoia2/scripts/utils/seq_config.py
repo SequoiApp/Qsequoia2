@@ -180,7 +180,7 @@ def get_style(layer_key, style_folder):
 
     return None
 
-def seq_read(key, project_folder, add_to_project=False, group_name=None, style_folder=None):
+def seq_read(key, project_folder, add_to_project=False, group=None, style_folder=None):
 
     meta = seq_layer(key)
     layer_type = meta["type"]
@@ -198,9 +198,8 @@ def seq_read(key, project_folder, add_to_project=False, group_name=None, style_f
         raise RuntimeError(
             f"Multiple layers found for '{filename}':\n{paths_str}"
         )
-
+        
     path = matches[0]
-
     if layer_type == "vect":
         layer = QgsVectorLayer(str(path), layer_name, "ogr")
     elif layer_type == "rast":
@@ -219,18 +218,10 @@ def seq_read(key, project_folder, add_to_project=False, group_name=None, style_f
 
     if add_to_project:
         project = QgsProject.instance()
-        root = project.layerTreeRoot()
+        project.addMapLayer(layer, not bool(group))
 
-        if group_name:
-            group = root.findGroup(group_name)
-            if not group:
-                group = root.addGroup(group_name)
-
-            project.addMapLayer(layer, False)
+        if group:
             group.addLayer(layer)
-
-        else:
-            project.addMapLayer(layer)
 
     return layer
 

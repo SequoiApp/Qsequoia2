@@ -199,14 +199,17 @@ class AddDataTabWidget(QTabWidget, FORM_CLASS):
         # Safe group name
         key = data["key"]
         family = data.get("family") or "AUTRES"
-        group_name = family.upper()
+
+        group = self.project.layerTreeRoot().findGroup(family.upper())
+        if not group:
+            group = self.project.layerTreeRoot().addGroup(family.upper())
 
         try:
             seq_read(
                 key=key,
                 project_folder=project_folder,
                 add_to_project=True,
-                group_name=group_name,
+                group=group,
                 style_folder=style_folder
             )
 

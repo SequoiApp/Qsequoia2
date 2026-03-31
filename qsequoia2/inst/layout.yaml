@@ -2,34 +2,32 @@ assemblage:
   alias : "Plan d'assemblage cadastral"
   canvas:
     scale: 7500
-    zoom_on: SEQ_PARCA_poly
-    readonly: [SEQ_PARCA_poly]
-    layers:
-      sequoia:
-        - COMS_TOPO_line
-        - CURVES_line
-        - COMS_TOPO_point
-        - INFRA_point
-        - INFRA_line
-        - INFRA_poly
-        - TOPONYME_point
-        - ROAD_TOPO_line
-        - ROAD_TOPO_poly
-        - ROAD_GRAPH_line
-        - ROAD_GRAPH_poly
-        - HYDRO_poly
-        - HYDRO_line
-        - VEGE_poly
-        - CAD_PARCELLE_poly
-        - SEQ_OWNER_line
-        - SEQ_PARCA_poly
-      wmts:
-        - wmts_scan25_grey
-        - wmts_scan100
-        - wmts_scan1000
-        - wmts_pci
-        - wmts_irc
-        - wmts_rgb
+    zoom_on: v.seq.parca.poly
+    readonly: [v.seq.parca.poly]
+  layers:
+    sequoia: &assemblage_w_seq
+      - v.seq.owner.line
+      - v.seq.parca.poly
+      - v.com.topo.line
+      - v.com.topo.point
+      - v.infra.point
+      - v.infra.line
+      - v.infra.poly
+      - v.toponyme.point
+      - v.road.line
+      - v.roadway.line
+      - v.roadway.poly
+      - v.hydro.poly
+      - v.hydro.line
+      - v.vege.poly
+      - v.curves.line
+    wmts: &assemblage_w_wmts
+      - wmts_scan25_grey
+      - wmts_scan100
+      - wmts_scan1000
+      - wmts_pci
+      - wmts_irc
+      - wmts_rgb
     # themes:
     #   - name: assemblage
     #     show: [*assemblage_w_vect, *assemblage_w_seq]
@@ -40,57 +38,55 @@ assemblage:
     legends:
       - name: legend1
         layers: [*assemblage_w_seq, *assemblage_w_wmts]
-      - name: 'legend2'
-        layers: *assemblage_w_vect
 
-situation:
-  alias : "Cartographie de situation"
-  canvas:
-    scale: 25000
-    zoom_on: 'SEQ_PARCA_poly'
-    readonly: ['SEQ_PARCA_poly']
-    groups: 
-      - name: VECTEUR
-        type: vector
-        layers: &situation_w_vect
-          - COMS_TOPO_line
-          - CURVES_line
-          - PRSF_point
-          - INFRA_poly
-          - ROAD_TOPO_poly
-          - ROAD_TOPO_line
-          - TOPONYME_point
-          - HYDRO_poly
-          - HYDRO_line
-          - VEGE_poly
+# situation:
+#   alias : "Cartographie de situation"
+#   canvas:
+#     scale: 25000
+#     zoom_on: 'SEQ_PARCA_poly'
+#     readonly: ['SEQ_PARCA_poly']
+#     groups: 
+#       - name: VECTEUR
+#         type: vector
+#         layers: &situation_w_vect
+#           - COMS_TOPO_line
+#           - CURVES_line
+#           - PRSF_point
+#           - INFRA_poly
+#           - ROAD_TOPO_poly
+#           - ROAD_TOPO_line
+#           - TOPONYME_point
+#           - HYDRO_poly
+#           - HYDRO_line
+#           - VEGE_poly
 
-      - name: SEQUOIA
-        type: vector
-        layers: &situation_w_seq
-          - SEQ_PF_point
-          - SEQ_PF_line
-          - SEQ_PF_poly
-          - SEQ_PROP_point
+#       - name: SEQUOIA
+#         type: vector
+#         layers: &situation_w_seq
+#           - SEQ_PF_point
+#           - SEQ_PF_line
+#           - SEQ_PF_poly
+#           - SEQ_PROP_point
 
-      - name: WMTS
-        type: wmts
-        layers: &situation_w_wmts
-          - 'wmts_scan25'
-          - 'wmts_scan1000'
-    # themes:
-    #   - name: situation1/25000
-    #     show: [*situation_w_vect, *situation_w_seq]
-    #   - name: situation1/25000+WMTS
-    #     show: [*situation_w_seq, *situation_w_wmts]
-    #   - name: situation1/100000
-    #     show: ['SEQ_PROP_point', 'wmts_scan1000']
-  layout:
-    theme: 'situation1/25000'
-    legends:
-      - name: legend1
-        layers: [*situation_w_seq,'wmts_scan1000']
-      - name: legend2
-        layers: *situation_w_vect
+#       - name: WMTS
+#         type: wmts
+#         layers: &situation_w_wmts
+#           - 'wmts_scan25'
+#           - 'wmts_scan1000'
+#     # themes:
+#     #   - name: situation1/25000
+#     #     show: [*situation_w_vect, *situation_w_seq]
+#     #   - name: situation1/25000+WMTS
+#     #     show: [*situation_w_seq, *situation_w_wmts]
+#     #   - name: situation1/100000
+#     #     show: ['SEQ_PROP_point', 'wmts_scan1000']
+#   layout:
+#     theme: 'situation1/25000'
+#     legends:
+#       - name: legend1
+#         layers: [*situation_w_seq,'wmts_scan1000']
+#       - name: legend2
+#         layers: *situation_w_vect
 
 # peuplements:
 #   alias : "Cartographie des peuplements forestiers"

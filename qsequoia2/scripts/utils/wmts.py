@@ -4,7 +4,6 @@ import yaml
 from qgis.core import QgsRasterLayer, QgsProject
 from qsequoia2.scripts.utils.seq_config import _CONFIG_CACHE
 
-
 def get_wmts_config_path() -> Path:
     path = Path(__file__).parents[2] / "inst" / "wmts.yaml"
 
@@ -12,7 +11,6 @@ def get_wmts_config_path() -> Path:
         return path
 
     raise RuntimeError("WMTS config not found")
-
 
 def get_wmts_config() -> dict:
     if "wmts" in _CONFIG_CACHE:
@@ -27,11 +25,13 @@ def get_wmts_config() -> dict:
     _CONFIG_CACHE["wmts"] = data
     return data
 
-
-def wmts_read(key: str, project=None):
+def wmts_layers(key):
     wmts_cfg = get_wmts_config()
-    wmts = wmts_cfg.get(key)
+    return wmts_cfg.get(key)
 
+def wmts_read(key: str, group=None):
+
+    wmts = wmts_layers(key)
     if not wmts:
         raise RuntimeError(f"WMTS inconnu: {key}")
 
@@ -41,21 +41,19 @@ def wmts_read(key: str, project=None):
     if not url:
         raise RuntimeError("URL WMTS invalide")
 
+    project = QgsProject.instance()
+
+    existing = project.mapLayersByName(name)
+    if existing:
+        return existing[0]
+
     layer = QgsRasterLayer(url, name, "wms")
 
     if not layer.isValid():
         raise RuntimeError("WMTS layer invalide")
 
-    project = project or QgsProject.instance()
-    root = project.layerTreeRoot()
-
-    group_name = (wmts.get("family") or "AUTRES").upper()
-
-    group = root.findGroup(group_name)
-    if not group:
-        group = root.addGroup(group_name)
-
-    project.addMapLayer(layer, False)
-    group.addLayer(layer)
+    project.addMapLayer(layer, not bool(group))
+    if group:
+        group.addLayer(layer)
 
     return layer

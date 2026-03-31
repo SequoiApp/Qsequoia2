@@ -12,8 +12,9 @@ from PyQt5.QtCore import  Qt
 from PyQt5 import uic
 
 from .layout_loader import LayoutLoader
-from ..utils.messageBar import messageBar, messageLog
-from ..utils.variable import get_project_variable, set_project_variable
+from .layout_builder import LayoutBuilder
+from ..utils.messageBar import messageBar
+from ..utils.variable import get_project_variable
 
 UI_PATH = Path(__file__).parent / "layout_designer.ui"
 FORM_CLASS, _ = uic.loadUiType(str(UI_PATH))
@@ -133,9 +134,13 @@ class LayoutDesignerWidget(QWidget, FORM_CLASS):
         project_key = self.combo_project.currentData()
         if not project_key:
             return
-
-        # builder = ProjectBuilder(current_project_name=self.current_project_name,current_style_folder=self.current_style_folder,downloads_path=self.downloads_path,current_project_folder=self.current_project_folder,project_key=project_key, yaml_path=self.yaml_path,iface=self.iface)
-        # builder.build()
+        
+        seq_id = get_project_variable("QS2_seq_identifier") or None
+        if not project_key:
+            return
+        
+        builder = LayoutBuilder(self.iface, seq_id, self.cfg, project_key)
+        builder._build()
 
         # # ================================
         # # 4. Ouvrir et construire la mise en page 

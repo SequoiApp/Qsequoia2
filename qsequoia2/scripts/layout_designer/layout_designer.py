@@ -11,8 +11,8 @@ from PyQt5.QtWidgets import QWidget
 from PyQt5.QtCore import  Qt
 from PyQt5 import uic
 
-from .layout_loader import LayoutLoader
-from .layout_builder import LayoutBuilder
+from .project_config_loader import ProjectConfigLoader
+from .project_builder import ProjectBuilder
 from ..utils.messageBar import messageBar
 from ..utils.variable import get_project_variable
 
@@ -30,7 +30,7 @@ class LayoutDesignerWidget(QWidget, FORM_CLASS):
         self.iface = iface
         self.parent = parent
         self.project = QgsProject.instance()
-        self.cfg = LayoutLoader(LAYOUT_CONFIG)
+        self.cfg = ProjectConfigLoader(LAYOUT_CONFIG)
         self.setupUi(self)
 
         # button
@@ -139,7 +139,7 @@ class LayoutDesignerWidget(QWidget, FORM_CLASS):
         if not project_key:
             return
         
-        builder = LayoutBuilder(self.iface, seq_id, self.cfg, project_key)
+        builder = ProjectBuilder(self.iface, seq_id, self.cfg, project_key)
         builder.build()
 
         # # ================================

@@ -19,7 +19,7 @@ class ProjectLayers:
     sequoia: list = field(default_factory=list)
     wmts: list = field(default_factory=list)
 
-class LayoutLoader:
+class ProjectConfigLoader:
 
     def __init__(self, cfg_path: Path):
         self.cfg_path = cfg_path

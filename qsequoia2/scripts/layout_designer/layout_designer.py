@@ -58,7 +58,11 @@ class LayoutDesignerWidget(QWidget, FORM_CLASS):
         self.btn_run.clicked.connect(self._accept)
 
     def _on_project_changed(self):
-        self._update_scale()
+        project_key = self.combo_project.currentData()
+        if not project_key:
+            return
+        
+        self._update_scale(project_key)
 
     def _on_type_changed(self, button):
 
@@ -71,12 +75,7 @@ class LayoutDesignerWidget(QWidget, FORM_CLASS):
         except Exception as e:
             messageBar(self.iface, f"Erreur type_changed : {e}", "w", 10)
 
-    def _update_scale(self):
-
-        project_key = self.combo_project.currentData()
-        if not project_key:
-            return
-
+    def _update_scale(self, project_key):
         try:
             canvas = self.cfg.get_canvas(project_key)
             if canvas.scale:
@@ -130,46 +129,13 @@ class LayoutDesignerWidget(QWidget, FORM_CLASS):
         return base
     
     def _accept(self):
-        """
-        Prend en compte les paramètres sélectionnés et construit le projet.
 
-        Étapes principales :
-        1. Vérifie qu'un projet est sélectionné.
-        2. Initialise et construit le projet via `ProjectBuilder`.
-        3. Configure le snapping global via `configure_snapping`.
-        4. Si le composeur est activé :
-        - Calcule le format et l'orientation.
-        - Importe et configure le layout.
-        - Ouvre le Layout Designer QGIS.
-        - Met à jour l'échelle du canevas.
-        5. Si l'option de sauvegarde est cochée, enregistre le projet avec un léger délai.
-
-        :return: None
-        :raises Exception: Si aucune sélection de projet n'est effectuée.
-        :note: Les exceptions internes sont loggées et peuvent être décommentées pour le debug.
-        """
-
-        project_key = self._get_project_key()
-
+        project_key = self.combo_project.currentData()
         if not project_key:
-            QMessageBox.warning(self, "Erreur", "Aucun projet sélectionné.")
             return
-        
-        # # pour le debug on sort du try catch, mais à terme il faudrait le remettre pour éviter les plantages
-        # #try:
-
-        # # ================================
-        # # Construire projet (import et configuration des couches)
-        # # ================================
 
         # builder = ProjectBuilder(current_project_name=self.current_project_name,current_style_folder=self.current_style_folder,downloads_path=self.downloads_path,current_project_folder=self.current_project_folder,project_key=project_key, yaml_path=self.yaml_path,iface=self.iface)
-
         # builder.build()
-
-        # # ================================
-        # # 3. Snapping
-        # # ================================
-        # configure_snapping()
 
         # # ================================
         # # 4. Ouvrir et construire la mise en page 

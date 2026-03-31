@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from pathlib import Path
+from tomlkit import key
 import yaml
 
 @dataclass
@@ -7,13 +8,12 @@ class ProjectCanvas:
     scale: int = 1000
     zoom_on: str = ""
     readonly: list = field(default_factory=list)
-    groups: list = field(default_factory=list)  # list of dicts
-
+    layers: dict = field(default_factory=dict)  # {"seq": [...], "wmts": [...]}
 
 @dataclass
 class ProjectLayout:
     theme: str = ""
-    legends: list = field(default_factory=list)  # list of dicts
+    legends: list = field(default_factory=list)
 
 class LayoutLoader:
 
@@ -30,52 +30,37 @@ class LayoutLoader:
                     self._cache = yaml.safe_load(f) or {}
         return self._cache
 
-
-    def _flatten(self, items):
-        """Flatten nested lists because [*a, *b] in yaml mean [[a], [b]]. Yaml canno't concatenate lists"""
-        result = []
-        for i in items:
-            if isinstance(i, list):
-                result.extend(self._flatten(i))
-            else:
-                result.append(i)
-        return result
-
     def get_projects(self):
         data = self._load()
-
         return [
             (key, value.get("alias", key))
             for key, value in data.items()
         ]
-    
+
     def get_canvas(self, key: str) -> ProjectCanvas:
         raw = self._load().get(key, {}).get("canvas", {})
-
-        groups = []
-        for g in raw.get("groups", []):
-            group = dict(g)  # copy
-            group["layers"] = self._flatten(g.get("layers", []))
-            groups.append(group)
 
         return ProjectCanvas(
             scale=raw.get("scale", 1000),
             zoom_on=raw.get("zoom_on", ""),
             readonly=raw.get("readonly", []),
-            groups=groups
+            layers=raw.get("layers", {})
         )
 
     def get_layout(self, key: str) -> ProjectLayout:
         raw = self._load().get(key, {}).get("layout", {})
 
-        legends = []
-        for l in raw.get("legends", []):
-            legend = dict(l)
-            legend["layers"] = self._flatten(l.get("layers", []))
-            legends.append(legend)
-
         return ProjectLayout(
             theme=raw.get("theme", ""),
-            legends=legends
+            legends=raw.get("legends", [])
         )
+    
+    def get_layers_by_type(self, key: str, layer_type: str):
+        canvas = self.get_canvas(key)
+        return canvas.layers.get(layer_type, [])
 
+    def get_seq_layers(self, key: str):
+        return self.get_layers_by_type(key, "seq")
+    
+    def get_wmts_layers(self, key: str):
+        return self.get_layers_by_type(key, "wmts")

@@ -4,39 +4,32 @@ assemblage:
     scale: 7500
     zoom_on: SEQ_PARCA_poly
     readonly: [SEQ_PARCA_poly]
-    groups:
-      - name: VECTEUR
-        type: vector
-        layers: &assemblage_w_vect 
-          - COMS_TOPO_line
-          - CURVES_line
-          - COMS_TOPO_point
-          - INFRA_point
-          - INFRA_line
-          - INFRA_poly
-          - TOPONYME_point
-          - ROAD_TOPO_line
-          - ROAD_TOPO_poly
-          - ROAD_GRAPH_line
-          - ROAD_GRAPH_poly
-          - HYDRO_poly
-          - HYDRO_line
-          - VEGE_poly
-          - CAD_PARCELLE_poly
-      - name: SEQUOIA
-        type: vector
-        layers: &assemblage_w_seq
-          - SEQ_OWNER_line
-          - SEQ_PARCA_poly
-      - name: WMTS
-        type: wmts
-        layers: &assemblage_w_wmts
-          - wmts_scan25_grey
-          - wmts_scan100
-          - wmts_scan1000
-          - wmts_pci
-          - wmts_irc
-          - wmts_rgb
+    layers:
+      sequoia:
+        - COMS_TOPO_line
+        - CURVES_line
+        - COMS_TOPO_point
+        - INFRA_point
+        - INFRA_line
+        - INFRA_poly
+        - TOPONYME_point
+        - ROAD_TOPO_line
+        - ROAD_TOPO_poly
+        - ROAD_GRAPH_line
+        - ROAD_GRAPH_poly
+        - HYDRO_poly
+        - HYDRO_line
+        - VEGE_poly
+        - CAD_PARCELLE_poly
+        - SEQ_OWNER_line
+        - SEQ_PARCA_poly
+      wmts:
+        - wmts_scan25_grey
+        - wmts_scan100
+        - wmts_scan1000
+        - wmts_pci
+        - wmts_irc
+        - wmts_rgb
     # themes:
     #   - name: assemblage
     #     show: [*assemblage_w_vect, *assemblage_w_seq]

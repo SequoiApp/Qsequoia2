@@ -6,8 +6,9 @@ from qgis.PyQt.QtCore import pyqtSignal, Qt
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QCompleter, QFileDialog, QApplication
 
-from qsequoia2.scripts.add_data.add_data import AddDataTabWidget
 from qsequoia2.scripts.forest_data.forest_data import ForestDataDialog
+from qsequoia2.scripts.add_data.add_data import AddDataTabWidget
+from qsequoia2.scripts.layout_designer.layout_designer import LayoutDesignerWidget
 from qsequoia2.scripts.tools.tools import ToolsDialog
 from qsequoia2.scripts.utils.variable import get_global_variable
 from qsequoia2.scripts.utils.seq_config import *
@@ -24,7 +25,6 @@ class SeqDirState(Enum):
     EMPTY = 0
     INVALID = 1
     VALID = 2
-
 
 class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
@@ -180,6 +180,7 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         add_tab(ForestDataDialog(iface=self.iface, parent=self), "forest_data.svg", "Métadonnées")
         add_tab(AddDataTabWidget(iface=self.iface, parent=self), "add_data.svg", "Ajout de données")
+        add_tab(LayoutDesignerWidget(iface=self.iface, parent=self), "layout.svg", "Conception de mise en page")
         add_tab(ToolsDialog(iface=self.iface, parent=self), "tools.svg", "Outils")
 
     def refresh(self):

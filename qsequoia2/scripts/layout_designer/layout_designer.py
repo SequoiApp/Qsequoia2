@@ -140,7 +140,7 @@ class LayoutDesignerWidget(QWidget, FORM_CLASS):
             return
         
         builder = LayoutBuilder(self.iface, seq_id, self.cfg, project_key)
-        builder._build()
+        builder.build()
 
         # # ================================
         # # 4. Ouvrir et construire la mise en page 

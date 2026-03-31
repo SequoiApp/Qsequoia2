@@ -25,13 +25,13 @@ def get_wmts_config() -> dict:
     _CONFIG_CACHE["wmts"] = data
     return data
 
-def wmts_layers(key):
+def wmts_layer(key):
     wmts_cfg = get_wmts_config()
     return wmts_cfg.get(key)
 
 def wmts_read(key: str, group=None):
 
-    wmts = wmts_layers(key)
+    wmts = wmts_layer(key)
     if not wmts:
         raise RuntimeError(f"WMTS inconnu: {key}")
 
@@ -41,17 +41,12 @@ def wmts_read(key: str, group=None):
     if not url:
         raise RuntimeError("URL WMTS invalide")
 
-    project = QgsProject.instance()
-
-    existing = project.mapLayersByName(name)
-    if existing:
-        return existing[0]
-
     layer = QgsRasterLayer(url, name, "wms")
 
     if not layer.isValid():
         raise RuntimeError("WMTS layer invalide")
 
+    project = QgsProject.instance()
     project.addMapLayer(layer, not bool(group))
     if group:
         group.addLayer(layer)

@@ -40,15 +40,9 @@ class getForestdata:
     # appel des fonctions
     # ================================================================================================
 
-    def build(self) -> dict :
+    def build(self, ua_layer, parca_layer) -> dict :
         """Construit toutes les metadata et retourne un dict"""
-        parca_layer = seq_read("parca", self.seq_dir)
-        ua_layer = seq_read("ua", self.seq_dir)
         
-        if not ua_layer or not parca_layer :
-            messageBar(self.iface, "layer 'UA not found in project","w",10)
-            return
-
         city_list, city_str = self.set_city_data(parca_layer)
         owner_list, owner_str = self.set_owner_data(parca_layer)
         dep_str, dep_list = self.forest_departements(parca_layer)
@@ -221,7 +215,7 @@ class getForestdata:
         ua_field = seq_field("cor_area")["name"]
         if ua_layer and ua_layer.isValid() and ua_field in ua_layer.fields().names():
             surfaces = [float(f[ua_field] or 0.0) for f in ua_layer.getFeatures()]
-            if sum(surfaces) > 0 and len(set(surfaces)) > 1:
+            if sum(surfaces) > 0 :
                 return ua_layer, ua_field
 
         if parca_layer and parca_layer.isValid():

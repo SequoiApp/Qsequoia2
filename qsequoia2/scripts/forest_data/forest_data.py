@@ -6,8 +6,7 @@
 # python 
 
 from pathlib import Path
-import os, json
-import re
+import json
 
 # Qgis
 from PyQt5 import uic
@@ -17,13 +16,11 @@ from PyQt5.QtWidgets import QTableWidgetItem, QHeaderView
 from PyQt5.QtCore import Qt
 
 # Qsequoia2 
-
+from .update_forest_name import *
 from ..utils.messageBar import *
-from .forest_get_data import getForestdata
-from .data_table import getFinaldata
+from .forest_get_data import *
+from .data_table import *
 from ..utils.variable import *
-from ..utils.seq_config import *
-from ..utils.yaml_helper import *
 from ..utils.seq_config import *
 
 UI_PATH = Path(__file__).parent / 'forest_data.ui'
@@ -43,9 +40,7 @@ class ForestDataTabs(QDialog, FORM_CLASS):
         self.project = QgsProject.instance()
         self.setupUi(self)
 
-        # réaction au changement du numéro de parcelle dans le tableau
-        self.cb_parcelle.currentTextChanged.connect(self.on_cb_parcelle_changed)
-
+        # checkboxes de type de forêt
         self.forestType_checkbox = {
             self.checkBox_domaine: "Domaine",
             self.checkBox_massif: "Massif",
@@ -57,22 +52,35 @@ class ForestDataTabs(QDialog, FORM_CLASS):
             cb.setVisible(False)
             cb.toggled.connect(self.on_checkbox_toggled)
 
+        self.forestTable.setVisible(False)
+
+        # réaction au changement de type de données à afficher
+        self.cb_dataType.currentTextChanged.connect(self.actu_Tabledata)
+        # réaction au changement de parcelle sélectionnée
+        self.cb_parcelle.currentTextChanged.connect(self.on_cb_parcelle_changed)
+        self.cb_sspf.currentTextChanged.connect(self.on_cb_parcelle_changed)
+
+
+
+
     # endregion
     # ================================================
-    # region Actualisation et construction des metadonnées
+    # region Metadonnées
     # ================================================
 
 
-    def actu_data(self, seq_dirname, seq_dir, seq_identifier):
+    def actu_metadata(self, seq_dirname, seq_dir, seq_identifier):
         """relance les fonctions de chargement des data pour actualiser l'affichage"""  
-        seq_dir = Path(seq_dir)
 
-        if not seq_dir :
-            messageBar(self.iface,"Pas de dossier de projet !","w",10)
-            return
-        
+        # métadata build
+
+        seq_dir = Path(seq_dir)
+        self.parca_layer = seq_read("parca", seq_dir)
+        self.ua_layer = seq_read("ua", seq_dir)
+
         for cb in self.forestType_checkbox:
             cb.setVisible(True)
+        self.cb_dataType.setEnabled(True)
         
         # création des métadata 
         seq_metadata = self.run_calculation(seq_dir)
@@ -82,18 +90,17 @@ class ForestDataTabs(QDialog, FORM_CLASS):
         self.get_base_metadata()
         self.display_base_metadata()
 
-        # Lecture des données finales
-        self.setFinaldata(seq_dir)
 
     def run_calculation(self, seq_dir):
         try : 
             seq_metadata = getForestdata(self.iface, seq_dir)
 
-            return seq_metadata.build()
+            return seq_metadata.build(self.ua_layer, self.parca_layer)
 
         except Exception as e :
             messageBar(self.iface, f"Erreur lors de la construction des metadata : {e}","w",10)
             return {"vide"}
+        
         
     def export_to_project_variables(self, seq_metadata, seq_dir):
         """ajoute les données dans les varaibles projets"""
@@ -105,9 +112,9 @@ class ForestDataTabs(QDialog, FORM_CLASS):
 
         messageLog(f"-- metadata build pour {seq_dir} --!","i")
 
-    # endregion
+
     # ================================================
-    # region Lecture et affichage
+    # Metadata Lecture et affichage
     # ================================================
 
     def get_base_metadata(self):
@@ -171,7 +178,6 @@ class ForestDataTabs(QDialog, FORM_CLASS):
         if not checked:
             return
 
-
         if not seq_dir or not seq_identifier :
             # Aucun projet => décocher toutes
             for cb in self.nom_checkbox:
@@ -192,39 +198,8 @@ class ForestDataTabs(QDialog, FORM_CLASS):
                     cb.setChecked(False)
                     cb.blockSignals(False)
 
-        self.update_forest_name(seq_identifier)
-
-
-    def update_forest_name(self, seq_identifier):
-        """Met à jour le nom de la forêt en combinant le nom du projet et le type de propriété sélectionné."""
-
         prefix = next((label for cb, label in self.forestType_checkbox.items() if cb.isChecked()), "")
-
-        base = seq_identifier
-
-        base = re.sub(r"^(ST|STE|SAINT)(.*)", r"\1 \2", base, flags=re.IGNORECASE)
-
-        base = (base.lower().replace("_", " ").replace(".", " ").replace("-", " ").title().split())
-        co = ["De", "La", "D", "Le"]
-        ST = ["ST", "STE", "SAINT"]
-        base = [elem.title() if elem in ST else elem for elem in base]
-
-        base = [elem.lower() if elem in co else elem for elem in base]
-        base = " ".join(base)
-        
-        if prefix and base:
-            # plural names take " des "
-            if base.lower().endswith("s"):
-                connector = " des "
-            # then vowel or mute-h → d'
-            elif base[0].lower() in ("a","e","i","o","u","h"):
-                connector = " d'"
-            # otherwise normal " de "
-            else:
-                connector = " de "
-            forest_name = f"{prefix}{connector}{base}"
-        else:
-            forest_name = base
+        forest_name = update_forest_name(prefix, seq_identifier)
 
         set_project_variable("QS2_forest_name", forest_name)
 
@@ -233,85 +208,119 @@ class ForestDataTabs(QDialog, FORM_CLASS):
 
     # endregion
     # ================================================
-    # region tableaux : finalisation
+    # region tableaux
     # ================================================
 
-    def setFinaldata(self, seq_dir):
+    def actu_Tabledata(self, value):
+        seq_dir = Path(get_project_variable("QS2_seq_dir"))
+
+        if not seq_dir:
+            return
+
+        if value == "Vérificateur de données":
+            self.check_data(seq_dir)
+            self.current_layer = self.ua_layer
+            self.forestTable.setVisible(True)
+            self.cb_parcelle.setEnabled(True)
+            self.cb_parcelle.clear()
+            self.cb_sspf.setEnabled(True)
+            self.cb_sspf.setVisible(True)
+            self.lbl_sspf.setVisible(True)
+            self.populate_cb_from_field(cb_name = "cb_parcelle", Layer = self.ua_layer, field_name = "N_PARFOR")
+            self.populate_cb_from_field(cb_name = "cb_sspf", Layer = self.ua_layer, field_name = "N_SSPARFOR")
+
+        elif value == "Synthèse":
+            try:
+                synthese = seq_read("summary", seq_dir)
+                self.final_layer = self.setFinaldata(seq_dir, synthese)
+                self.current_layer = self.final_layer
+
+                self.populate_cb_from_field(cb_name = "cb_parcelle", Layer = self.final_layer, field_name = "N_PARFOR")
+                self.forestTable.setVisible(True)
+                self.lbl_sspf.setVisible(False)
+                self.cb_sspf.setVisible(False)
+                self.cb_parcelle.setEnabled(True)
+                self.fill_table(self.final_layer, list(self.final_layer.getFeatures()))
+            except Exception as e:
+                messageLog(f"Erreur lors de la mise à jour de la table : {e}", "w")
+                
+        
+        elif value == "Sélectionner une table":
+
+            self.cb_parcelle.setEnabled(False)
+            self.cb_sspf.setEnabled(False)
+            self.forestTable.setVisible(False)
+
+    # création de la synthèse et affichage dans la table
+
+    def setFinaldata(self, seq_dir, synthese):
         """"""
-        synthese = seq_read("summary", seq_dir)
         source = synthese.dataProvider().dataSourceUri()
         synthese = source.split("|")[0]
 
-        if not synthese:
-            self.table = {
-                self.label_2,
-                self.cb_parcelle,
-                self.forestTable}
-
-            for elements in self.table:
-                elements.setVisible(False)
-                return
-        
-
         final_data = getFinaldata(synthese)
 
-        # Stocker la couche mémoire pour les sélections
-        self.final_layer = final_data
+        return final_data
 
-        # Remplir la combo des parcelles
-        self.populate_cb_parcelle(final_data)
+    # ================================================
+    # tableaux : Vérification
+    # ================================================
 
-        fields = final_data.fields()
-        features = list(final_data.getFeatures())
+    def check_data(self, seq_dir):
 
-        self.forestTable.setColumnCount(len(fields))
-        self.forestTable.setHorizontalHeaderLabels([f.name() for f in fields])
-        self.forestTable.setRowCount(len(features))
+        self.forestTable.clearContents()
+        self.forestTable.setRowCount(0)
 
-        for row, feat in enumerate(features):
-            for col, field in enumerate(fields):
-                value = feat[field.name()]
-                item = QTableWidgetItem(str(value))
-                item.setFlags(item.flags() ^ Qt.ItemIsEditable)
-                self.forestTable.setItem(row, col, item)
+        self.fill_table(self.ua_layer, list(self.ua_layer.getFeatures()))
 
-        header = self.forestTable.horizontalHeader()
-        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(1, QHeaderView.Stretch)
-        header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
 
-        self.forestTable.setAlternatingRowColors(True)
 
+    # endregion
+    # ================================================
+    # region utilitaires tableaux
+    # ================================================ 
     
-    def populate_cb_parcelle(self, data):
+    def populate_cb_from_field(self, cb_name, Layer, field_name):
         # Récupérer les valeurs uniques
-        values = sorted({str(f["N_PARFOR"]) for f in data.getFeatures()})
 
-        self.cb_parcelle.clear()
-        self.cb_parcelle.addItem("Toutes")      # valeur par défaut
-        self.cb_parcelle.addItems(values)
-
-        self.cb_parcelle.setCurrentIndex(0)  
+        cb = getattr(self, cb_name)
+        values = sorted({str(f[field_name]) for f in Layer.getFeatures()})
+        cb.clear()
+        cb.addItem("Toutes")      # valeur par défaut
+        cb.addItems(values)
+        cb.setCurrentIndex(0)
 
 
     def on_cb_parcelle_changed(self, value):
-        layer = self.final_layer  # ta couche mémoire
 
+        layer = self.current_layer
         layer.removeSelection()
 
-        # Si "Toutes" → aucune sélection → afficher tout
-        if value == "Toutes":
+        # Construction dynamique des filtres
+        filters = []
+        pf_value = self.cb_parcelle.currentText()
+        sspf_value = self.cb_sspf.currentText()
+
+        if value != "Toutes":
+            filters.append(f"\"N_PARFOR\" = '{pf_value}'")
+
+        if "N_SSPARFOR" in [field.name() for field in layer.fields()]:
+            if sspf_value != "Toutes":
+                filters.append(f"\"N_SSPARFOR\" = '{sspf_value}'")
+
+        # Si aucun filtre → tout afficher
+        if not filters:
             self.update_table_with_all(layer)
             return
 
-        # Sinon → sélection attributaire
-        expr = f"\"N_PARFOR\" = '{value}'"
+        expr = " AND ".join(filters)
+
         request = QgsFeatureRequest().setFilterExpression(expr)
-
         ids = [f.id() for f in layer.getFeatures(request)]
-        layer.selectByIds(ids)
 
+        layer.selectByIds(ids)
         self.update_table_with_selection(layer, ids)
+
 
     def update_table_with_all(self, layer):
         feats = list(layer.getFeatures())
@@ -321,12 +330,18 @@ class ForestDataTabs(QDialog, FORM_CLASS):
         feats = [f for f in layer.getFeatures() if f.id() in ids]
         self.fill_table(layer, feats)
     
+
     def fill_table(self, layer, features):
+        """Remplit la table avec les features données"""
+
         fields = layer.fields()
 
         self.forestTable.setColumnCount(len(fields))
         self.forestTable.setHorizontalHeaderLabels([f.name() for f in fields])
         self.forestTable.setRowCount(len(features))
+
+        # met en forme la table
+        self.TableFormat()
 
         for row, feat in enumerate(features):
             for col, field in enumerate(fields):
@@ -335,7 +350,11 @@ class ForestDataTabs(QDialog, FORM_CLASS):
                 item.setFlags(item.flags() ^ Qt.ItemIsEditable)
                 self.forestTable.setItem(row, col, item)
 
-    # endregion
-    # ================================================
-    # region tableaux : Vérification
-    # ================================================
+    def TableFormat(self):
+        """Met en forme la table"""
+        header = self.forestTable.horizontalHeader()
+        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(1, QHeaderView.Stretch)
+        header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
+
+        self.forestTable.setAlternatingRowColors(True)

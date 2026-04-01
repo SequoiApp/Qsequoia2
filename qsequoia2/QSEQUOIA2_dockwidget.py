@@ -152,7 +152,7 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
 
         if state == SeqDirState.VALID:
-            self.forest_tab.actu_data(seq_dirname, seq_dir, seq_identifier)
+            self.forest_tab.actu_metadata(seq_dirname, seq_dir, seq_identifier)
             self.add_data_tab.on_project_changed(seq_dirname, seq_dir, seq_identifier)
             
             messageBar(self.iface, f"Dossier valide : {seq_dir}", "s", 10)

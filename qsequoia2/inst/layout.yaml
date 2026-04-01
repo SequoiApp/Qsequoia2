@@ -32,7 +32,7 @@ assemblage:
     layers: *assemblage_seq
     legends:
       - name: legend1
-        layers: [*assemblage_seq, *assemblage_w_wmts]
+        layers: *assemblage_seq
 
 # situation:
 #   alias : "Cartographie de situation"

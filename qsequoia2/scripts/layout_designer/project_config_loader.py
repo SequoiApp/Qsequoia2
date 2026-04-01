@@ -32,6 +32,18 @@ class ProjectConfigLoader:
                     self._cache = yaml.safe_load(f) or {}
         return self._cache
 
+    def _flatten(self, value):
+        if not isinstance(value, list):
+            return []
+
+        flat = []
+        for v in value:
+            if isinstance(v, list):
+                flat.extend(v)
+            else:
+                flat.append(v)
+        return flat
+
     def get_projects(self):
         data = self._load()
         return [
@@ -59,11 +71,18 @@ class ProjectConfigLoader:
 
     def get_layout(self, key: str) -> ProjectLayout:
         raw = self._load().get(key, {}).get("layout", {})
-        print(f"Raw layout data for '{key}': {raw}")
+
+        layers = self._flatten(raw.get("layers", []))
+
+        legends = raw.get("legends", [])
+        if isinstance(legends, list):
+            for l in legends:
+                if isinstance(l, dict):
+                    l["layers"] = self._flatten(l.get("layers", []))
 
         return ProjectLayout(
             scale=raw.get("scale", 7500),
-            layers=raw.get("layers", []),
-            legends=raw.get("legends", [])
+            layers=layers,
+            legends=legends
         )
-    
+        

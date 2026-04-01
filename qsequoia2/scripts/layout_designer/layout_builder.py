@@ -62,8 +62,11 @@ class LayoutBuilder:
         messageLog(f"Layout '{layout_name}' importé avec succès (format: {fmt}, orientation: {orient})")
         self._configure_layout(layout_name)
 
-    def _compute_layout_info(self, parca):
+        return None
 
+
+    def _compute_layout_info(self, parca):
+        
         if not parca or not parca.isValid():
             raise ValueError("[parca] Couche invalide ou non chargée")
 
@@ -210,15 +213,31 @@ class LayoutBuilder:
         map_item.zoomToExtent(self.iface.mapCanvas().extent())
         map_item.setScale(self.scale)
 
+        for legend_cfg in self.layout.legends:
+            legend_id = legend_cfg.get("name")
+            layer_keys = legend_cfg.get("layers", [])
+            self._add_legend(layout, legend_id, layer_keys)
 
-#     # Legends
-#     if legends:
-#         for l in legends:
-#             self.add_layer_to_legend(layout=layout,
-#                                      legend_id=l["name"],
-#                                      layer_keys=l["layers"],
-#                                      map_id="map1",
-#                                      )
+    def _add_legend(self, layout, legend_id, layer_keys):
+
+        legend = layout.itemById(legend_id)
+        if not legend:
+            raise ValueError(f"[Legend] '{legend_id}' introuvable")
+
+        root = legend.model().rootGroup()
+
+        legend.setAutoUpdateModel(False)
+        root.clear()
+
+        for key in layer_keys:
+
+            layer = resolve_seq_layer(key, self.project, self.seq_id)
+            if not layer:
+                continue
+            root.addLayer(layer)
+
+        legend.refresh()
+
 
 #     # ====================================================
 #     # AUTO TABLE CONFIG
@@ -249,90 +268,8 @@ class LayoutBuilder:
 
 #     self.apply_metadata_to_layout(layout)
 
-# # ============================================================
-# # LEGEND
-# # ============================================================
-# def add_layer_to_legend(self,layout,
-#                         legend_id: str,
-#                         layer_keys: list,
-#                         map_id: str = None,):
-#     """
-#     Ajoute des couches à une légende dans le layout et applique les alias.
 
-#     Args:
-#         layout (QgsPrintLayout): Layout contenant la légende.
-#         legend_id (str): ID de la légende.
-#         layer_keys (list): Clés des couches à ajouter.
-#         map_id (str, optional): ID de la carte liée. Defaults to None.
 
-#     Raises:
-#         ValueError: Si la légende n’est pas trouvée.
-#     """
-
-#     legend = layout.itemById(legend_id)
-#     if not legend:
-#         raise ValueError(f"Légende '{legend_id}' introuvable")
-
-#     root = legend.model().rootGroup()
-
-#     # ---------------------------
-#     # Aplatir layer_keys
-#     # ---------------------------
-#     if hasattr(self.config, "flatten"):
-#         flat_keys = self.config.flatten(layer_keys)
-#     else:
-#         # fallback simple
-#         flat_keys = []
-#         for k in layer_keys:
-#             if isinstance(k, list):
-#                 flat_keys.extend(k)
-#             else:
-#                 flat_keys.append(k)
-
-#     # ---------------------------
-#     # Boucle sur chaque clé
-#     # ---------------------------
-#     for key in flat_keys:
-
-#         # Résolution du layer
-#         layer = resolve_layer(
-#             key,
-#             self.project,
-#             project_name=self.project_name,
-#             project_folder=self.project_folder,
-#             style_folder=self.style_folder,
-#             parent=None,
-#         )
-
-#         if not layer:
-#             continue  # Skip if not found
-
-#         # Eviter doublon
-#         if layer.id() in [n.layerId() for n in root.findLayers()]:
-#             continue
-
-#         # Ajouter layer dans la légende
-#         node = root.addLayer(layer)
-
-#         # Appliquer alias si existant
-#         alias = None
-#         if isinstance(key, str):
-#             alias = self.layer_aliases.get(key)
-
-#         if alias:
-#             node.setName(alias)
-#         else:
-#             node.setName(layer.name())  # fallback si pas d'alias
-
-#     # ---------------------------
-#     # Filtrage sur une map spécifique
-#     # ---------------------------
-#     if map_id:
-#         map_item = layout.itemById(map_id)
-#         legend.setLinkedMap(map_item)
-#         legend.setLegendFilterByMapEnabled(True)
-
-#     legend.refresh()
 
 # # ============================================================
 # # ATTRIBUTE TABLE
@@ -398,69 +335,3 @@ class LayoutBuilder:
 
 #     table.refresh()
     
-# # ============================================================
-# # Ajout des metadata dans la layout et des variables
-# # ============================================================
-
-# def build_available_variables(self):
-
-#     vars_dict = {}
-
-#     # JSON racine
-#     #vars_dict.update(self.root_data)
-
-#     # metadata
-#     vars_dict.update(self.metadata)
-
-#     # variables internes Python
-#     vars_dict["project_key"] = self.project_key
-#     vars_dict["current_date"] = datetime.datetime.now().strftime("%m/%Y")
-#     vars_dict["username"] = get_global_variable("QS2_user_full_name")
-#     vars_dict["adresse"] = get_global_variable("QS2_adress_organisation")
-#     vars_dict["project_alias"] = self.get_project_alias(self.project_key)
-
-#     return vars_dict
-
-# def apply_metadata_to_layout(self, layout):
-#     """
-#     Remplit les éléments du layout avec les variables et metadata du projet.
-
-#     Args:
-#         layout (QgsPrintLayout): Layout à remplir.
-#     """
-
-#     all_vars = self.build_available_variables()
-
-#     combined_mapping = {}
-#     combined_mapping.update(self.mapping_config.get("metadata", {}))
-#     combined_mapping.update(self.mapping_config.get("var", {}))
-#     print("combined_mapping ", combined_mapping)
-
-#     for obj_name, config in combined_mapping.items():
-
-#         item = layout.itemById(obj_name)
-#         if not item:
-#             print("manquant : ", obj_name)
-#             continue
-
-#         # Si mapping simple
-#         if isinstance(config, str):
-#             value = all_vars.get(config, "")
-
-#         # Si mapping avancé (avec prefix)
-#         elif isinstance(config, dict):
-#             var_name = config.get("var")
-#             value = all_vars.get(var_name, "")
-
-#             prefix = config.get("prefix", "")
-#             suffix = config.get("suffix", "")
-
-#             value = f"{prefix}{value}{suffix}"
-
-#         else:
-#             value = ""
-
-#         if isinstance(value, float):
-#             value = f"{value:.4f}"
-
-#         item.setText(str(value))

@@ -5,8 +5,6 @@ assemblage:
     readonly: [v.seq.parca.poly]
     layers:
       sequoia: &assemblage_seq
-        - v.seq.owner.line
-        - v.seq.parca.poly
         - v.com.topo.line
         - v.com.topo.point
         - v.infra.point
@@ -20,6 +18,9 @@ assemblage:
         - v.hydro.line
         - v.vege.poly
         - v.curves.line
+        # Order is important here, we want parca to be at the back so vectoriel layers are visible on top of it
+        - v.seq.owner.line
+        - v.seq.parca.poly
       wmts: &assemblage_w_wmts
         - wmts_scan25_grey
         - wmts_scan100
@@ -27,11 +28,13 @@ assemblage:
         - wmts_pci
         - wmts_irc
         - wmts_rgb
+
   layout:
     scale: 7500
     layers: *assemblage_seq
+
     legends:
-      - name: legend1
+      - id: legend1
         layers: *assemblage_seq
 
 # situation:

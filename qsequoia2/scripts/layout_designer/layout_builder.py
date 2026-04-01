@@ -1,20 +1,25 @@
 from pathlib import Path
 
-from qgis.core import QgsVectorLayer, QgsRectangle, QgsWkbTypes, QgsUnitTypes, QgsPrintLayout, QgsReadWriteContext, QgsLayoutItemMap, QgsLayoutFrame, QgsLayoutItemAttributeTable
 from qgis.PyQt.QtXml import QDomDocument
+from qgis.core import (
+    QgsLayoutFrame,
+    QgsLayoutItemMap,
+    QgsPrintLayout,
+    QgsReadWriteContext,
+    QgsRectangle,
+    QgsUnitTypes,
+    QgsVectorLayer,
+    QgsWkbTypes,
+)
 
-from qsequoia2.scripts.utils.seq_config import seq_read
-
-# Python
-from ..utils.variable import get_global_variable, get_project_variable
-from ..utils.seq_config import resolve_seq_layer, seq_read
-from .processing import buffer, multipart_to_singleparts
 from ..utils.messageBar import messageBar, messageLog
+from ..utils.variable import get_global_variable, get_project_variable
+from ..utils.seq_config import seq_field, seq_read
+from .processing import buffer, multipart_to_singleparts
 
 TEMPLATE_DIR = Path(__file__).parents[2] / "data" / "templates"
 
 class LayoutBuilder:
-
     FORMATS_MM = (
         ("A4", (210, 297)),
         ("A3", (297, 420)),
@@ -23,50 +28,39 @@ class LayoutBuilder:
         ("A0", (841, 1189)),
     )
 
-    def __init__(self, iface, project, seq_id, layout, coeff_cadre: float = 0.90):
+    MAP_ID = "map1"
+
+    def __init__(self, iface, project, layout_spec, layers, coeff_cadre: float = 0.90):
         self.iface = iface
         self.project = project
-        self.seq_id = seq_id
-        self.layout = layout
+        self.layout = layout_spec
+        self.layers = layers
         self.coeff_cadre = coeff_cadre
 
-        self.scale = self.layout.scale
-        self.layers = self.layout.layers
-
-    def build(self):
-        # compute layout info (format, orientation) from parca layer
-        seq_dir = get_project_variable("QS2_seq_dir")
-        if not seq_dir:
-            raise RuntimeError("[Projet] Aucun projet sélectionné")
-
-        try:
-            parca = seq_read("parca", seq_dir)
-        except Exception as e:
-            raise RuntimeError(f"[Lecture couche 'parca'] {e}") from e
+    def build(self) -> str | None:
+        project_folder = get_project_variable("QS2_seq_dir") or None
+        parca = seq_read("parca", add_to_project=False, project_folder=project_folder)
+        if not parca:
+            raise RuntimeError("[Layout] Couche 'parca' absente du contexte")
 
         fmt, orient = self._compute_layout_info(parca)
-        
-        # import layout template
-        dirs = [
-            Path(get_global_variable("QS2_models_directory") or ""),
-            TEMPLATE_DIR,
-        ]
+        layout_name = self._create_layout(fmt, orient)
+        messageLog(f"Layout '{layout_name}' créé avec succès")
 
-        try:
-            layout_name = self._import_layout(dirs, fmt, orient)
+        layout = self._get_layout(layout_name)
+        messageLog(f"Layout '{layout}' récupéré avec succès")
 
-        except Exception as e:
-            messageBar().pushCritical("Layout", str(e))
-            return
+        self._configure_map(layout)
+        self._configure_legends(layout)
+        self._add_parcels_table(layout)
 
-        messageLog(f"Layout '{layout_name}' importé avec succès (format: {fmt}, orientation: {orient})")
-        self._configure_layout(layout_name)
+        messageLog(f"Layout '{layout_name}' configuré avec succès")
+        return layout_name
 
-        return None
+    def _layer(self, key):
+        return self.layers.get(key)
 
-
-    def _compute_layout_info(self, parca):
-        
+    def _compute_layout_info(self, parca: QgsVectorLayer):
         if not parca or not parca.isValid():
             raise ValueError("[parca] Couche invalide ou non chargée")
 
@@ -74,31 +68,21 @@ class LayoutBuilder:
             raise TypeError("[parca] La couche doit être polygonale")
 
         if parca.crs().mapUnits() != QgsUnitTypes.DistanceMeters:
-            raise TypeError("[parca] CRS non métrique → les distances peuvent être incorrectes")
+            raise TypeError("[parca] CRS non métrique")
 
-        try:
-            geom = self._get_main_massif(parca)
-        except Exception as e:
-            raise RuntimeError(f"[parca] Erreur extraction géométrie principale : {e}") from e
-
+        geom = self._get_main_massif(parca)
         if geom is None or geom.isEmpty():
             raise ValueError("[parca] Géométrie principale vide")
 
         bbox = geom.boundingBox()
-
-        try:
-            fmt = self._pick_format(bbox)
-            orient = self._pick_orient(bbox)
-        except Exception as e:
-            raise RuntimeError(f"[Layout] Impossible de déterminer format/orientation : {e}") from e
+        fmt = self._pick_format(bbox)
+        orient = self._pick_orient(bbox)
 
         return fmt, orient
 
     def _get_main_massif(self, layer: QgsVectorLayer):
-
         buffered = buffer(layer, distance=100, dissolve=True)
         dissolved = buffer(buffered, distance=-100)
-
         single_parts = multipart_to_singleparts(dissolved)
 
         feat = max(
@@ -119,9 +103,8 @@ class LayoutBuilder:
         return "A0+"
 
     def _fits_bbox(self, mm, bbox, marge_mm=6):
-
-        needed_w = (bbox.width() / self.scale) * 1000.0
-        needed_h = (bbox.height() / self.scale) * 1000.0
+        needed_w = (bbox.width() / self.layout.scale) * 1000.0
+        needed_h = (bbox.height() / self.layout.scale) * 1000.0
 
         available_w = (mm[0] - 2 * marge_mm) * self.coeff_cadre
         available_h = (mm[1] - 2 * marge_mm) * self.coeff_cadre
@@ -132,32 +115,27 @@ class LayoutBuilder:
     def _pick_orient(bbox):
         return "portrait" if bbox.height() >= bbox.width() else "landscape"
 
-    def _import_layout(self, models_dirs, fmt, orient):
-
-        try:
-            qpt, orient = self._find_template(models_dirs, fmt, orient)
-        except Exception as e:
-            raise RuntimeError(f"[Template] {e}") from e
+    def _create_layout(self, fmt: str, orient: str) -> str:
+        qpt, final_orient = self._find_template(
+            [
+                Path(get_global_variable("QS2_models_directory") or ""),
+                TEMPLATE_DIR,
+            ],
+            fmt,
+            orient,
+        )
 
         layout = QgsPrintLayout(self.project)
         layout.initializeDefaults()
 
         doc = QDomDocument()
+        with open(qpt, encoding="utf-8") as f:
+            if not doc.setContent(f.read()):
+                raise ValueError(f"[Lecture QPT] XML invalide : {qpt}")
 
-        try:
-            with open(qpt, encoding="utf-8") as f:
-                if not doc.setContent(f.read()):
-                    raise ValueError("XML invalide")
-        except Exception as e:
-            raise RuntimeError(f"[Lecture QPT] {qpt} : {e}") from e
+        layout.loadFromTemplate(doc, QgsReadWriteContext())
 
-        try:
-            layout.loadFromTemplate(doc, QgsReadWriteContext())
-        except Exception as e:
-            raise RuntimeError(f"[Chargement layout] {qpt} : {e}") from e
-
-        layout_name = f"{fmt}_{orient}"
-
+        layout_name = f"{fmt}_{final_orient}"
         layout.setName(layout_name)
         self.project.layoutManager().addLayout(layout)
 
@@ -165,7 +143,6 @@ class LayoutBuilder:
 
     def _find_template(self, models_dirs, fmt, orient):
         orient = orient.lower()
-
         tried = []
 
         for models_dir in models_dirs:
@@ -185,153 +162,81 @@ class LayoutBuilder:
             f"Recherché dans :\n- " + "\n- ".join(tried)
         )
 
-    def _configure_layout(self, layout_name):
-
+    def _get_layout(self, layout_name):
         layout = self.project.layoutManager().layoutByName(layout_name)
         if not layout:
             raise RuntimeError(f"[Layout] '{layout_name}' introuvable")
+        return layout
 
-        maps = [i for i in layout.items() if isinstance(i, QgsLayoutItemMap)]
-        if not maps:
-            raise ValueError("[Layout] Aucune carte trouvée dans le modèle")
-    
-        map_item = next((m for m in maps if m.id() == "map1"), maps[0])
+    def _get_map_item(self, layout):
+        for item in layout.items():
+            if isinstance(item, QgsLayoutItemMap) and item.id() == self.MAP_ID:
+                return item
 
-        layout_layers = []
-        for k in self.layers:
-            layer = resolve_seq_layer(k, self.project, self.seq_id)
-            messageLog(f"Résolution couche '{k}' → {layer.name() if layer else 'introuvable'}")
-            if layer:
-                layout_layers.append(layer)
+        for item in layout.items():
+            if isinstance(item, QgsLayoutItemMap):
+                return item
 
+        raise ValueError("[Layout] Aucune carte trouvée")
+
+    def _configure_map(self, layout):
+        map_item = self._get_map_item(layout)
+
+        layout_layers = [self._layer(k) for k in self.layout.layers]
+        layout_layers = [l for l in layout_layers if l]
         if not layout_layers:
-            raise ValueError("Aucune couche valide")
-        
+            raise ValueError("[Layout] Aucune couche valide pour la carte")
+
         map_item.setFollowVisibilityPreset(False)
         map_item.setKeepLayerSet(True)
         map_item.setLayers(layout_layers)
         map_item.zoomToExtent(self.iface.mapCanvas().extent())
-        map_item.setScale(self.scale)
+        map_item.setScale(self.layout.scale)
 
-        for legend_cfg in self.layout.legends:
-            legend_id = legend_cfg.get("name")
-            layer_keys = legend_cfg.get("layers", [])
-            self._add_legend(layout, legend_id, layer_keys)
+    def _configure_legends(self, layout):
+        map_item = self._get_map_item(layout)
 
-    def _add_legend(self, layout, legend_id, layer_keys):
-
-        legend = layout.itemById(legend_id)
-        if not legend:
-            raise ValueError(f"[Legend] '{legend_id}' introuvable")
-
-        root = legend.model().rootGroup()
-
-        legend.setAutoUpdateModel(False)
-        root.clear()
-
-        for key in layer_keys:
-
-            layer = resolve_seq_layer(key, self.project, self.seq_id)
-            if not layer:
+        for legend_spec in self.layout.legends:
+            legend = layout.itemById(legend_spec.id)
+            if not legend:
                 continue
-            root.addLayer(layer)
 
-        legend.refresh()
+            root = legend.model().rootGroup()
+            legend.setAutoUpdateModel(False)
+            root.clear()
 
+            for key in legend_spec.layers:
+                layer = self._layer(key)
+                if layer:
+                    root.addLayer(layer)
 
-#     # ====================================================
-#     # AUTO TABLE CONFIG
-#     # ====================================================
-#     if self.project_key not in ("assemblage",):
+            legend.setLinkedMap(map_item)
+            legend.setLegendFilterByMapEnabled(True)
+            legend.refresh()
 
+    def _add_parcels_table(self, layout):
+        
+        table_id = "table1"
+        table_layer = "parca"
+        field_pcl_code = seq_field("pcl_code")["name"]
+        field_cor_area = seq_field("cor_area")["name"]
 
-#         path = get_path("SEQ_PF_poly", project_name= self.project_name, project_folder=self.project_folder, style_folder = self.style_folder, parent=None)
+        table_filter = f'"{field_pcl_code}" <> \'00\''
 
-#         if path:
-#             first_key = list(path.keys())[0]
-#             path = path[first_key]
-#             layer_name = Path(path).stem
-#             layers = self.project.mapLayersByName(layer_name)
+        item = layout.itemById(table_id)
+        if not item:
+            return
 
-#             if layers:
-#                 self.configure_attribute_table(
-#                     layout=layout,
-#                     table_id="table1",
-#                     layer_key=layer_name,
-#                     fields=["N_PARFOR", "SURF_COR"],
-#                     map_id="map1",
-#                     filter_expression='"N_PARFOR" <> \'00\'',)
-            
-#     # Import des metadata dans le layout
-#     print("Metadata:", self.metadata)
-#     print("Mapping config:", self.mapping_config)
+        table = item.multiFrame() if isinstance(item, QgsLayoutFrame) else item
 
-#     self.apply_metadata_to_layout(layout)
+        layer = self._layer(table_layer)
+        if not layer:
+            return
 
+        table.setVectorLayer(layer)
+        table.setDisplayedFields([field_pcl_code, field_cor_area])
 
+        table.setFeatureFilter(table_filter)
+        table.setFilterFeatures(True)
 
-
-# # ============================================================
-# # ATTRIBUTE TABLE
-# # ============================================================
-# def configure_attribute_table(self,
-#                               layout,
-#                               table_id: str,
-#                               layer_key: str,
-#                               fields: list,
-#                               map_id: str = None,
-#                               filter_expression: str = None,):
-#     """
-#     Configure une table attributaire dans le layout.
-
-#     Args:
-#         layout (QgsPrintLayout): Layout contenant la table.
-#         table_id (str): ID de la table.
-#         layer_key (str): Clé de la couche à afficher.
-#         fields (list): Liste des champs à afficher.
-#         map_id (str, optional): ID de la carte pour filtrer les features visibles. Defaults to None.
-#         filter_expression (str, optional): Expression de filtre QGIS. Defaults to None.
-
-#     Raises:
-#         ValueError: Si la couche ou la table est introuvable.
-#     """
-
-#     item = layout.itemById(table_id)
-#     if not item:
-#         pass
-#     # MultiFrame support
-#     if isinstance(item, QgsLayoutFrame):
-#         table = item.multiFrame()
-#     else:
-#         table = item
-
-#     # Résolution propre via resolve_layer
-#     layer = resolve_layer(layer_key,
-#                             project=self.project,
-#                             project_name=self.project_name,
-#                             project_folder=self.project_folder,
-#                             style_folder=self.style_folder,
-#                             parent=None)
-
-
-#     if not layer:
-#         raise ValueError(f"Couche '{layer_key}' introuvable ou non chargée")
-
-#     # Appliquer couche + champs
-#     table.setVectorLayer(layer)
-#     table.setDisplayedFields(fields)
-
-#     # Visible only
-#     if map_id:
-#         map_item = layout.itemById(map_id)
-#         if map_item:
-#             table.setMap(map_item)
-#             table.setDisplayOnlyVisibleFeatures(True)
-
-#     # Filtre
-#     if filter_expression:
-#         table.setFeatureFilter(filter_expression)
-#         table.setFilterFeatures(True)
-
-#     table.refresh()
-    
+        table.refresh()

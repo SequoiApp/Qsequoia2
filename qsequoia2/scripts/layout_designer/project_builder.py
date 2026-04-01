@@ -1,120 +1,115 @@
+from __future__ import annotations
 
-from qsequoia2.scripts.utils.variable import get_global_variable, get_project_variable
+from dataclasses import dataclass
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication
+from qgis.core import QgsMapLayer, QgsProject
 
+from qsequoia2.scripts.utils.variable import get_global_variable, get_project_variable
+
+from ..utils.messageBar import messageBar, messageLog
 from ..utils.seq_config import seq_layer, seq_read
 from ..utils.wmts import wmts_layer, wmts_read
-from ..utils.messageBar import messageBar, messageLog
 
-from qgis.core import QgsProject
+@dataclass
+class BuildContext:
+    seq_id: str | None
+    canvas: object
+    layers: dict[str, QgsMapLayer]
 
 class ProjectBuilder:
-
-    def __init__(self, iface, project, seq_id, canvas):
-
+    def __init__(self, iface, project: QgsProject, seq_id: str | None, canvas):
         self.iface = iface
         self.project = project
         self.seq_id = seq_id
         self.canvas = canvas
 
-        self.canvas = self.canvas
-        self.seq_keys = self.canvas.layers.sequoia
-        self.wmts_keys = self.canvas.layers.wmts
-        self.zoom_on = self.canvas.zoom_on
+    def build(self) -> BuildContext:
+        messageBar(self.iface, f"Chargement du projet {self.canvas.alias}", "i", 8)
 
-    def build(self):
-
-        messageBar(self.iface, f"Création de la mise en page {self.canvas.alias}", "i", 8)
-
-        group_name = f"{self.seq_id} - {self.canvas.key.upper()}"
+        group_name = (
+            f"{self.seq_id} - {self.canvas.key.upper()}"
+            if self.seq_id else self.canvas.key.upper()
+        )
         main_group = self._get_group(group_name)
 
         QApplication.setOverrideCursor(Qt.WaitCursor)
         try:
-            layers = self._load_layers(main_group)
-            messageLog(f"Layers chargées : {list(layers.keys())}")
+            layers = {}
+            layers |= self._load_seq_layers(self.canvas.layers.sequoia, main_group)
+            layers |= self._load_wmts_layers(self.canvas.layers.wmts, main_group)
         finally:
             QApplication.restoreOverrideCursor()
 
-        zoom_layer = layers.get(self.zoom_on) if self.zoom_on else None
-        messageLog(f"Zoom sur : {self.zoom_on} -> {zoom_layer}")
-
+        zoom_layer = layers.get(self.canvas.zoom_on) if self.canvas.zoom_on else None
         if zoom_layer:
             self._zoom_to_layer(zoom_layer)
 
         self._fold_all()
 
-        messageBar(self.iface, f"Mise en page chargée avec succès {self.canvas.alias}", "s", 8)
+        messageBar(self.iface, f"Projet chargé : {self.canvas.alias}", "s", 8)
+
+        return BuildContext(
+            seq_id=self.seq_id,
+            canvas=self.canvas,
+            layers=layers,
+        )
 
     def _get_group(self, name, parent=None):
         parent = parent or self.project.layerTreeRoot()
         group = parent.findGroup(name)
         return group if group else parent.addGroup(name)
 
-    def _load_layers(self, main_group):
-
+    def _load_seq_layers(self, keys, main_group) -> dict[str, QgsMapLayer]:
         project_folder = get_project_variable("QS2_seq_dir")
         style_folder = get_global_variable("QS2_styles_directory")
 
         if not project_folder:
-            messageBar(self.iface, "Aucun projet sélectionné", "w")
-            return {}
+            raise RuntimeError("[Projet] Aucun projet sélectionné")
 
-        seq_layers = self._load_seq_layers(self.seq_keys, main_group, project_folder, style_folder)
-        wmts_layers = self._load_wmts_layers(self.wmts_keys, main_group)
+        loaded = {}
 
-        return seq_layers | wmts_layers
-
-    def _load_seq_layers(self, keys, main_group, project_folder, style_folder):
-
-        seq_layers = {}
-        errors = []
-        for seq_key in keys:
+        for key in keys:
             try:
-                meta = seq_layer(seq_key)
+                meta = seq_layer(key)
                 family = (meta.get("family") or "autres").upper()
-
                 group = self._get_group(family, parent=main_group)
 
                 layer = seq_read(
-                    seq_key,
+                    key,
                     project_folder=project_folder,
                     add_to_project=True,
                     group=group,
-                    style_folder=style_folder
+                    style_folder=style_folder,
                 )
 
                 if layer:
-                    seq_layers[seq_key] = layer
+                    loaded[key] = layer
 
             except Exception as e:
-                errors.append(f"{seq_key}: {e}")
-                messageLog(f"[SEQ] {seq_key} failed: {e}")
-        
-        return seq_layers
+                messageLog(f"[SEQ] {key} failed: {e}")
 
-    def _load_wmts_layers(self, keys, main_group):
+        return loaded
 
-        wmts_layers = {}
-        errors = []
-        for wmts_key in keys:
+    def _load_wmts_layers(self, keys, main_group) -> dict[str, QgsMapLayer]:
+        loaded = {}
+
+        for key in keys:
             try:
-                meta = wmts_layer(wmts_key)
+                meta = wmts_layer(key)
                 family = (meta.get("family") or "autres").upper()
-
                 group = self._get_group(family, parent=main_group)
-                layer = wmts_read(key=wmts_key, group=group)
+
+                layer = wmts_read(key=key, group=group)
 
                 if layer:
-                    wmts_layers[wmts_key] = layer
+                    loaded[key] = layer
 
             except Exception as e:
-                errors.append(f"{wmts_key}: {e}")
-                messageLog(f"[WMTS] {wmts_key} failed: {e}")
-        
-        return wmts_layers
+                messageLog(f"[WMTS] {key} failed: {e}")
+
+        return loaded
 
     def _zoom_to_layer(self, layer, margin=1.1):
         extent = layer.extent()
@@ -125,9 +120,6 @@ class ProjectBuilder:
         canvas.refresh()
 
     def _fold_all(self):
-        root = self.project.layerTreeRoot()
-        for child in root.children():
-            child.setExpanded(False)
         root = self.project.layerTreeRoot()
         for node in root.children():
             node.setExpanded(False)

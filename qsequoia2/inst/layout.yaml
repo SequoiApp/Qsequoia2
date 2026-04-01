@@ -1,43 +1,38 @@
 assemblage:
   alias : "Plan d'assemblage cadastral"
   canvas:
-    scale: 7500
     zoom_on: v.seq.parca.poly
     readonly: [v.seq.parca.poly]
-  layers:
-    sequoia: &assemblage_w_seq
-      - v.seq.owner.line
-      - v.seq.parca.poly
-      - v.com.topo.line
-      - v.com.topo.point
-      - v.infra.point
-      - v.infra.line
-      - v.infra.poly
-      - v.toponyme.point
-      - v.road.line
-      - v.roadway.line
-      - v.roadway.poly
-      - v.hydro.poly
-      - v.hydro.line
-      - v.vege.poly
-      - v.curves.line
-    wmts: &assemblage_w_wmts
-      - wmts_scan25_grey
-      - wmts_scan100
-      - wmts_scan1000
-      - wmts_pci
-      - wmts_irc
-      - wmts_rgb
-    # themes:
-    #   - name: assemblage
-    #     show: [*assemblage_w_vect, *assemblage_w_seq]
-    #   - name: assemblage+WMTS
-    #     show: [*assemblage_w_vect, *assemblage_w_seq, *assemblage_w_wmts]
+    layers:
+      sequoia: &assemblage_seq
+        - v.seq.owner.line
+        - v.seq.parca.poly
+        - v.com.topo.line
+        - v.com.topo.point
+        - v.infra.point
+        - v.infra.line
+        - v.infra.poly
+        - v.toponyme.point
+        - v.road.line
+        - v.roadway.line
+        - v.roadway.poly
+        - v.hydro.poly
+        - v.hydro.line
+        - v.vege.poly
+        - v.curves.line
+      wmts: &assemblage_w_wmts
+        - wmts_scan25_grey
+        - wmts_scan100
+        - wmts_scan1000
+        - wmts_pci
+        - wmts_irc
+        - wmts_rgb
   layout:
-    theme: 'assemblage'
+    scale: 7500
+    layers: *assemblage_seq
     legends:
       - name: legend1
-        layers: [*assemblage_w_seq, *assemblage_w_wmts]
+        layers: [*assemblage_seq, *assemblage_w_wmts]
 
 # situation:
 #   alias : "Cartographie de situation"

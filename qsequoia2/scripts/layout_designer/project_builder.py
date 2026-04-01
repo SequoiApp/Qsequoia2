@@ -12,25 +12,23 @@ from qgis.core import QgsProject
 
 class ProjectBuilder:
 
-    def __init__(self, iface, seq_id, config, project_key: str):
+    def __init__(self, iface, project, seq_id, canvas):
 
         self.iface = iface
+        self.project = project
         self.seq_id = seq_id
-        self.config = config
-        self.project_key = project_key
+        self.canvas = canvas
 
-        self.project = QgsProject.instance()
-
-        self.canvas = self.config.get_canvas(project_key)
-        self.layout = self.config.get_layout(project_key)
-
+        self.canvas = self.canvas
+        self.seq_keys = self.canvas.layers.sequoia
+        self.wmts_keys = self.canvas.layers.wmts
         self.zoom_on = self.canvas.zoom_on
 
     def build(self):
 
-        messageBar(self.iface, f"Création de la mise en page : {self.project_key}", "i", 8)
+        messageBar(self.iface, f"Création de la mise en page {self.canvas.alias}", "i", 8)
 
-        group_name = f"{self.seq_id} - {self.project_key.upper()}"
+        group_name = f"{self.seq_id} - {self.canvas.key.upper()}"
         main_group = self._get_group(group_name)
 
         QApplication.setOverrideCursor(Qt.WaitCursor)
@@ -48,7 +46,7 @@ class ProjectBuilder:
 
         self._fold_all()
 
-        messageBar(self.iface, f"Mise en page {self.project_key} chargée avec succès", "s", 8)
+        messageBar(self.iface, f"Mise en page chargée avec succès {self.canvas.alias}", "s", 8)
 
     def _get_group(self, name, parent=None):
         parent = parent or self.project.layerTreeRoot()
@@ -57,8 +55,6 @@ class ProjectBuilder:
 
     def _load_layers(self, main_group):
 
-        layers_key = self.config.get_layers(self.project_key)
-
         project_folder = get_project_variable("QS2_seq_dir")
         style_folder = get_global_variable("QS2_styles_directory")
 
@@ -66,8 +62,8 @@ class ProjectBuilder:
             messageBar(self.iface, "Aucun projet sélectionné", "w")
             return {}
 
-        seq_layers = self._load_seq_layers(layers_key.sequoia, main_group, project_folder, style_folder)
-        wmts_layers = self._load_wmts_layers(layers_key.wmts, main_group)
+        seq_layers = self._load_seq_layers(self.seq_keys, main_group, project_folder, style_folder)
+        wmts_layers = self._load_wmts_layers(self.wmts_keys, main_group)
 
         return seq_layers | wmts_layers
 

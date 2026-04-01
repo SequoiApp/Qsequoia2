@@ -1,23 +1,21 @@
 from dataclasses import dataclass, field
+from types import SimpleNamespace
 from pathlib import Path
 import yaml
 
 @dataclass
 class ProjectCanvas:
-    scale: int = 1000
+    key: str = ""
+    alias: str = ""
     zoom_on: str = ""
     readonly: list = field(default_factory=list)
-    layers: dict = field(default_factory=dict)  # {"seq": [...], "wmts": [...]}
+    layers: SimpleNamespace = field(default_factory=SimpleNamespace)
 
 @dataclass
 class ProjectLayout:
-    theme: str = ""
+    scale: int = 7500
+    layers: list = field(default_factory=list)
     legends: list = field(default_factory=list)
-
-@dataclass
-class ProjectLayers:
-    sequoia: list = field(default_factory=list)
-    wmts: list = field(default_factory=list)
 
 class ProjectConfigLoader:
 
@@ -40,29 +38,32 @@ class ProjectConfigLoader:
             (key, value.get("alias", key))
             for key, value in data.items()
         ]
-
+    
     def get_canvas(self, key: str) -> ProjectCanvas:
-        raw = self._load().get(key, {}).get("canvas", {})
+        data = self._load()
+        project = data.get(key, {})
+
+        raw = project.get("canvas", {})
+
+        layers_raw = raw.get("layers", {})
+        if not isinstance(layers_raw, dict):
+            layers_raw = {}
 
         return ProjectCanvas(
-            scale=raw.get("scale", 1000),
+            key=key,
+            alias=project.get("alias", key),
             zoom_on=raw.get("zoom_on", ""),
             readonly=raw.get("readonly", []),
-            layers=raw.get("layers", {})
+            layers=SimpleNamespace(**layers_raw)
         )
 
     def get_layout(self, key: str) -> ProjectLayout:
         raw = self._load().get(key, {}).get("layout", {})
+        print(f"Raw layout data for '{key}': {raw}")
 
         return ProjectLayout(
-            theme=raw.get("theme", ""),
+            scale=raw.get("scale", 7500),
+            layers=raw.get("layers", []),
             legends=raw.get("legends", [])
         )
     
-    def get_layers(self, key: str) -> ProjectLayers:
-        raw = self._load().get(key, {}).get("layers", {})
-
-        return ProjectLayers(
-            sequoia=raw.get("sequoia", []),
-            wmts=raw.get("wmts", [])
-        )

@@ -13,6 +13,7 @@ from PyQt5 import uic
 
 from .project_config_loader import ProjectConfigLoader
 from .project_builder import ProjectBuilder
+from .layout_builder import LayoutBuilder
 from ..utils.messageBar import messageBar
 from ..utils.variable import get_project_variable
 
@@ -138,39 +139,15 @@ class LayoutDesignerWidget(QWidget, FORM_CLASS):
         seq_id = get_project_variable("QS2_seq_identifier") or None
         if not project_key:
             return
-        
-        builder = ProjectBuilder(self.iface, seq_id, self.cfg, project_key)
-        builder.build()
 
-        # # ================================
-        # # 4. Ouvrir et construire la mise en page 
-        # # ================================
-        # if self.cb_composeur.isChecked():
+        canvas = self.cfg.get_canvas(project_key)
+        project_builder = ProjectBuilder(self.iface, self.project, seq_id, canvas)
+        project_builder.build()
 
-        #     canvas_cfg = self.config.get_project_canvas(project_key)
-        #     layout_cfg = self.config.get_project_layout(project_key)
-
-        #     # créer le service Layout
-        #     layout_service = LayoutService(
-        #         project=QgsProject.instance(),
-        #         project_key = project_key,
-        #         project_name=self.current_project_name,
-        #         style_folder=self.current_style_folder,
-        #         downloads_path=self.downloads_path,
-        #         project_folder=self.current_project_folder,
-        #         iface=self.iface)
-            
-
-        #     # Calcul format + orientation
-        #     info = layout_service.compute_layout_info(
-        #         scale=canvas_cfg.scale,
-        #         coeff_cadre=self.dsb_occup.value() / 100)
-
-        #     # Import layout et conserver la référence
-        #     self.current_layout = layout_service.import_layout(project_key=project_key, fmt=info.paper_format, orient=info.orientation)
-
-        #     # Ajouter au layout manager
-        #     lm = QgsProject.instance().layoutManager()
+        if self.cb_composeur.isChecked():
+            layout = self.cfg.get_layout(project_key)
+            layout_builder = LayoutBuilder(self.iface, self.project, seq_id, layout, self.dsb_occup.value() / 100)
+            layout_builder.build()
 
         #     # éviter les collisions de nom, je le garde pour le dev je met une condition pour éviter erreur python si le projet existe déja
         #     if self.current_layout is not None:

@@ -30,10 +30,12 @@ class LayoutBuilder:
 
     MAP_ID = "map1"
 
-    def __init__(self, iface, project, layout_spec, layers, coeff_cadre: float = 0.90):
+    def __init__(self, iface, project, seq_id, layout_spec, layers, coeff_cadre: float = 0.90):
         self.iface = iface
         self.project = project
+        self.seq_id = seq_id
         self.layout = layout_spec
+        self.key = layout_spec.key
         self.layers = layers
         self.coeff_cadre = coeff_cadre
 
@@ -135,7 +137,7 @@ class LayoutBuilder:
 
         layout.loadFromTemplate(doc, QgsReadWriteContext())
 
-        layout_name = f"{fmt}_{final_orient}"
+        layout_name = f"{self.seq_id}_{self.key}_{fmt}_{final_orient}"
         layout.setName(layout_name)
         self.project.layoutManager().addLayout(layout)
 

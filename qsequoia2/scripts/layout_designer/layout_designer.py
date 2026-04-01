@@ -65,7 +65,9 @@ class LayoutDesignerWidget(QWidget, FORM_CLASS):
             if self.cb_composeur.isChecked():
                 layout_cfg = self.cfg.get_layout(project_key)
                 coeff_cadre = self.dsb_occup.value() / 100
-                layout_name = LayoutBuilder(iface=self.iface, project=self.project, layout_spec=layout_cfg, layers=ctx.layers, coeff_cadre=coeff_cadre).build()
+                layout_name = LayoutBuilder(
+                    iface=self.iface, project=self.project, seq_id = seq_id, layout_spec=layout_cfg, layers=ctx.layers, coeff_cadre=coeff_cadre
+                ).build()
                 messageLog(f"Layout '{layout_name}' créé avec succès")
 
                 if not layout_name:

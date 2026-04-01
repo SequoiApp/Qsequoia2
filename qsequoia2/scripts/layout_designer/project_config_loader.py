@@ -24,6 +24,7 @@ class ProjectCanvas:
 
 @dataclass
 class ProjectLayout:
+    key: str
     scale: int = 7500
     layers: list[str] = field(default_factory=list)
     legends: list[LegendSpec] = field(default_factory=list)
@@ -87,6 +88,7 @@ class ProjectConfigLoader:
         ]
 
         return ProjectLayout(
+            key=key,
             scale=raw.get("scale", 7500),
             layers=self._flatten(raw.get("layers", [])),
             legends=legends,

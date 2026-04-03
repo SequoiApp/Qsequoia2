@@ -200,6 +200,7 @@ def get_style(layer_key, style_folder):
 
     return None
 
+
 def seq_read(key, project_folder, add_to_project=False, group=None, style_folder=None):
 
     meta = seq_layer(key)
@@ -218,17 +219,29 @@ def seq_read(key, project_folder, add_to_project=False, group=None, style_folder
         raise RuntimeError(
             f"Multiple layers found for '{filename}':\n{paths_str}"
         )
-        
+
     path = matches[0]
+    path_str = str(path)
+
+    # Check if layer already exists in the group
+    if group:
+        for node in group.findLayers():
+            existing_layer = node.layer()
+            if existing_layer and existing_layer.source().startswith(path_str):
+                messageLog(f"Layer already in group: '{existing_layer.name()}' ({existing_layer.source()})")
+                messageBar(f"Layer {existing_layer.name()} already in group: '{group.name()}'")
+                return existing_layer
+
     if layer_type == "vect":
-        layer = QgsVectorLayer(str(path), layer_name, "ogr")
+        layer = QgsVectorLayer(path_str, layer_name, "ogr")
     elif layer_type == "rast":
-        layer = QgsRasterLayer(str(path), layer_name)
+        layer = QgsRasterLayer(path_str, layer_name)
     else:
         raise ValueError(f"Unsupported layer type: {layer_type}")
 
     if not layer.isValid():
         raise RuntimeError(f"Invalid layer: {path}")
+
 
     if style_folder:
         style_path = get_style(key, style_folder)

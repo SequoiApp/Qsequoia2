@@ -32,7 +32,6 @@ assemblage:
   layout:
     scale: 7500
     layers: *assemblage_seq
-
     legends:
       - id: legend1
         layers: *assemblage_seq

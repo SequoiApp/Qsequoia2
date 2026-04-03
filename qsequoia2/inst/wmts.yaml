@@ -1,30 +1,30 @@
 wmts_scan1000:
-  display_name: "IGN SCAN 1000 TOPO (Metropole)"
+  display_name: "SCAN 1000"
   family: scan
   url: contextualWMSLegend=0&crs=EPSG:2154&dpiMode=7&featureCount=10&format=image/png&layers=FXX_SCAN1000&styles&url=http://mapsref.brgm.fr/wxs/refcom-brgm/refign
 
 wmts_scan100:
-  display_name: "IGN SCAN 100 TOPO (Metropole)"
+  display_name: "SCAN 100"
   family: scan
   url: contextualWMSLegend=0&crs=EPSG:2154&dpiMode=7&featureCount=10&format=image/png&http-header:referer=&layers=FXX_SCAN100&styles&url=http://mapsref.brgm.fr/wxs/refcom-brgm/refign
 
 wmts_scan25:
-  display_name: "IGN SCAN 25 TOPO (Metropole)"
+  display_name: "SCAN 25"
   family: scan
   url: contextualWMSLegend=0&crs=EPSG:2154&dpiMode=7&featureCount=10&format=image/png&layers=FXX_SCAN25TOPO&styles&url=http://mapsref.brgm.fr/wxs/refcom-brgm/refign
 
 wmts_scan25_grey:
-  display_name: "IGN SCAN 25 TOPO (Metropole) gray"
+  display_name: "SCAN 25 gray"
   family: scan
   url: contextualWMSLegend=0&crs=EPSG:2154&dpiMode=7&featureCount=10&format=image/png&http-header:referer=&layers=FXX_SCAN25NB&styles&url=http://mapsref.brgm.fr/wxs/refcom-brgm/refign
 
 wmts_irc:
-  display_name: "IGN BDORTHO IRC 20cm"
+  display_name: "BDORTHO IRC 20cm"
   family: ortho
   url: contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&featureCount=10&format=image/jpeg&layers=ORTHOIMAGERY.ORTHOPHOTOS.IRC&styles=normal&tileMatrixSet=PM_6_19&tilePixelRatio=0&url=https://data.geopf.fr/wmts?SERVICE%3DWMTS%26VERSION%3D1.0.0%26REQUEST%3DGetCapabilities
 
 wmts_rgb:
-  display_name: "IGN BDORTHO RGB 20cm"
+  display_name: "BDORTHO RGB 20cm"
   family: ortho
   url: contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&featureCount=10&format=image/jpeg&layers=HR.ORTHOIMAGERY.ORTHOPHOTOS&styles=normal&tileMatrixSet=PM_6_19&tilePixelRatio=0&url=https://data.geopf.fr/wmts?SERVICE%3DWMTS%26VERSION%3D1.0.0%26REQUEST%3DGetCapabilities
 
@@ -99,7 +99,7 @@ wmts_ocs_2024_2025:
   url: contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&featureCount=10&format=image/png&layers=IGNF_COSIA_2024-2026&styles=normal&tileMatrixSet=PM_6_18&tilePixelRatio=0&url=https://data.geopf.fr/wmts?SERVICE%3DWMTS%26VERSION%3D1.0.0%26REQUEST%3DGetCapabilities
 
 wmts_foret_ancienne:
-  display_name: "IGNF Forêt anciennes"
+  display_name: "Forêt anciennes"
   family: autres
   url: contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&featureCount=10&format=image/png&layers=IGNF_FORETS-ANCIENNES&styles=normal&tileMatrixSet=PM_6_16&tilePixelRatio=0&url=https://data.geopf.fr/wmts?SERVICE%3DWMTS%26VERSION%3D1.0.0%26REQUEST%3DGetCapabilities
 

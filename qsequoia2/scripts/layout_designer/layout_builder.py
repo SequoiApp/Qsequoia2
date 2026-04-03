@@ -30,12 +30,12 @@ class LayoutBuilder:
 
     MAP_ID = "map1"
 
-    def __init__(self, iface, project, seq_id, layout_spec, layers, coeff_cadre: float = 0.90):
+    def __init__(self, iface, project, seq_id, layout_cfg, layers, coeff_cadre: float = 0.90):
         self.iface = iface
         self.project = project
         self.seq_id = seq_id
-        self.layout = layout_spec
-        self.key = layout_spec.key
+        self.layout = layout_cfg
+        self.key = layout_cfg.key
         self.layers = layers
         self.coeff_cadre = coeff_cadre
 
@@ -43,21 +43,18 @@ class LayoutBuilder:
         project_folder = get_project_variable("QS2_seq_dir") or None
         parca = seq_read("parca", add_to_project=False, project_folder=project_folder)
         if not parca:
-            raise RuntimeError("[Layout] Couche 'parca' absente du contexte")
+            raise RuntimeError("[LAYOUT] Couche 'parca' absente du contexte")
 
         fmt, orient = self._compute_layout_info(parca)
-        layout_name = self._create_layout(fmt, orient)
-        messageLog(f"Layout '{layout_name}' créé avec succès")
+        layout = self._create_layout(fmt, orient)
 
-        layout = self._get_layout(layout_name)
-        messageLog(f"Layout '{layout}' récupéré avec succès")
-
+        self._set_visibility()
         self._configure_map(layout)
         self._configure_legends(layout)
         self._add_parcels_table(layout)
 
-        messageLog(f"Layout '{layout_name}' configuré avec succès")
-        return layout_name
+        messageLog(f"Layout '{layout}' configuré avec succès")
+        return layout
 
     def _layer(self, key):
         return self.layers.get(key)
@@ -141,7 +138,7 @@ class LayoutBuilder:
         layout.setName(layout_name)
         self.project.layoutManager().addLayout(layout)
 
-        return layout_name
+        return layout
 
     def _find_template(self, models_dirs, fmt, orient):
         orient = orient.lower()
@@ -164,12 +161,6 @@ class LayoutBuilder:
             f"Recherché dans :\n- " + "\n- ".join(tried)
         )
 
-    def _get_layout(self, layout_name):
-        layout = self.project.layoutManager().layoutByName(layout_name)
-        if not layout:
-            raise RuntimeError(f"[Layout] '{layout_name}' introuvable")
-        return layout
-
     def _get_map_item(self, layout):
         for item in layout.items():
             if isinstance(item, QgsLayoutItemMap) and item.id() == self.MAP_ID:
@@ -183,17 +174,14 @@ class LayoutBuilder:
 
     def _configure_map(self, layout):
         map_item = self._get_map_item(layout)
+        canvas = self.iface.mapCanvas()
 
-        layout_layers = [self._layer(k) for k in self.layout.layers]
-        layout_layers = [l for l in layout_layers if l]
-        if not layout_layers:
-            raise ValueError("[Layout] Aucune couche valide pour la carte")
-
+        map_item.setKeepLayerSet(False)
         map_item.setFollowVisibilityPreset(False)
-        map_item.setKeepLayerSet(True)
-        map_item.setLayers(layout_layers)
-        map_item.zoomToExtent(self.iface.mapCanvas().extent())
-        map_item.setScale(self.layout.scale)
+
+        map_item.setExtent(canvas.extent())
+        map_item.setLayers([]) # Critical to remove old layers saved in template and let map use canvas layers
+        map_item.refresh()
 
     def _configure_legends(self, layout):
         map_item = self._get_map_item(layout)
@@ -242,3 +230,22 @@ class LayoutBuilder:
         table.setFilterFeatures(True)
 
         table.refresh()
+
+    def _set_visibility(self):
+        root = self.project.layerTreeRoot()
+
+        root.setItemVisibilityCheckedRecursive(False)
+
+        # show selected
+        messageLog(f"Layers in layout: {self.layout.layers}")
+        for key in self.layout.layers:
+            layer = self._layer(key)
+
+            if not layer:
+                continue
+
+            node = root.findLayer(layer.id())
+            if not node:
+                continue
+
+            node.setItemVisibilityCheckedParentRecursive(True)

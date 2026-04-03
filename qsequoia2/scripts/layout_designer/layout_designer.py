@@ -65,23 +65,14 @@ class LayoutDesignerWidget(QWidget, FORM_CLASS):
             if self.cb_composeur.isChecked():
                 layout_cfg = self.cfg.get_layout(project_key)
                 coeff_cadre = self.dsb_occup.value() / 100
-                layout_name = LayoutBuilder(
-                    iface=self.iface, project=self.project, seq_id = seq_id, layout_spec=layout_cfg, layers=ctx.layers, coeff_cadre=coeff_cadre
+                layout = LayoutBuilder(
+                    iface=self.iface, project=self.project, seq_id = seq_id, layout_cfg = layout_cfg, layers = ctx.layers, coeff_cadre = coeff_cadre
                 ).build()
-                messageLog(f"Layout '{layout_name}' créé avec succès")
 
-                if not layout_name:
+                if not layout:
                     messageBar(self.iface, "Échec de création du layout", "critical", 10)
                     return
-
-                lm = self.project.layoutManager()
-
-                layout = lm.layoutByName(layout_name)
-                if not layout:
-                    messageBar(self.iface, f"Layout '{layout_name}' introuvable", "critical", 10)
-                    return
                 
-                messageLog(f"Ouverture du layout '{layout_name}' dans le composeur de cartes")
                 self.iface.openLayoutDesigner(layout)
 
         except Exception as e:

@@ -98,6 +98,7 @@ class ProjectBuilder:
         for key in keys:
             try:
                 meta = wmts_layer(key)
+                messageLog(f"[WMTS] {meta}")
                 family = (meta.get("family") or "autres").upper()
                 group = self._get_group(family, parent=main_group)
 

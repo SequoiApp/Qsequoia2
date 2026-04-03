@@ -115,6 +115,8 @@ class LayoutBuilder:
         return "portrait" if bbox.height() >= bbox.width() else "landscape"
 
     def _create_layout(self, fmt: str, orient: str) -> str:
+        lm = self.project.layoutManager()
+
         qpt, final_orient = self._find_template(
             [
                 Path(get_global_variable("QS2_models_directory") or ""),
@@ -123,6 +125,11 @@ class LayoutBuilder:
             fmt,
             orient,
         )
+
+        layout_name = f"{self.seq_id}_{self.key}_{fmt}_{final_orient}"
+
+        if lm.layoutByName(layout_name):
+            return lm.layoutByName(layout_name)
 
         layout = QgsPrintLayout(self.project)
         layout.initializeDefaults()
@@ -133,10 +140,9 @@ class LayoutBuilder:
                 raise ValueError(f"[Lecture QPT] XML invalide : {qpt}")
 
         layout.loadFromTemplate(doc, QgsReadWriteContext())
-
-        layout_name = f"{self.seq_id}_{self.key}_{fmt}_{final_orient}"
         layout.setName(layout_name)
-        self.project.layoutManager().addLayout(layout)
+
+        layout = lm.addLayout(layout)
 
         return layout
 

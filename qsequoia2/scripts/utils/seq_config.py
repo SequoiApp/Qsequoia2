@@ -229,7 +229,6 @@ def seq_read(key, project_folder, add_to_project=False, group=None, style_folder
             existing_layer = node.layer()
             if existing_layer and existing_layer.source().startswith(path_str):
                 messageLog(f"Layer already in group: '{existing_layer.name()}' ({existing_layer.source()})")
-                messageBar(f"Layer {existing_layer.name()} already in group: '{group.name()}'")
                 return existing_layer
 
     if layer_type == "vect":

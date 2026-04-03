@@ -2,6 +2,7 @@ from pathlib import Path
 import yaml
 
 from qgis.core import QgsRasterLayer, QgsProject
+from qsequoia2.scripts.utils.messageBar import messageBar, messageLog
 from qsequoia2.scripts.utils.seq_config import _CONFIG_CACHE
 
 def get_wmts_config_path() -> Path:
@@ -29,6 +30,8 @@ def wmts_layer(key):
     wmts_cfg = get_wmts_config()
     return wmts_cfg.get(key)
 
+from qgis.core import QgsProject, QgsRasterLayer
+
 def wmts_read(key: str, group=None):
 
     wmts = wmts_layer(key)
@@ -41,6 +44,19 @@ def wmts_read(key: str, group=None):
     if not url:
         raise RuntimeError("URL WMTS invalide")
 
+    # Check if already exists in group
+    if group:
+        for node in group.findLayers():
+            existing_layer = node.layer()
+
+            if not existing_layer:
+                continue
+
+            # WMTS source matching (more robust than ==)
+            if existing_layer.source() == url or url in existing_layer.source():
+                messageLog(f"WMTS already {existing_layer.name()} in group: '{group.name()}'")
+                return existing_layer
+
     layer = QgsRasterLayer(url, name, "wms")
 
     if not layer.isValid():
@@ -48,6 +64,7 @@ def wmts_read(key: str, group=None):
 
     project = QgsProject.instance()
     project.addMapLayer(layer, not bool(group))
+
     if group:
         group.addLayer(layer)
 

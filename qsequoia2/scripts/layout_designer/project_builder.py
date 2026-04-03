@@ -121,6 +121,4 @@ class ProjectBuilder:
         canvas.refresh()
 
     def _fold_all(self):
-        root = self.project.layerTreeRoot()
-        for node in root.children():
-            node.setExpanded(False)
+        self.iface.layerTreeView().collapseAll()

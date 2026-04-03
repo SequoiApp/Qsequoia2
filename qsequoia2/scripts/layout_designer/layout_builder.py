@@ -179,9 +179,10 @@ class LayoutBuilder:
         map_item.setKeepLayerSet(False)
         map_item.setFollowVisibilityPreset(False)
 
-        map_item.setExtent(canvas.extent())
-        map_item.setLayers([]) # Critical to remove old layers saved in template and let map use canvas layers
+        map_item.zoomToExtent(canvas.extent())
+        map_item.setScale(self.layout.scale)
         map_item.refresh()
+        layout.refresh()
 
     def _configure_legends(self, layout):
         map_item = self._get_map_item(layout)

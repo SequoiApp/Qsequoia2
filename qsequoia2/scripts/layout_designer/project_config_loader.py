@@ -15,7 +15,6 @@ class LegendSpec:
 class ProjectCanvas:
     key: str
     alias: str
-    scale: int = 7500
     zoom_on: str = ""
     readonly: list[str] = field(default_factory=list)
     layers: SimpleNamespace = field(
@@ -67,7 +66,6 @@ class ProjectConfigLoader:
         return ProjectCanvas(
             key=key,
             alias=project.get("alias", key),
-            scale=raw.get("scale", 7500),
             zoom_on=raw.get("zoom_on", ""),
             readonly=raw.get("readonly", []),
             layers=SimpleNamespace(

@@ -24,10 +24,7 @@ assemblage:
       wmts: &assemblage_w_wmts
         - wmts_scan25_grey
         - wmts_scan100
-        - wmts_scan1000
         - wmts_pci
-        - wmts_irc
-        - wmts_rgb
 
   layout:
     scale: 7500

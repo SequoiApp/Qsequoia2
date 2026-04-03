@@ -54,7 +54,7 @@ class getForestdata:
     """Lecture depuis une couche PARCA des donénes sur la forêt. 
         Paramètre lu depuis la table forest_data.json"""
 
-    def __init__(self, seq_identifier, seq_dir, iface):
+    def __init__(self, seq_id, seq_dir, iface):
         """Initialise l’objet getForestdata.
             Charge la configuration JSON et YAML, résout les définitions de champs,
             récupère les couches du projet et prépare la structure interne
@@ -62,7 +62,7 @@ class getForestdata:
         """
 
         self.iface = iface
-        self.seq_identifier = seq_identifier
+        self.seq_id = seq_id
         self.seq_dir = seq_dir
 
 
@@ -715,7 +715,7 @@ class getForestdata:
         file_path = Path(_CACHE_DIR / "Qseq_forestMetadata")
 
         data_to_save = {
-            "project_name": self.seq_identifier,
+            "project_name": self.seq_id,
             "project_folder": self.seq_dir,
             "timestamp": datetime.now().isoformat(),
             "metadata": getattr(self, "_calculated_values", {})  # Résultats calculés

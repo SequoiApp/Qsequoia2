@@ -46,7 +46,7 @@ class ForestDataDialog(QDialog, FORM_CLASS):
         # Chargement des variables
 
         self.seq_dir = get_project_variable("QS2_seq_dir")
-        self.seq_identifier= get_project_variable("QS2_seq_identifier")
+        self.seq_id= get_project_variable("QS2_seq_id")
         self.current_style_folder = get_global_variable("QS2_styles_directory")
         
         
@@ -70,7 +70,7 @@ class ForestDataDialog(QDialog, FORM_CLASS):
         # appel du calcul des metadonnées
         try:
             forest_data = getForestdata(
-                seq_identifier=self.seq_identifier,
+                seq_id=self.seq_id,
                 seq_dir=self.seq_dir,
                 iface=self.iface)
             

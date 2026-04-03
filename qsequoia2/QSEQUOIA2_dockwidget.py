@@ -29,7 +29,7 @@ class SeqDirState(Enum):
 class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
     closingPlugin = pyqtSignal()
-    projectChanged = pyqtSignal(str, str, str)
+    projectChanged = pyqtSignal(str, str) #seq_dir, seq_id
 
     def __init__(self, iface, parent=None):
         super().__init__(parent)
@@ -129,24 +129,24 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         if not seq_dir:
             self._set_seq_dir_status(SeqDirState.EMPTY)
-            self.projectChanged.emit("", None, None)
+            self.projectChanged.emit(None, None)
             return
 
         name = Path(seq_dir).name
 
         try:
-            identifier = find_seq_identifier(seq_dir)
+            seq_id = find_seq_id(seq_dir)
             state = SeqDirState.VALID
-            label = identifier
+            label = seq_id
 
         except Exception as e:
             state = SeqDirState.INVALID
-            identifier = None
+            seq_id = None
             label = name
             messageBar(self.iface, str(e), "c", 10)
 
         self._set_seq_dir_status(state, label)
-        self.projectChanged.emit(name, seq_dir, identifier)
+        self.projectChanged.emit(seq_dir, seq_id)
 
         if state == SeqDirState.VALID:
             messageBar(self.iface, f"Dossier valide : {seq_dir}", "s", 10)
@@ -173,15 +173,19 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.lbl_forest_id.show()
 
     def _init_tabs(self):
+
         def add_tab(widget, icon_name, tooltip):
             icon = QIcon(str(ICONS_DIR / icon_name))
             self.tabWidget.addTab(widget, icon, "")
             self.tabWidget.setTabToolTip(self.tabWidget.count() - 1, tooltip)
+            return widget 
 
-        add_tab(ForestDataDialog(iface=self.iface, parent=self), "forest_data.svg", "Métadonnées")
-        add_tab(AddDataTabWidget(iface=self.iface, parent=self), "add_data.svg", "Ajout de données")
-        add_tab(LayoutDesignerWidget(iface=self.iface, parent=self), "layout.svg", "Conception de mise en page")
-        add_tab(ToolsDialog(iface=self.iface, parent=self), "tools.svg", "Outils")
+        forest_tab = add_tab(ForestDataDialog(iface=self.iface, parent=self), "forest_data.svg", "Métadonnées")
+        add_data_tab = add_tab(AddDataTabWidget(iface=self.iface, parent=self), "add_data.svg", "Ajout de données")
+        layout_tab = add_tab(LayoutDesignerWidget(iface=self.iface, parent=self), "layout.svg", "Conception de mise en page")
+        tools_tab = add_tab(ToolsDialog(iface=self.iface, parent=self), "tools.svg",  "Outils")
+
+        self.projectChanged.connect(add_data_tab.on_project_changed)
 
     def refresh(self):
         self._update_project_visibility()

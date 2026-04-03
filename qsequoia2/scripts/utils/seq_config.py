@@ -295,7 +295,7 @@ def find_all_seq_dir(root_dir, max_dirs=5000):
 
     return projects
 
-def find_seq_identifier(seq_dir):
+def find_seq_id(seq_dir):
     layer = seq_read("parca", seq_dir)
     field_name = seq_field("identifier")["name"]
 

@@ -256,7 +256,7 @@ class AddDataTabWidget(QTabWidget, FORM_CLASS):
     # endregion
 
     # region UPDATE FROM SIGNAL
-    def on_project_changed(self, seq_dirname, seq_dir):
+    def on_project_changed(self, seq_dir, seq_id):
         self._reload_vecteur_tab(seq_dir)
         self._reload_raster_tab(seq_dir)
 
@@ -266,6 +266,7 @@ class AddDataTabWidget(QTabWidget, FORM_CLASS):
 
         self.removeTab(VTAB_INDEX)
         self.add_vecteur_tab(seq_dir)
+        messageLog(f"Vecteur tab rechargé avec dossier {seq_dir}")
 
         # Restore user position
         self.setCurrentIndex(current)
@@ -279,5 +280,4 @@ class AddDataTabWidget(QTabWidget, FORM_CLASS):
 
         # Restore user position
         self.setCurrentIndex(current)
-
     # endregion

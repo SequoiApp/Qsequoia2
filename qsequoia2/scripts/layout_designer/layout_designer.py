@@ -57,7 +57,7 @@ class LayoutDesignerWidget(QWidget, FORM_CLASS):
             if not project_key:
                 raise RuntimeError("Aucun projet sélectionné")
 
-            seq_id = get_project_variable("QS2_seq_identifier") or None
+            seq_id = get_project_variable("QS2_seq_id") or None
             canvas_cfg = self.cfg.get_canvas(project_key)
 
             ctx = ProjectBuilder(iface=self.iface, project=self.project, seq_id=seq_id, canvas=canvas_cfg).build()
@@ -102,7 +102,7 @@ class LayoutDesignerWidget(QWidget, FORM_CLASS):
     def _on_type_changed(self, button):
         try:
             prefix = button.text()
-            base = get_project_variable("QS2_seq_identifier") or ""
+            base = get_project_variable("QS2_seq_id") or ""
             forest_name = self.format_forest_name(base, prefix)
             self.le_propriete.setText(forest_name)
         except Exception as e:

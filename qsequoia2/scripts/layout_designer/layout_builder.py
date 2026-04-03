@@ -173,6 +173,8 @@ class LayoutBuilder:
         raise ValueError("[Layout] Aucune carte trouvée")
 
     def _configure_map(self, layout):
+        #Don't use map_item.setLayers([]) for reinitialisation, it causes issues with map item height
+
         map_item = self._get_map_item(layout)
         canvas = self.iface.mapCanvas()
 

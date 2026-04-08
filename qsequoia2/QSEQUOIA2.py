@@ -78,7 +78,7 @@ class Qsequoia2:
         # Fetch Rsequoia2 config
         sync_seq_configs()
         
-        disabled_v_external_grass()
+        disabled_v_external_grass(self.iface)
 
         # Lazy init watchdog
         if self.dogwatcher is None:

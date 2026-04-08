@@ -6,7 +6,7 @@ wmts_scan1000:
 wmts_scan100:
   display_name: "SCAN 100"
   family: scan
-  url: contextualWMSLegend=0&crs=EPSG:2154&dpiMode=7&featureCount=10&format=image/png&http-header:referer=&layers=FXX_SCAN100&styles&url=http://mapsref.brgm.fr/wxs/refcom-brgm/refign
+  url: styleUrl=https://data.geopf.fr/annexes/ressources/vectorTiles/styles/PLAN.IGN/classique.json&type=xyz&url=https://data.geopf.fr/tms/1.0.0/PLAN.IGN/%7Bz%7D/%7Bx%7D/%7By%7D.pbf&zmax=14&zmin=0&http-header:referer=
 
 wmts_scan25:
   display_name: "SCAN 25"

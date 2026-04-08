@@ -19,6 +19,7 @@ from .processing import buffer, multipart_to_singleparts
 
 TEMPLATE_DIR = Path(__file__).parents[2] / "data" / "templates"
 
+
 class LayoutBuilder:
     FORMATS_MM = (
         ("A4", (210, 297)),
@@ -28,18 +29,16 @@ class LayoutBuilder:
         ("A0", (841, 1189)),
     )
 
-    MAP_ID = "map1"
-
     def __init__(self, iface, project, seq_id, layout_cfg, layers, coeff_cadre: float = 0.90):
         self.iface = iface
         self.project = project
         self.seq_id = seq_id
         self.layout = layout_cfg
-        self.key = layout_cfg.key
+        self.key = self.layout.key
         self.layers = layers
         self.coeff_cadre = coeff_cadre
 
-    def build(self) -> str | None:
+    def build(self):
         project_folder = get_project_variable("QS2_seq_dir") or None
         parca = seq_read("parca", add_to_project=False, project_folder=project_folder)
         if not parca:
@@ -49,11 +48,11 @@ class LayoutBuilder:
         layout = self._create_layout(fmt, orient)
 
         self._set_visibility()
-        self._configure_map(layout)
+        self._configure_maps(layout)
         self._configure_legends(layout)
         self._add_parcels_table(layout)
 
-        messageLog(f"Layout '{layout}' configuré avec succès")
+        messageLog(f"Layout '{layout.name()}' configuré avec succès")
         return layout
 
     def _layer(self, key):
@@ -96,14 +95,18 @@ class LayoutBuilder:
         return feat.geometry()
 
     def _pick_format(self, bbox: QgsRectangle) -> str:
+        scale = self.layout.scale
+        if scale is None:
+            raise ValueError("[LAYOUT] layout.scale est requis pour calculer le format")
+
         for name, mm in self.FORMATS_MM:
-            if self._fits_bbox(mm, bbox):
+            if self._fits_bbox(mm, bbox, scale):
                 return name
         return "A0+"
 
-    def _fits_bbox(self, mm, bbox, marge_mm=6):
-        needed_w = (bbox.width() / self.layout.scale) * 1000.0
-        needed_h = (bbox.height() / self.layout.scale) * 1000.0
+    def _fits_bbox(self, mm, bbox, scale, marge_mm=6):
+        needed_w = (bbox.width() / scale) * 1000.0
+        needed_h = (bbox.height() / scale) * 1000.0
 
         available_w = (mm[0] - 2 * marge_mm) * self.coeff_cadre
         available_h = (mm[1] - 2 * marge_mm) * self.coeff_cadre
@@ -114,7 +117,7 @@ class LayoutBuilder:
     def _pick_orient(bbox):
         return "portrait" if bbox.height() >= bbox.width() else "landscape"
 
-    def _create_layout(self, fmt: str, orient: str) -> str:
+    def _create_layout(self, fmt: str, orient: str) -> QgsPrintLayout:
         lm = self.project.layoutManager()
 
         qpt, final_orient = self._find_template(
@@ -126,10 +129,13 @@ class LayoutBuilder:
             orient,
         )
 
+        messageLog(f"[TEMPLATE] Template trouvé: {qpt} (format={fmt}, orient={final_orient})")
+
         layout_name = f"{self.seq_id}_{self.key}_{fmt}_{final_orient}"
 
-        if lm.layoutByName(layout_name):
-            return lm.layoutByName(layout_name)
+        existing = lm.layoutByName(layout_name)
+        if existing:
+            return existing
 
         layout = QgsPrintLayout(self.project)
         layout.initializeDefaults()
@@ -142,8 +148,7 @@ class LayoutBuilder:
         layout.loadFromTemplate(doc, QgsReadWriteContext())
         layout.setName(layout_name)
 
-        layout = lm.addLayout(layout)
-
+        lm.addLayout(layout)
         return layout
 
     def _find_template(self, models_dirs, fmt, orient):
@@ -167,38 +172,69 @@ class LayoutBuilder:
             f"Recherché dans :\n- " + "\n- ".join(tried)
         )
 
-    def _get_map_item(self, layout):
-        for item in layout.items():
-            if isinstance(item, QgsLayoutItemMap) and item.id() == self.MAP_ID:
-                return item
+    def _get_map_item(self, layout, map_id: str) -> QgsLayoutItemMap:
+        item = layout.itemById(map_id)
+        messageLog(f"[LAYOUT] Recherche de l'item '{map_id}'")
 
-        for item in layout.items():
-            if isinstance(item, QgsLayoutItemMap):
-                return item
+        if not item:
+            raise messageLog(f"[Layout] Carte '{map_id}' introuvable")
 
-        raise ValueError("[Layout] Aucune carte trouvée")
+        if not isinstance(item, QgsLayoutItemMap):
+            raise messageLog(f"[Layout] L'item '{map_id}' n'est pas une carte")
 
-    def _configure_map(self, layout):
-        #Don't use map_item.setLayers([]) for reinitialisation, it causes issues with map item height
+        return item
 
-        map_item = self._get_map_item(layout)
+    def _resolve_map_layers(self, map_spec):
+        map_layers = []
+
+        for key in map_spec.layers:
+            layer = self._layer(key)
+            if not layer:
+                messageLog(f"[LAYOUT] couche absente du contexte: {key}")
+                continue
+            map_layers.append(layer)
+
+        if not map_layers:
+            raise ValueError(f"[Layout] Aucune couche valide pour la carte '{map_spec.id}'")
+
+        return map_layers
+
+    def _configure_maps(self, layout):
         canvas = self.iface.mapCanvas()
 
-        map_item.setKeepLayerSet(False)
-        map_item.setFollowVisibilityPreset(False)
+        for map_spec in self.layout.maps:
+            map_item = self._get_map_item(layout, map_spec.id)
+            messageLog(f"[LAYOUT] configuring: {map_spec.id} with layers: {map_spec.layers} (follow_canvas={map_spec.follow_canvas})")
 
-        map_item.zoomToExtent(canvas.extent())
-        map_item.setScale(self.layout.scale)
-        map_item.refresh()
-        layout.refresh()
+            if map_spec.follow_canvas:
+                map_item.setKeepLayerSet(False)
+                map_item.setFollowVisibilityPreset(False)
+                map_item.zoomToExtent(canvas.extent())
+
+            else:
+                map_layers = self._resolve_map_layers(map_spec)
+
+                map_item.setKeepLayerSet(True)
+                map_item.setFollowVisibilityPreset(False)
+                map_item.setLayers(map_layers)
+
+                map_item.zoomToExtent(canvas.extent())
+
+            # scale (common logic)
+            scale = map_spec.scale or self.layout.scale
+            if scale:
+                map_item.setScale(scale)
+
+            map_item.refresh()
 
     def _configure_legends(self, layout):
-        map_item = self._get_map_item(layout)
-
         for legend_spec in self.layout.legends:
             legend = layout.itemById(legend_spec.id)
             if not legend:
+                messageLog(f"[LAYOUT] légende introuvable: {legend_spec.id}")
                 continue
+
+            map_item = self._get_map_item(layout, legend_spec.map)
 
             root = legend.model().rootGroup()
             legend.setAutoUpdateModel(False)
@@ -206,15 +242,16 @@ class LayoutBuilder:
 
             for key in legend_spec.layers:
                 layer = self._layer(key)
-                if layer:
-                    root.addLayer(layer)
+                if not layer:
+                    messageLog(f"[LAYOUT] couche absente de la légende '{legend_spec.id}': {key}")
+                    continue
+                root.addLayer(layer)
 
             legend.setLinkedMap(map_item)
             legend.setLegendFilterByMapEnabled(True)
             legend.refresh()
 
     def _add_parcels_table(self, layout):
-        
         table_id = "table1"
         table_layer = "parca"
         field_pcl_code = seq_field("pcl_code")["name"]
@@ -230,26 +267,29 @@ class LayoutBuilder:
 
         layer = self._layer(table_layer)
         if not layer:
+            messageLog(f"[LAYOUT] couche table absente: {table_layer}")
             return
 
         table.setVectorLayer(layer)
         table.setDisplayedFields([field_pcl_code, field_cor_area])
-
         table.setFeatureFilter(table_filter)
         table.setFilterFeatures(True)
-
         table.refresh()
 
     def _set_visibility(self):
         root = self.project.layerTreeRoot()
-
         root.setItemVisibilityCheckedRecursive(False)
 
-        # show selected
-        messageLog(f"Layers in layout: {self.layout.layers}")
-        for key in self.layout.layers:
-            layer = self._layer(key)
+        visible_keys = {
+            key
+            for map_spec in self.layout.maps
+            for key in map_spec.layers
+        }
 
+        messageLog(f"Layers in layout maps: {sorted(visible_keys)}")
+
+        for key in visible_keys:
+            layer = self._layer(key)
             if not layer:
                 continue
 

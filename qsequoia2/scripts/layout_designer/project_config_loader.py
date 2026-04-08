@@ -7,25 +7,33 @@ from types import SimpleNamespace
 import yaml
 
 @dataclass
-class LegendSpec:
-    id: str
-    layers: list[str] = field(default_factory=list)
-
-@dataclass
 class ProjectCanvas:
     key: str
     alias: str
     zoom_on: str = ""
     readonly: list[str] = field(default_factory=list)
     layers: SimpleNamespace = field(
-        default_factory=lambda: SimpleNamespace(sequoia=[], wmts=[])
+        default_factory=lambda: SimpleNamespace(sequoia=[], tms=[],wmts=[])
     )
+
+@dataclass
+class LayoutMap:
+    id: str
+    layers: list[str]
+    scale: int | None = None
+    follow_canvas: bool = False
+
+@dataclass
+class LegendSpec:
+    id: str
+    layers: list[str]
+    map: str
 
 @dataclass
 class ProjectLayout:
     key: str
-    scale: int = 7500
-    layers: list[str] = field(default_factory=list)
+    scale: int | None = None
+    maps: list[LayoutMap] = field(default_factory=list)
     legends: list[LegendSpec] = field(default_factory=list)
 
 class ProjectConfigLoader:
@@ -40,8 +48,14 @@ class ProjectConfigLoader:
         return self._cache
 
     def _flatten(self, value) -> list:
+        if not value:
+            return []   
+
+        if isinstance(value, str):
+            return [value]
+
         flat = []
-        for v in value or []:
+        for v in value:
             if isinstance(v, list):
                 flat.extend(self._flatten(v))
             else:
@@ -61,7 +75,7 @@ class ProjectConfigLoader:
 
         layers_raw = raw.get("layers", {})
         if not isinstance(layers_raw, dict):
-            layers_raw = {}
+            raise TypeError(f"[CONFIG] '{key}' canvas.layers must be a dict")
 
         return ProjectCanvas(
             key=key,
@@ -70,6 +84,7 @@ class ProjectConfigLoader:
             readonly=raw.get("readonly", []),
             layers=SimpleNamespace(
                 sequoia=self._flatten(layers_raw.get("sequoia", [])),
+                tms=self._flatten(layers_raw.get("tms", [])),
                 wmts=self._flatten(layers_raw.get("wmts", [])),
             ),
         )
@@ -77,17 +92,72 @@ class ProjectConfigLoader:
     def get_layout(self, key: str) -> ProjectLayout:
         raw = self._load().get(key, {}).get("layout", {})
 
-        legends = [
-            LegendSpec(
-                id=item["id"],
-                layers=self._flatten(item.get("layers", [])),
+        # --- maps ---
+        maps_raw = raw.get("maps")
+        if not maps_raw:
+            raise ValueError(f"[CONFIG] '{key}' layout.maps is required")
+
+        if not isinstance(maps_raw, list):
+            raise TypeError(f"[CONFIG] '{key}' layout.maps must be a list")
+
+        maps = []
+        for item in maps_raw:
+            if "id" not in item:
+                raise ValueError(f"[CONFIG] map missing 'id' in '{key}'")
+
+            layers = self._flatten(item.get("layers", []))
+            if not layers:
+                raise ValueError(f"[CONFIG] map '{item['id']}' has no layers")
+
+            maps.append(
+                LayoutMap(
+                    id=item["id"],
+                    layers=layers,
+                    scale=item.get("scale"),
+                    follow_canvas=item.get("follow_canvas"),
+                )
             )
-            for item in raw.get("legends", [])
-        ]
+
+        # --- duplicate map ids ---
+        ids = [m.id for m in maps]
+        if len(ids) != len(set(ids)):
+            raise ValueError(f"[CONFIG] duplicate map ids in '{key}': {ids}")
+
+        map_ids = set(ids)
+
+        # --- legends ---
+        legends_raw = raw.get("legends", [])
+        if not isinstance(legends_raw, list):
+            raise TypeError(f"[CONFIG] '{key}' layout.legends must be a list")
+
+        legends = []
+        for item in legends_raw:
+            if "id" not in item:
+                raise ValueError(f"[CONFIG] legend missing 'id' in '{key}'")
+
+            if "map" not in item:
+                raise ValueError(f"[CONFIG] legend '{item['id']}' missing 'map'")
+
+            if item["map"] not in map_ids:
+                raise ValueError(
+                    f"[CONFIG] legend '{item['id']}' references unknown map '{item['map']}'"
+                )
+
+            layers = self._flatten(item.get("layers", []))
+            if not layers:
+                raise ValueError(f"[CONFIG] legend '{item['id']}' has no layers")
+
+            legends.append(
+                LegendSpec(
+                    id=item["id"],
+                    layers=layers,
+                    map=item["map"],
+                )
+            )
 
         return ProjectLayout(
             key=key,
-            scale=raw.get("scale", 7500),
-            layers=self._flatten(raw.get("layers", [])),
+            scale=raw.get("scale"),
+            maps=maps,
             legends=legends,
         )

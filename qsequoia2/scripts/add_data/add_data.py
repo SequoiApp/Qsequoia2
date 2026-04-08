@@ -10,6 +10,7 @@ from qgis.PyQt.QtCore import Qt
 from qgis.core import QgsRasterLayer, QgsProject
 
 from ..utils.seq_config import seq_layer, get_seq_config, seq_read
+from ..utils.tms import get_tms_config, tms_read
 from ..utils.variable import get_global_variable, get_project_variable
 from ..utils.messageBar import messageBar, messageLog
 
@@ -19,6 +20,7 @@ FORM_CLASS, _ = uic.loadUiType(str(UI_PATH))
 VTAB_INDEX = 0
 RTAB_INDEX = 1
 WTAB_INDEX = 2
+TTAB_INDEX = 3
 
 class AddDataTabWidget(QTabWidget, FORM_CLASS):
     """
@@ -43,6 +45,7 @@ class AddDataTabWidget(QTabWidget, FORM_CLASS):
         self.add_vecteur_tab()
         self.add_raster_tab()
         self.add_wmts_tab()
+        self.add_tms_tab()
 
     def add_vecteur_tab(self, seq_dir=None):
 
@@ -172,6 +175,38 @@ class AddDataTabWidget(QTabWidget, FORM_CLASS):
         tree.itemDoubleClicked.connect(self.on_wmts_clicked)
 
         return tab
+    
+    def add_tms_tab(self):
+
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+
+        tree = QTreeWidget()
+        tree.setObjectName("tms_tree")
+        tree.setHeaderLabels(["TMS"])
+
+        categories = {}
+        for key, tms in get_tms_config().items():
+
+            raw_family = tms.get("family", "autres")
+            family_key = raw_family.lower()
+            family_label = raw_family.capitalize()
+
+            if family_key not in categories:
+                cat_item = QTreeWidgetItem([family_label])
+                tree.addTopLevelItem(cat_item)
+                categories[family_key] = cat_item
+
+            item = QTreeWidgetItem([tms["display_name"]])
+            item.setData(0, Qt.UserRole, (key, family_key))
+
+            categories[family_key].addChild(item)
+
+        layout.addWidget(tree)
+        self.insertTab(TTAB_INDEX, tab, "TMS")
+        tree.itemDoubleClicked.connect(self.on_tms_clicked)
+
+        return tab
   
     @staticmethod
     def is_available(layer, folder):
@@ -253,6 +288,29 @@ class AddDataTabWidget(QTabWidget, FORM_CLASS):
 
         except Exception as e:
             messageBar(self.iface, f"Erreur WMTS: {e}", "c")
+    
+    def on_tms_clicked(self, item, column):
+
+        data = item.data(0, Qt.UserRole)
+        if not data:
+            return
+
+        # Safe group name
+        key, family_key = data[0], data[1]
+        messageLog(f"TMS data: {data}")
+        messageLog(f"TMS key: {key}, family_key: {family_key}")
+
+        root = self.project.layerTreeRoot()
+        group_name = family_key.upper()
+
+        group = root.findGroup(group_name)
+        if not group:
+            group = root.addGroup(group_name)
+
+        try:
+            tms_read(key=key, group=group)
+        except Exception as e:
+            messageBar(self.iface, f"Erreur: {e}", "c")
     # endregion
 
     # region UPDATE FROM SIGNAL

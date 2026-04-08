@@ -43,7 +43,6 @@ class LayoutDesignerWidget(QWidget, FORM_CLASS):
         for key, alias in self.cfg.get_projects():
             self.combo_project.addItem(alias, key)
 
-        self.combo_project.currentIndexChanged.connect(self._on_project_changed)
         self.combo_project.setCurrentIndex(0)
 
         self.cb_composeur.toggled.connect(self.dsb_occup.setEnabled)
@@ -77,18 +76,6 @@ class LayoutDesignerWidget(QWidget, FORM_CLASS):
 
         except Exception as e:
             messageBar(self.iface, str(e), "critical", 10)
-
-    def _on_project_changed(self):
-        project_key = self.combo_project.currentData()
-        if not project_key:
-            return
-
-        try:
-            canvas = self.cfg.get_canvas(project_key)
-            if canvas.scale:
-                self.sb_scale.setValue(canvas.scale)
-        except Exception as e:
-            messageBar(self.iface, f"Erreur update_scale : {e}", "w", 10)
 
     def _on_type_changed(self, button):
         try:

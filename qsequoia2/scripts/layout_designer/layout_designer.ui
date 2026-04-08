@@ -33,6 +33,13 @@
      <layout class="QVBoxLayout">
       <item>
        <layout class="QFormLayout" name="formLayout">
+        <item row="0" column="0">
+         <widget class="QLabel" name="lbl_composeur">
+          <property name="text">
+           <string>Ouvrir le composeur</string>
+          </property>
+         </widget>
+        </item>
         <item row="0" column="1">
          <widget class="QCheckBox" name="cb_composeur">
           <property name="text">
@@ -40,13 +47,6 @@
           </property>
           <property name="checked">
            <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="0">
-         <widget class="QLabel" name="lbl_composeur">
-          <property name="text">
-           <string>Ouvrir le composeur</string>
           </property>
          </widget>
         </item>
@@ -67,26 +67,6 @@
           </property>
           <property name="value">
            <double>90.000000000000000</double>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="0">
-         <widget class="QLabel" name="lbl_scale">
-          <property name="text">
-           <string>Échelle :</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="1">
-         <widget class="QSpinBox" name="sb_scale">
-          <property name="maximum">
-           <number>1000000</number>
-          </property>
-          <property name="singleStep">
-           <number>500</number>
-          </property>
-          <property name="value">
-           <number>10000</number>
           </property>
          </widget>
         </item>

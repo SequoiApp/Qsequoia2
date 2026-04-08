@@ -1,5 +1,5 @@
 assemblage:
-  alias : "Plan d'assemblage cadastral"
+  alias : "Assemblage cadastral"
   canvas:
     zoom_on: v.seq.parca.poly
     readonly: [v.seq.parca.poly]
@@ -21,7 +21,8 @@ assemblage:
         # Order is important here, we want parca to be at the back so vectoriel layers are visible on top of it
         - v.seq.owner.line
         - v.seq.parca.poly
-      wmts: &assemblage_w_wmts
+      wmts: &assemblage_wmts
+        - wmts_scan25
         - wmts_scan25_grey
         - wmts_scan100
         - wmts_pci
@@ -33,54 +34,56 @@ assemblage:
       - id: legend1
         layers: *assemblage_seq
 
-# situation:
-#   alias : "Cartographie de situation"
-#   canvas:
-#     scale: 25000
-#     zoom_on: 'SEQ_PARCA_poly'
-#     readonly: ['SEQ_PARCA_poly']
-#     groups: 
-#       - name: VECTEUR
-#         type: vector
-#         layers: &situation_w_vect
-#           - COMS_TOPO_line
-#           - CURVES_line
-#           - PRSF_point
-#           - INFRA_poly
-#           - ROAD_TOPO_poly
-#           - ROAD_TOPO_line
-#           - TOPONYME_point
-#           - HYDRO_poly
-#           - HYDRO_line
-#           - VEGE_poly
+situation:
+  alias: "Carte de situation"
 
-#       - name: SEQUOIA
-#         type: vector
-#         layers: &situation_w_seq
-#           - SEQ_PF_point
-#           - SEQ_PF_line
-#           - SEQ_PF_poly
-#           - SEQ_PROP_point
+  canvas:
+    zoom_on: "v.seq.forest.poly"
+    layers:
+      sequoia: &situation_seq
+        - v.seq.forest.point
+        - v.seq.forest.poly
+        - v.com.topo.line
+        - v.curves.line
+        - v.secu.prsf.point
+        - v.infra.point
+        - v.infra.line
+        - v.infra.poly
+        - v.road.line
+        - v.roadway.line
+        - v.roadway.poly
+        - v.toponyme.point
+        - v.hydro.point
+        - v.hydro.line
+        - v.hydro.poly
+        - v.vege.point
+        - v.vege.line
+        - v.vege.poly
+      tms: &situation_tms
+        - tms.plan_ign.standard
+        - tms.plan_ign.classique
+      wmts: &situation_wmts
+        - wmts_scan25
+        - wmts_scan25_grey
+        - wmts_scan100
 
-#       - name: WMTS
-#         type: wmts
-#         layers: &situation_w_wmts
-#           - 'wmts_scan25'
-#           - 'wmts_scan1000'
-#     # themes:
-#     #   - name: situation1/25000
-#     #     show: [*situation_w_vect, *situation_w_seq]
-#     #   - name: situation1/25000+WMTS
-#     #     show: [*situation_w_seq, *situation_w_wmts]
-#     #   - name: situation1/100000
-#     #     show: ['SEQ_PROP_point', 'wmts_scan1000']
-#   layout:
-#     theme: 'situation1/25000'
-#     legends:
-#       - name: legend1
-#         layers: [*situation_w_seq,'wmts_scan1000']
-#       - name: legend2
-#         layers: *situation_w_vect
+  layout:
+    scale: 25000
+    maps:
+      - id: map1
+        follow_canvas: true
+        scale: 25000
+        layers: *situation_seq
+      - id: map2
+        follow_canvas: false
+        scale: 800000
+        layers:
+          - v.seq.forest.point
+          - tms.plan_ign.classique
+    legends:
+      - id: legend1
+        map: map1
+        layers: *situation_seq
 
 # peuplements:
 #   alias : "Cartographie des peuplements forestiers"
@@ -216,7 +219,7 @@ assemblage:
 
 #       - name : VECTOR
 #         type : vector
-#         layers : &geol_w_vect ['CURVES_line','SOL_BDCHARM50_poly','SOL_CARHAB_poly']
+#         layers : &geol_w_vect ['v.curves.line','SOL_BDCHARM50_poly','SOL_CARHAB_poly']
 #       - name : WMTS
 #         type : wmts
 #         layers : &geol_w_wmts ['wmts_scan25_grey']

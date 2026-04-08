@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from PyQt5.QtCore import Qt
@@ -11,6 +9,7 @@ from qsequoia2.scripts.utils.variable import get_global_variable, get_project_va
 from ..utils.messageBar import messageBar, messageLog
 from ..utils.seq_config import seq_layer, seq_read
 from ..utils.wmts import wmts_layer, wmts_read
+from ..utils.tms import tms_layer, tms_read
 
 @dataclass
 class BuildContext:
@@ -39,6 +38,7 @@ class ProjectBuilder:
             layers = {}
             layers |= self._load_seq_layers(self.canvas.layers.sequoia, main_group)
             layers |= self._load_wmts_layers(self.canvas.layers.wmts, main_group)
+            layers |= self._load_tms_layers(self.canvas.layers.tms, main_group)
         finally:
             QApplication.restoreOverrideCursor()
 
@@ -103,6 +103,26 @@ class ProjectBuilder:
                 group = self._get_group(family, parent=main_group)
 
                 layer = wmts_read(key=key, group=group)
+
+                if layer:
+                    loaded[key] = layer
+
+            except Exception as e:
+                messageLog(f"[WMTS] {key} failed: {e}")
+
+        return loaded
+    
+    def _load_tms_layers(self, keys, main_group) -> dict[str, QgsMapLayer]:
+        loaded = {}
+
+        for key in keys:
+            try:
+                meta = tms_layer(key)
+                messageLog(f"[TMS] {meta}")
+                family = (meta.get("family") or "autres").upper()
+                group = self._get_group(family, parent=main_group)
+
+                layer = tms_read(key=key, group=group)
 
                 if layer:
                     loaded[key] = layer

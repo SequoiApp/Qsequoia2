@@ -75,23 +75,13 @@ def getFinaldata(synthese):
 # Calcul des surfaces par parcelles ou sous parcelles séléctionné
 
 def sspf_surface_calculation(ua_layer) -> str:
-    
-    if "SURF_SIG" not in [f.name() for f in ua_layer.fields()]:
-        return
 
-    ua_layer = ua_layer.source()
-
-    stat = processing.run("native:basicstatisticsforfields", 
-                    {'INPUT_LAYER':QgsProcessingFeatureSourceDefinition(ua_layer, 
-                        selectedFeaturesOnly=True, 
-                        featureLimit=-1, 
-                        geometryCheck=QgsFeatureRequest.GeometryAbortOnInvalid),
-                        'FIELD_NAME':'SURF_SIG',
-                        'OUTPUT':'TEMPORARY_OUTPUT',
-                        'OUTPUT_HTML_FILE':'TEMPORARY_OUTPUT'})
-
-    surf = str(round((stat["SUM"]),4))+ " ha"
-    return surf
+    feats = list(ua_layer.getSelectedFeatures())
+    if not feats: return "0 ha"
+    tmp = QgsVectorLayer("Polygon?crs=" + ua_layer.crs().authid(), "tmp", "memory")
+    tmp.dataProvider().addFeatures(feats)
+    surf = sum(f.geometry().area() for f in tmp.getFeatures()) / 10000
+    return f"{round(surf,4)} ha"
 
     
 

@@ -75,6 +75,10 @@ class Qsequoia2:
 
         self.actions.append(action)
 
+        # close the current project if it is a Qsequoia2 project to avoid conflicts with the new one that will be loaded
+
+        close_qgis_project()
+
         # Fetch Rsequoia2 config
         sync_seq_configs()
         

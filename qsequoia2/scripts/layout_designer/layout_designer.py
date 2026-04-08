@@ -59,13 +59,13 @@ class LayoutDesignerWidget(QWidget, FORM_CLASS):
             seq_id = get_project_variable("QS2_seq_id") or None
             canvas_cfg = self.cfg.get_canvas(project_key)
 
-            ctx = ProjectBuilder(iface=self.iface, project=self.project, seq_id=seq_id, canvas=canvas_cfg).build()
+            ctx = ProjectBuilder(iface=self.iface, project=self.project, seq_id=seq_id, canvas_cfg=canvas_cfg).build()
 
             if self.cb_composeur.isChecked():
                 layout_cfg = self.cfg.get_layout(project_key)
                 coeff_cadre = self.dsb_occup.value() / 100
                 layout = LayoutBuilder(
-                    iface=self.iface, project=self.project, seq_id = seq_id, layout_cfg = layout_cfg, layers = ctx.layers, coeff_cadre = coeff_cadre
+                    project=self.project, seq_id = seq_id, layout_cfg = layout_cfg, layers = ctx.layers, coeff_cadre = coeff_cadre
                 ).build()
 
                 if not layout:

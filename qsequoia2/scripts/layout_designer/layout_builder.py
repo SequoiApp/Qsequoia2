@@ -12,6 +12,8 @@ from qgis.core import (
     QgsWkbTypes,
 )
 
+from qgis.PyQt.QtCore import QTimer
+
 from ..utils.messageBar import messageBar, messageLog
 from ..utils.variable import get_global_variable, get_project_variable
 from ..utils.seq_config import seq_field, seq_read
@@ -29,8 +31,7 @@ class LayoutBuilder:
         ("A0", (841, 1189)),
     )
 
-    def __init__(self, iface, project, seq_id, layout_cfg, layers, coeff_cadre: float = 0.90):
-        self.iface = iface
+    def __init__(self, project, seq_id, layout_cfg, layers, coeff_cadre: float = 0.90):
         self.project = project
         self.seq_id = seq_id
         self.layout = layout_cfg
@@ -44,11 +45,12 @@ class LayoutBuilder:
         if not parca:
             raise RuntimeError("[LAYOUT] Couche 'parca' absente du contexte")
 
-        fmt, orient = self._compute_layout_info(parca)
+        fmt, orient, bbox = self._compute_layout_info(parca)
         layout = self._create_layout(fmt, orient)
 
         self._set_visibility()
-        self._configure_maps(layout)
+        # Needed to waste some time to avoid layout bug
+        QTimer.singleShot(0, lambda: self._configure_maps(layout, bbox))
         self._configure_legends(layout)
         self._add_parcels_table(layout)
 
@@ -76,7 +78,7 @@ class LayoutBuilder:
         fmt = self._pick_format(bbox)
         orient = self._pick_orient(bbox)
 
-        return fmt, orient
+        return fmt, orient, bbox
 
     def _get_main_massif(self, layer: QgsVectorLayer):
         buffered = buffer(layer, distance=100, dissolve=True)
@@ -199,29 +201,25 @@ class LayoutBuilder:
 
         return map_layers
 
-    def _configure_maps(self, layout):
-        canvas = self.iface.mapCanvas()
+    def _configure_maps(self, layout, bbox):
 
         for map_spec in self.layout.maps:
             map_item = self._get_map_item(layout, map_spec.id)
             messageLog(f"[LAYOUT] configuring: {map_spec.id} with layers: {map_spec.layers} (main_map={map_spec.main_map})")
 
+            map_item.setFollowVisibilityPreset(False)
+            map_item.zoomToExtent(bbox)    
+
             if map_spec.main_map:
                 map_item.setKeepLayerSet(False)
-                map_item.setFollowVisibilityPreset(False)
-                map_item.zoomToExtent(canvas.extent())
-
             else:
-                map_layers = self._resolve_map_layers(map_spec)
-
                 map_item.setKeepLayerSet(True)
-                map_item.setFollowVisibilityPreset(False)
+                map_layers = self._resolve_map_layers(map_spec)
                 map_item.setLayers(map_layers)
 
-                map_item.zoomToExtent(canvas.extent())
-
             # scale (common logic)
-            scale = map_spec.scale or self.layout.main_scale
+            scale = map_spec.scale
+            messageLog(f"[SCALE] scale:{scale} - map_item:{map_item}")
             if scale:
                 map_item.setScale(scale)
 

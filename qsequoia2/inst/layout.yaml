@@ -199,6 +199,7 @@ enjeux_env:
 
 enjeux_pat:
   alias : "Enjeux patrimoniaux"
+
   canvas:
     zoom_on: "v.seq.forest.line"
     layers:
@@ -231,39 +232,35 @@ enjeux_pat:
       - id: map1
         main_map: true
         scale: 15000
-        layers: [*enjeux_env_seq, tms.plan_ign.epure]
+        layers: [*enjeux_pat_seq, tms.plan_ign.epure]
     legends:
       - id: legend1
         map: map1
-        layers: *enjeux_env_seq
+        layers: *enjeux_pat_seq
 
+geologie:
+  alias : "Géologie"
+  canvas:
+    zoom_on: "v.seq.forest.line"
+    layers:
+      sequoia: &geologie_seq
+        - v.sol.bdcharm50.poly
+        - v.sol.carhab.poly
+        # SEQUOIA
+        - v.seq.forest.line
+        - v.seq.pf.line
+        - v.seq.sspf.poly
+        - v.seq.sspf.point
+      wmts: &geologie_wmts
+        - wmts_geol
 
-# geologie:
-#   alias : "Cartographie géologique et stationnelle"
-#   canvas:
-#     scale: 15000
-#     zoom_on: SEQ_PARCA_poly
-#     readonly: [SEQ_PARCA_poly]
-
-#     groups:
-#       - name : SEQUOIA
-#         type : vector
-#         layers : &geol_w_seq ['SEQ_OWNER_line', 'SEQ_PF_line']
-
-#       - name : VECTOR
-#         type : vector
-#         layers : &geol_w_vect ['v.curves.line','SOL_BDCHARM50_poly','SOL_CARHAB_poly']
-#       - name : WMTS
-#         type : wmts
-#         layers : &geol_w_wmts ['wmts_scan25_grey']
-#     themes:
-#       - name: geologie
-#         show: [*geol_w_seq, *geol_w_vect, *geol_w_wmts]
-
-#   layout:
-#     theme: 'geologie'
-#     legends:
-#       - name: legend1
-#         layers: ['SEQ_PARCA_poly']
-#       - name: legend2
-#         layers: ['SOL_BDCHARM50_poly', 'SOL_CARHAB_poly']
+  layout:
+    maps:
+      - id: map1
+        main_map: true
+        scale: 15000
+        layers: [*geologie_seq, wmts_geol]
+    legends:
+      - id: legend1
+        map: map1
+        layers: *geologie_seq

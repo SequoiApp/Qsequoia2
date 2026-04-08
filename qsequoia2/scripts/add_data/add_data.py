@@ -11,7 +11,7 @@ from qgis.core import QgsRasterLayer, QgsProject
 
 from ..utils.seq_config import seq_layer, get_seq_config, seq_read
 from ..utils.variable import get_global_variable, get_project_variable
-from ..utils.messageBar import messageBar, messageLog
+from ..utils.Qmessage import *
 
 UI_PATH = Path(__file__).parent / "add_data.ui"
 FORM_CLASS, _ = uic.loadUiType(str(UI_PATH))

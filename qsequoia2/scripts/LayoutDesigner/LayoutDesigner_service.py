@@ -20,7 +20,7 @@ from ..utils.config import get_path
 from .processing import buffer, multipart_to_singleparts
 from ..utils.layers import resolve_layer
 from .ConfigLoader import ConfigLoader
-from ..utils.messageBar import messageBar
+from ..utils.Qmessage import messageBar
 
 # endregion
 # ============================================================

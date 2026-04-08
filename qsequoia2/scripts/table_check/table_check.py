@@ -15,7 +15,7 @@ from PyQt5.QtWidgets import QTableWidgetItem, QHeaderView
 from PyQt5.QtCore import Qt
 
 # Qsequoia2 
-from ..utils.messageBar import *
+from ..utils.Qmessage import *
 from .data_table import *
 from ..utils.variable import *
 from ..utils.seq_config import *

@@ -17,7 +17,7 @@ from ..utils.add_wmts_layers import load_wmts
 
 from ..utils.layers import *
 from ..utils.config import *
-from ..utils.messageBar import *
+from ..utils.Qmessage import *
 from .ConfigLoader import ConfigLoader
 
 # endregion

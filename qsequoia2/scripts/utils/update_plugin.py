@@ -1,5 +1,5 @@
 from .variable import *
-from .messageBar import * 
+from .Qmessage import * 
 
 def update_plugin(iface,parent):
     """force plugin to reload the data in seq_dir and qgis project"""

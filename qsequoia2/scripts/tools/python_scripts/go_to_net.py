@@ -3,7 +3,7 @@
 
 import webbrowser, os, yaml
 from qgis.gui import QgsMessageBar
-from ...utils.messageBar import *
+from ...utils.Qmessage import *
 
 def go_to_net(action, iface, dockwidget=None):
     """

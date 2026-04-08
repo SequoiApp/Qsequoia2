@@ -12,7 +12,7 @@ from qsequoia2.scripts.forest_data.forest_data import ForestDataTabs
 from qsequoia2.scripts.tools.tools import ToolsDialog
 from qsequoia2.scripts.utils.variable import get_global_variable
 from qsequoia2.scripts.utils.seq_config import *
-from qsequoia2.scripts.utils.messageBar import *
+from qsequoia2.scripts.utils.Qmessage import *
 
 PLUGIN_DIR = Path(__file__).resolve().parent
 ICONS_DIR = PLUGIN_DIR / "icons"

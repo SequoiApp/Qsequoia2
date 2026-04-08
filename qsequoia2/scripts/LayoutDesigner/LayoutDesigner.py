@@ -27,7 +27,7 @@ from .LayoutDesigner_service import LayoutService
 from ..utils.layers import configure_snapping 
 from .ProjectBuilder import ProjectBuilder
 from ..utils.variable import set_project_variable
-from ..utils.messageBar import messageBar
+from ..utils.Qmessage import messageBar
 from .ConfigLoader import ConfigLoader
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(

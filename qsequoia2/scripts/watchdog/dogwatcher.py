@@ -24,7 +24,7 @@ from watchdog.observers import Observer
 
 from .watchdog_handler import DownloadEventHandler
 from .extract_files import show_add_banner
-from ..utils.messageBar import *
+from ..utils.Qmessage import *
 
 class DogWatcher(QObject):
     """

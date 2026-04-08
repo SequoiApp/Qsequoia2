@@ -20,7 +20,7 @@ from qgis.core import QgsRasterLayer
 # Qsequoia2
 
 from .config import get_style
-from .messageBar import *
+from .Qmessage import *
 
 # ==================================================================================
 # load_rasters

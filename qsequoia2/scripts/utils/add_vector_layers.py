@@ -19,7 +19,7 @@ from qgis.core import (QgsProject,QgsVectorLayer,QgsMessageLog,Qgis)
 
 # QSEQUOIA2
 from .config import get_style
-from .messageBar import *
+from .Qmessage import *
 
 # ==================================================================================
 # load_vectors

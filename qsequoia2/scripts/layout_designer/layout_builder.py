@@ -13,6 +13,7 @@ from qgis.core import (
 )
 
 from qgis.PyQt.QtCore import QTimer
+from qgis.PyQt.QtWidgets import QMessageBox
 
 from ..utils.messageBar import messageBar, messageLog
 from ..utils.variable import get_global_variable, get_project_variable
@@ -31,7 +32,8 @@ class LayoutBuilder:
         ("A0", (841, 1189)),
     )
 
-    def __init__(self, project, seq_id, layout_cfg, layers, coeff_cadre: float = 0.90):
+    def __init__(self, iface, project, seq_id, layout_cfg, layers, coeff_cadre: float = 0.90):
+        self.iface = iface
         self.project = project
         self.seq_id = seq_id
         self.layout = layout_cfg
@@ -137,7 +139,19 @@ class LayoutBuilder:
 
         existing = lm.layoutByName(layout_name)
         if existing:
-            return existing
+            reply = QMessageBox.question(
+                self.iface.mainWindow(),
+                "Layout existant",
+                f"Le layout '{layout_name}' existe déjà.\nVoulez-vous l'écraser ?",
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.No,
+            )
+
+            if reply == QMessageBox.No:
+                return existing
+
+            # overwrite
+            lm.removeLayout(existing)
 
         layout = QgsPrintLayout(self.project)
         layout.initializeDefaults()

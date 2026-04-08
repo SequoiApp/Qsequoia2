@@ -65,7 +65,7 @@ class LayoutDesignerWidget(QWidget, FORM_CLASS):
                 layout_cfg = self.cfg.get_layout(project_key)
                 coeff_cadre = self.dsb_occup.value() / 100
                 layout = LayoutBuilder(
-                    project=self.project, seq_id = seq_id, layout_cfg = layout_cfg, layers = ctx.layers, coeff_cadre = coeff_cadre
+                    iface = self.iface, project=self.project, seq_id = seq_id, layout_cfg = layout_cfg, layers = ctx.layers, coeff_cadre = coeff_cadre
                 ).build()
 
                 if not layout:

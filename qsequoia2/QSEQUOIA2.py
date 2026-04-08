@@ -8,6 +8,7 @@ from qgis.PyQt.QtWidgets import QAction, QApplication
 from qgis.core import *
 
 from qsequoia2.scripts.global_settings.global_settings import GlobalSettingsDialog
+from qsequoia2.scripts.utils.disabled_v_external_grass import disabled_v_external_grass
 from qsequoia2.scripts.watchdog.dogwatcher import DogWatcher
 from qsequoia2.scripts.utils.get_download_folder import get_download_folder
 from qsequoia2.scripts.utils.seq_config import sync_seq_configs
@@ -75,6 +76,8 @@ class Qsequoia2:
 
         # Fetch Rsequoia2 config
         sync_seq_configs()
+        
+        disabled_v_external_grass()
 
         # Lazy init watchdog
         if self.dogwatcher is None:
@@ -83,6 +86,7 @@ class Qsequoia2:
                 get_context_callback=self.get_watchdog_context,
                 parent=None
             )
+
 
     def run(self):
 

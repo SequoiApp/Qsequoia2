@@ -7,7 +7,7 @@ from qgis.core import QgsProject, QgsApplication
 
 # Utils
 from ..utils.variable import get_global_variable, set_global_variable
-from ..utils.messageBar import messageLog
+from ..utils.Qmessage import messageLog
 from ..add_on.addon_creator import addonCreator
 from .go_to_maps import open_maps
 
@@ -66,7 +66,9 @@ class GlobalSettingsDialog(QDialog, FORM_CLASS):
 
         self.open_maps.clicked.connect(lambda: open_maps(self.adress.text()))
 
-        self.open_project.setChecked(bool(get_global_variable("QS2_default_project")))
+        open_qgz_projet = bool(get_global_variable("QS2_default_project"))
+        self.cb_open_project.setChecked(open_qgz_projet)
+
 
         suggest_enabled = bool(get_global_variable("QS2_project_suggestions_enabled"))
         self.cb_suggest_enabled.setChecked(suggest_enabled)
@@ -88,7 +90,7 @@ class GlobalSettingsDialog(QDialog, FORM_CLASS):
         set_global_variable("QS2_user_full_name", self.userInput.text())
         set_global_variable("QS2_adress_organisation", self.adress.text())
         set_global_variable("QS2_organisation", self.orga.text())
-        set_global_variable("QS2_default_project", self.open_project.isChecked())
+        set_global_variable("QS2_default_project", self.cb_open_project.isChecked())
         set_global_variable("QS2_addon_folder", self.addon_folder.text())
 
         suggest_enabled = bool(self.cb_suggest_enabled.isChecked())

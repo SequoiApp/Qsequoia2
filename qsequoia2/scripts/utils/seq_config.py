@@ -4,13 +4,8 @@ import yaml
 import os
 from .messageBar import messageBar, messageLog
 
-from qgis.core import (
-    QgsApplication,
-    QgsVectorLayer,
-    QgsRasterLayer,
-    QgsProject
-)
-
+from .plugin_vars import *
+from qgis.core import *
 
 _BASE_URL = "https://raw.githubusercontent.com/SequoiApp/Rsequoia2/main/inst/config"
 
@@ -19,7 +14,7 @@ _SEQ_CONFIG_URLS = {
     for key in ["seq_fields", "seq_layers", "seq_path", "seq_tables"]
 }
 
-_CACHE_DIR = Path(QgsApplication.qgisSettingsDirPath()) / "qsequoia2"
+CACHE_DIR = Path(QgsApplication.qgisSettingsDirPath()) / "qsequoia2"
 
 _CONFIG_CACHE = {}
 
@@ -33,10 +28,10 @@ def sync_seq_configs(timeout: int = 3) -> None:
     - Safe to call at plugin startup
     """
 
-    _CACHE_DIR.mkdir(exist_ok=True)
+    CACHE_DIR.mkdir(exist_ok=True)
 
     for key, url in _SEQ_CONFIG_URLS.items():
-        path = _CACHE_DIR / f"{key}.yaml"
+        path = CACHE_DIR / f"{key}.yaml"
 
         try:
             response = urllib.request.urlopen(url, timeout=timeout)
@@ -57,7 +52,7 @@ def get_seq_config_path(name: str) -> Path:
         RuntimeError if config is missing (first run offline)
     """
 
-    path = _CACHE_DIR / f"{name}.yaml"
+    path = CACHE_DIR / f"{name}.yaml"
 
     if path.exists():
         return path
@@ -200,18 +195,18 @@ def get_style(layer_key, style_folder):
 
     return None
 
-def seq_read(key, project_folder, add_to_project=False, group=None, style_folder=None):
+def seq_read(key, seq_dir, add_to_project=False, group=None, style_folder=None):
 
     meta = seq_layer(key)
     layer_type = meta["type"]
     layer_name = meta["name"]
     filename = meta["filename"]
 
-    project_folder = Path(project_folder)
+    seq_dir = Path(seq_dir)
 
-    matches = list(project_folder.rglob(f"*{filename}"))
+    matches = list(seq_dir.rglob(f"*{filename}"))
     if not matches:
-        raise FileNotFoundError(f"Layer '{filename}' not found in '{project_folder}'")
+        raise FileNotFoundError(f"Layer '{filename}' not found in '{seq_dir}'")
 
     if len(matches) > 1:
         paths_str = "\n".join(str(p) for p in matches)
@@ -233,7 +228,9 @@ def seq_read(key, project_folder, add_to_project=False, group=None, style_folder
     if layer_type == "vect":
         layer = QgsVectorLayer(path_str, layer_name, "ogr")
     elif layer_type == "rast":
-        layer = QgsRasterLayer(path_str, layer_name)
+        layer = QgsRasterLayer(str(path), layer_name)
+    elif layer_type == "xlsx":
+        layer = QgsVectorLayer(str(path), layer_name, "ogr")
     else:
         raise ValueError(f"Unsupported layer type: {layer_type}")
 

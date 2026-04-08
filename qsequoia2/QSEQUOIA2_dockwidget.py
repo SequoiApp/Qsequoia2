@@ -6,13 +6,13 @@ from qgis.PyQt.QtCore import pyqtSignal, Qt
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QCompleter, QFileDialog, QApplication
 
-from qsequoia2.scripts.forest_data.forest_data import ForestDataDialog
+from qsequoia2.scripts.forest_data.forest_data import ForestDataTabs
 from qsequoia2.scripts.add_data.add_data import AddDataTabWidget
 from qsequoia2.scripts.layout_designer.layout_designer import LayoutDesignerWidget
 from qsequoia2.scripts.tools.tools import ToolsDialog
 from qsequoia2.scripts.utils.variable import get_global_variable
 from qsequoia2.scripts.utils.seq_config import *
-from qsequoia2.scripts.utils.messageBar import *
+from qsequoia2.scripts.utils.Qmessage import *
 
 PLUGIN_DIR = Path(__file__).resolve().parent
 ICONS_DIR = PLUGIN_DIR / "icons"
@@ -180,7 +180,7 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.tabWidget.setTabToolTip(self.tabWidget.count() - 1, tooltip)
             return widget 
 
-        forest_tab = add_tab(ForestDataDialog(iface=self.iface, parent=self), "forest_data.svg", "Métadonnées")
+        forest_tab = add_tab(ForestDataTabs(iface=self.iface, parent=self), "forest_data.svg", "Métadonnées")
         add_data_tab = add_tab(AddDataTabWidget(iface=self.iface, parent=self), "add_data.svg", "Ajout de données")
         layout_tab = add_tab(LayoutDesignerWidget(iface=self.iface, parent=self), "layout.svg", "Conception de mise en page")
         tools_tab = add_tab(ToolsDialog(iface=self.iface, parent=self), "tools.svg",  "Outils")

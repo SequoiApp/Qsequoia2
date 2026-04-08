@@ -1,12 +1,13 @@
 from qgis.core import *
 from PyQt5.QtCore import QVariant
+from pathlib import Path
 import processing
 
 # ==============================================
 # region getFinaldata
 # ==============================================
 
-def getFinaldata(synthesePath):
+def getFinaldata(synthese):
     """joint les données finalisé par parcelle dans une seule et même table
         sous forme d'un layers vecteur temporaire
         args : 
@@ -27,13 +28,13 @@ def getFinaldata(synthesePath):
     # on prend le premier élément comme base 
     baselistelem = couche[0]
     numeric_types = [QVariant.Double, QVariant.Int, QVariant.LongLong]
-    baseLayer = QgsVectorLayer(synthesePath+ "|layername=" + baselistelem,"base","ogr")
+    baseLayer = QgsVectorLayer(synthese + "|layername=" + baselistelem,"base","ogr")
 
     while table < nbcouche :
         # récupération des nom de table en fonction du numéro dans la liste
         listelem = couche[table]
 
-        use = synthesePath + "|layername=" + listelem
+        use = synthese + "|layername=" + listelem
 
         layer_excel = QgsVectorLayer(use, "", "ogr")
 
@@ -65,8 +66,22 @@ def getFinaldata(synthesePath):
     return baseLayer
 
 
-#final = getFinaldata(synthesePath=r'E:/GEO_DEV_SIG/projet/LE_NIVOT_SEQ_SIG/SYNTHESE_20260315T185922.xlsx')
 
-#final.setName("AGREGATION")
+# endregion
+# ================================================
+# region vérificateur
+# ================================================
 
-#QgsProject.instance().addMapLayer(final)
+# Calcul des surfaces par parcelles ou sous parcelles séléctionné
+
+def sspf_surface_calculation(ua_layer) -> str:
+
+    feats = list(ua_layer.getSelectedFeatures())
+    if not feats: return "0 ha"
+    tmp = QgsVectorLayer("Polygon?crs=" + ua_layer.crs().authid(), "tmp", "memory")
+    tmp.dataProvider().addFeatures(feats)
+    surf = sum(f.geometry().area() for f in tmp.getFeatures()) / 10000
+    return f"{round(surf,4)} ha"
+
+    
+

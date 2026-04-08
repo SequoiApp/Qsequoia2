@@ -6,33 +6,31 @@
 # python 
 
 from pathlib import Path
-import os, json
+import json
 
 # Qgis
 from PyQt5 import uic
-from qgis.PyQt.QtWidgets import QDialog, QFileDialog, QMessageBox
+from qgis.PyQt.QtWidgets import QDialog
 from qgis.core import *
-from PyQt5.QtWidgets import QLabel, QTableWidget, QTableWidgetItem, QHeaderView
-from PyQt5.QtCore import QTimer, Qt
+from PyQt5.QtWidgets import QTableWidgetItem, QHeaderView
+from PyQt5.QtCore import Qt
 
 # Qsequoia2 
-
-from ..utils.messageBar import *
-from .forest_get_data import getForestdata
-from .get_final_data import getFinaldata
+from .update_forest_name import *
+from ..utils.Qmessage import *
+from .forest_get_data import *
+from ..table_check.data_table import *
 from ..utils.variable import *
-from ..utils.seq_config import *
-from ..utils.yaml_helper import *
 from ..utils.seq_config import *
 
 UI_PATH = Path(__file__).parent / 'forest_data.ui'
 FORM_CLASS, _ = uic.loadUiType(str(UI_PATH))
 
 # ==========================================================================
-# ForestDataDialog
+# region initalisation
 # ==========================================================================
 
-class ForestDataDialog(QDialog, FORM_CLASS):
+class ForestDataTabs(QDialog, FORM_CLASS):
     """Classe principale du module Forestdata de Qsequoia2"""
     def __init__(self, iface, parent=None):
         super().__init__(parent)
@@ -40,202 +38,160 @@ class ForestDataDialog(QDialog, FORM_CLASS):
         self.iface = iface
         self.parent = parent
         self.project = QgsProject.instance()
-
         self.setupUi(self)
 
-        # Chargement des variables
+        # checkboxes de type de forêt
+        self.forestType_checkbox = {
+            self.checkBox_domaine: "Domaine",
+            self.checkBox_massif: "Massif",
+            self.checkBox_foret: "Forêt",
+            self.checkBox_bois: "Bois"
+        }
 
-        self.seq_dir = get_project_variable("QS2_seq_dir")
-        self.seq_id= get_project_variable("QS2_seq_id")
-        self.current_style_folder = get_global_variable("QS2_styles_directory")
-        
-        
-
-        # Chargement des paramètres 
-        self.script_dir = os.path.dirname(__file__)
-        json_path = os.path.join(self.script_dir, "forest_data.json")
-
-        with open(json_path, "r", encoding="utf-8") as f:
-            self.setting = json.load(f)
+        for cb in self.forestType_checkbox:
+            cb.setVisible(False)
+            cb.toggled.connect(self.on_checkbox_toggled)
 
 
-        # appel de la fonction de refresh
-        self.actu.clicked.connect(self.actu_data)
+    # endregion
+    # ================================================
+    # region Metadonnées
+    # ================================================
 
-        # réaction au changement du numéro de parcelle dans le tableau
-        self.cb_parcelle.currentTextChanged.connect(self.on_cb_parcelle_changed)
 
+    def actu_metadata(self, seq_dir, seq_dirname=None, seq_identifier= None):
+        """relance les fonctions de chargement des data pour actualiser l'affichage"""  
 
-    def get_base_metadata(self):
-        # appel du calcul des metadonnées
-        try:
-            forest_data = getForestdata(
-                seq_id=self.seq_id,
-                seq_dir=self.seq_dir,
-                iface=self.iface)
-            
-            forest_data.run_all_calculations()
-        except Exception as e:
-            messageLog(f"Erreur lors du calcul des metadata : {e}","w")
+        # métadata build
 
-    def actu_data(self):
-        """relance les fonctions de chargement des data pour actualiser l'affichage"""
-        if not self.seq_dir :
-            messageBar(self.iface,"Pas de dossier de projet !","w",10)
-            return
-        self.get_base_metadata()
+        seq_dir = Path(seq_dir)
+        self.parca_layer = seq_read("parca", seq_dir)
+        self.ua_layer = seq_read("ua", seq_dir)
+
+        for cb in self.forestType_checkbox:
+            cb.setVisible(True)
+
+        # création des métadata 
+        seq_metadata = self.run_calculation(seq_dir)
+        self.export_to_project_variables(seq_metadata, seq_dir)
 
         # lecture des metadata
-        self.metadata = yaml_loader("Qseq_forestMetadata","metadata")
-        print(self.metadata)
-
+        self.get_base_metadata()
         self.display_base_metadata()
-        try:
-            self.setFinaldata()
-        
+
+
+    def run_calculation(self, seq_dir):
+        try : 
+            seq_metadata = getForestdata(self.iface, seq_dir)
+
+            return seq_metadata.build(self.ua_layer, self.parca_layer)
+
         except Exception as e :
-            messageBar(self.parent,e,"w",10)
+            messageBar(self.iface, f"Erreur lors de la construction des metadata : {e}","w",10)
+            return {"vide"}
+        
+        
+    def export_to_project_variables(self, seq_metadata, seq_dir):
+        """ajoute les données dans les varaibles projets"""
+
+        for key, value in seq_metadata.items():
+            if isinstance(value, (list, dict)):
+                value = json.dumps(value)
+            set_project_variable(f"QS2_{key}", value)
+
+        messageLog(f"-- metadata build pour {seq_dir} --!","i")
+
+
+    # ================================================
+    # Metadata Lecture et affichage
+    # ================================================
+
+    def get_base_metadata(self):
+        """Récupère les metadata"""
+
+        def load_var(key):
+            val = get_project_variable(f"QS2_{key}")
+            try:
+                return json.loads(val)
+            except (TypeError, json.JSONDecodeError):
+                return val
+
+        self.city_list = load_var("city_list")
+        self.city_str = load_var("city_str")
+        self.owner_list = load_var("owner_list")
+        self.owner_str = load_var("owner_str")
+        self.dep_list = load_var("departement_list")
+        self.dep_str = load_var("departement_str")
+        self.wooded_surface = load_var("wooded_surface")
+        self.no_wooded_surface = load_var("no_wooded_surface")
+        self.total_surface = load_var("total_surface")
+        self.surface_formatted = load_var("surface_formatted")
+        self.forest_name = load_var("forest_name")
+        self.seq_identifier = load_var("seq_identifier")
 
 
     def display_base_metadata(self):
+        """Affiche les metadata"""
 
-        template_path = Path(__file__).parent / "html" / "metadata_display.html"
+        self.forest_name_edit.setText(str(self.seq_identifier))
+        self.departement_edit.setText(str(self.dep_str))
+        self.city_edit.setText(str(self.city_str))
+        self.surface_edit.setText(str(self.surface_formatted))
+        self.surface_boisee_edit.setText(str(self.wooded_surface))
+        self.surface_non_boisee_edit.setText(str(self.no_wooded_surface))
+        self.owner_edit.setText(str(self.owner_str))        
 
-        with open(template_path, "r", encoding="utf-8") as f:
-            template = f.read()
+        if self.forest_name :
+            self.forest_name_edit.setText(str(self.forest_name))
+            prefix = self.forest_name.split(" ")[0]
+            for cb, label in self.forestType_checkbox.items():
+                cb.setChecked(label == prefix)
 
-        if "forest_name" in self.metadata:
-            forest_name = self.metadata.get("forest_name", self.project_name)
-        else : 
-            forest_name = self.project_name
+    # endregion
+    # ================================================
+    # region Forest type and name
+    # ================================================
 
-        departement_str = self.metadata.get("departement_str", "")
-        city_str = self.metadata.get("city_str", "")
-        surface_formatted = self.metadata.get("surface_formatted","")
-        surface_boisee_ha = self.metadata.get("surface_boisee_ha","")
-        surface_non_boisee_ha = self.metadata.get("surface_non_boisee_ha","")
-        owner_str = self.metadata.get("owner_str","")
+    def on_checkbox_toggled(self, checked):
+        """
+        Gère la sélection des checkboxes de type de propriété.
 
-        self.forest_name_edit.setText(str(forest_name))
-        self.departement_edit.setText(str(departement_str))
-        self.city_edit.setText(str(city_str))
-        self.surface_edit.setText(str(surface_formatted))
-        self.surface_boisee_edit.setText(str(surface_boisee_ha))
-        self.surface_non_boisee_edit.setText(str(surface_non_boisee_ha))
-        self.owner_edit.setText(str(owner_str))
+        - Si aucun projet n'est sélectionné, toutes les checkboxes sont invisibles.
+        - Les checkboxes sont rendues mutuellement exclusives.
+        - Met à jour le nom de la forêt en fonction de la sélection.
 
+        """
+        seq_dir = get_project_variable("QS2_seq_dir")
+        seq_identifier = get_project_variable("QS2_seq_identifier")
 
+        if not checked:
+            return
 
-    def setFinaldata(self):
-        synthesePath = self.findSynthese()
-
-        if not synthesePath:
+        if not seq_dir or not seq_identifier :
+            # Aucun projet => décocher toutes
+            for cb in self.nom_checkbox:
+                if cb.isChecked():
+                    cb.blockSignals(True)
+                    cb.setChecked(False)
+                    cb.blockSignals(False)
             return
         
-        synthesePath = str(synthesePath)
+        seq_dir = Path(seq_dir)
 
-        data = getFinaldata(synthesePath)
+        if checked:
+            # Une checkbox a été cochée, décocher toutes les autres
+            sender_cb = self.sender()
+            for cb in self.forestType_checkbox:
+                if cb != sender_cb and cb.isChecked():
+                    cb.blockSignals(True)
+                    cb.setChecked(False)
+                    cb.blockSignals(False)
 
-        # Stocker la couche mémoire pour les sélections
-        self.final_layer = data
+        prefix = next((label for cb, label in self.forestType_checkbox.items() if cb.isChecked()), "")
+        forest_name = update_forest_name(prefix, seq_identifier)
 
-        # Remplir la combo des parcelles
-        self.populate_cb_parcelle(data)
+        set_project_variable("QS2_forest_name", forest_name)
 
-        # --- Remplir le tableau ---
-        fields = data.fields()
-        features = list(data.getFeatures())
+        self.forest_name_edit.setText(str(forest_name))
 
-        self.forestTable.setColumnCount(len(fields))
-        self.forestTable.setHorizontalHeaderLabels([f.name() for f in fields])
-        self.forestTable.setRowCount(len(features))
-
-        for row, feat in enumerate(features):
-            for col, field in enumerate(fields):
-                value = feat[field.name()]
-                item = QTableWidgetItem(str(value))
-                item.setFlags(item.flags() ^ Qt.ItemIsEditable)
-                self.forestTable.setItem(row, col, item)
-
-        header = self.forestTable.horizontalHeader()
-        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(1, QHeaderView.Stretch)
-        header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
-
-        self.forestTable.setAlternatingRowColors(True)
-
-    
-    def populate_cb_parcelle(self, data):
-        # Récupérer les valeurs uniques
-        values = sorted({str(f["N_PARFOR"]) for f in data.getFeatures()})
-
-        self.cb_parcelle.clear()
-        self.cb_parcelle.addItem("Toutes")      # valeur par défaut
-        self.cb_parcelle.addItems(values)
-
-        self.cb_parcelle.setCurrentIndex(0)  
-
-
-    def on_cb_parcelle_changed(self, value):
-        layer = self.final_layer  # ta couche mémoire
-
-        layer.removeSelection()
-
-        # Si "Toutes" → aucune sélection → afficher tout
-        if value == "Toutes":
-            self.update_table_with_all(layer)
-            return
-
-        # Sinon → sélection attributaire
-        expr = f"\"N_PARFOR\" = '{value}'"
-        request = QgsFeatureRequest().setFilterExpression(expr)
-
-        ids = [f.id() for f in layer.getFeatures(request)]
-        layer.selectByIds(ids)
-
-        self.update_table_with_selection(layer, ids)
-
-    def update_table_with_all(self, layer):
-        feats = list(layer.getFeatures())
-        self.fill_table(layer, feats)
-
-    def update_table_with_selection(self, layer, ids):
-        feats = [f for f in layer.getFeatures() if f.id() in ids]
-        self.fill_table(layer, feats)
-    
-    def fill_table(self, layer, features):
-        fields = layer.fields()
-
-        self.forestTable.setColumnCount(len(fields))
-        self.forestTable.setHorizontalHeaderLabels([f.name() for f in fields])
-        self.forestTable.setRowCount(len(features))
-
-        for row, feat in enumerate(features):
-            for col, field in enumerate(fields):
-                val = feat[field.name()]
-                item = QTableWidgetItem(str(val))
-                item.setFlags(item.flags() ^ Qt.ItemIsEditable)
-                self.forestTable.setItem(row, col, item)
-
-
-    # fonction provisoire pour trouver la synthèse de finalisation
-
-    def findSynthese(self):
-        name = "SYNTHESE"
-
-        # Parcourir tous les fichiers du dossier
-        for file in Path(self.current_project_folder).iterdir():
-            if file.is_file() and name in file.name:
-                return file  # retourne un Path complet
-
-        return None  # si rien trouvé
-
-
-
-
-
-
-
-
-
-
+    # endregion

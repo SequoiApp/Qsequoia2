@@ -12,7 +12,7 @@ from qgis.core import QgsRasterLayer, QgsProject
 from ..utils.seq_config import seq_layer, get_seq_config, seq_read
 from ..utils.tms import get_tms_config, tms_read
 from ..utils.variable import get_global_variable, get_project_variable
-from ..utils.messageBar import messageBar, messageLog
+from ..utils.Qmessage import *
 
 UI_PATH = Path(__file__).parent / "add_data.ui"
 FORM_CLASS, _ = uic.loadUiType(str(UI_PATH))
@@ -242,7 +242,7 @@ class AddDataTabWidget(QTabWidget, FORM_CLASS):
         try:
             seq_read(
                 key=key,
-                project_folder=project_folder,
+                seq_dir=project_folder,
                 add_to_project=True,
                 group=group,
                 style_folder=style_folder

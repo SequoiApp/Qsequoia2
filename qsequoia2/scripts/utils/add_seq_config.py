@@ -3,6 +3,7 @@ import urllib.request
 import yaml
 
 from qgis.core import QgsApplication
+from .plugin_vars import *
 
 BASE_URL = "https://raw.githubusercontent.com/SequoiApp/Rsequoia2/main/inst/config"
 
@@ -10,8 +11,6 @@ SEQ_CONFIG_URLS = {
     key: f"{BASE_URL}/{key}.yaml"
     for key in ["seq_fields", "seq_layers", "seq_path", "seq_tables"]
 }
-
-CACHE_DIR = Path(QgsApplication.qgisSettingsDirPath()) / "qsequoia2"
 
 def sync_seq_configs(timeout: int = 3) -> None:
     """

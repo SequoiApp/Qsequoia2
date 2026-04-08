@@ -17,12 +17,10 @@ from qsequoia2.scripts.utils.reloader import reloadQS2
 from qsequoia2.scripts.utils.variable import *
 from qsequoia2.scripts.utils.qgz_project import *
 from qsequoia2.scripts.utils.configure_snapping import *
+from qsequoia2.scripts.utils.plugin_vars import *
 
 
 from .qsequoia2_dockwidget import Qsequoia2DockWidget
-
-PLUGIN_DIR = Path(__file__).resolve().parent
-ICONS_DIR = PLUGIN_DIR / "icons"
 
 watchdog_path = str(PLUGIN_DIR / "inst" / "lib")
 if watchdog_path not in sys.path:

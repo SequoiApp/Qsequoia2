@@ -1,8 +1,3 @@
-
-# =====================================
-# Import
-# =====================================
-
 # python
 from pathlib import Path
 
@@ -11,7 +6,7 @@ from qgis.core import (QgsProject,QgsCoordinateReferenceSystem)
 
 from qsequoia2.scripts.utils.variable import *
 
-PROJECT = QgsProject.instance()
+from .plugin_vars import *
 
 def find_qgis_project(seq_dir, seq_dirname):
     seq_dir = Path(seq_dir)
@@ -52,11 +47,9 @@ def close_qgis_project():
     seq_dir = get_project_variable("QS2_seq_dir")
 
     if not seq_dir:
-        print("No project to close")
         return
     
     if seq_dir:
-        print(f"Closing project: {seq_dir}")
         seq_dir = Path(seq_dir)
         PROJECT.instance().write()
         PROJECT.instance().clear()

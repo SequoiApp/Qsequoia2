@@ -3,13 +3,8 @@ import urllib.request
 import yaml
 import os
 
-from qgis.core import (
-    QgsApplication,
-    QgsVectorLayer,
-    QgsRasterLayer,
-    QgsProject
-)
-
+from .plugin_vars import *
+from qgis.core import *
 
 _BASE_URL = "https://raw.githubusercontent.com/SequoiApp/Rsequoia2/main/inst/config"
 
@@ -18,7 +13,7 @@ _SEQ_CONFIG_URLS = {
     for key in ["seq_fields", "seq_layers", "seq_path", "seq_tables"]
 }
 
-_CACHE_DIR = Path(QgsApplication.qgisSettingsDirPath()) / "qsequoia2"
+CACHE_DIR = Path(QgsApplication.qgisSettingsDirPath()) / "qsequoia2"
 
 _CONFIG_CACHE = {}
 
@@ -32,10 +27,10 @@ def sync_seq_configs(timeout: int = 3) -> None:
     - Safe to call at plugin startup
     """
 
-    _CACHE_DIR.mkdir(exist_ok=True)
+    CACHE_DIR.mkdir(exist_ok=True)
 
     for key, url in _SEQ_CONFIG_URLS.items():
-        path = _CACHE_DIR / f"{key}.yaml"
+        path = CACHE_DIR / f"{key}.yaml"
 
         try:
             response = urllib.request.urlopen(url, timeout=timeout)
@@ -56,7 +51,7 @@ def get_seq_config_path(name: str) -> Path:
         RuntimeError if config is missing (first run offline)
     """
 
-    path = _CACHE_DIR / f"{name}.yaml"
+    path = CACHE_DIR / f"{name}.yaml"
 
     if path.exists():
         return path

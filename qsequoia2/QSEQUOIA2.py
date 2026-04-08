@@ -94,8 +94,12 @@ class Qsequoia2:
         # Handle DockWidget
         ## If already created
         if self.dockwidget:
-            self.dockwidget.show()
-            self.dockwidget.raise_()
+            if self.dockwidget.isVisible():
+                self.dockwidget.close()
+            else:
+
+                self.dockwidget.show()
+                self.dockwidget.raise_()
             return
 
         ## Else: create

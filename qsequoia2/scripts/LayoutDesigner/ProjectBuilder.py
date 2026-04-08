@@ -15,9 +15,9 @@ from ..utils.add_vector_layers import load_vectors
 from ..utils.add_raster_layers import load_rasters
 from ..utils.add_wmts_layers import load_wmts
 
-from ..utils.layers import *
+from ..utils.configure_snapping import *
 from ..utils.config import *
-from ..utils.messageBar import *
+from ..utils.Qmessage import *
 from .ConfigLoader import ConfigLoader
 
 # endregion

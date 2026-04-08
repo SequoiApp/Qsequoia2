@@ -7,7 +7,7 @@ from qgis.core import QgsProject, QgsApplication
 
 # Utils
 from ..utils.variable import get_global_variable, set_global_variable
-from ..utils.messageBar import messageLog
+from ..utils.Qmessage import messageLog
 from ..add_on.addon_creator import addonCreator
 from .go_to_maps import open_maps
 

@@ -1,5 +1,6 @@
 from qgis.core import *
 from PyQt5.QtCore import QVariant
+from pathlib import Path
 import processing
 
 # ==============================================
@@ -70,4 +71,17 @@ def getFinaldata(synthese):
 # ================================================
 # region vérificateur
 # ================================================
+
+# Calcul des surfaces par parcelles ou sous parcelles séléctionné
+
+def sspf_surface_calculation(ua_layer) -> str:
+
+    feats = list(ua_layer.getSelectedFeatures())
+    if not feats: return "0 ha"
+    tmp = QgsVectorLayer("Polygon?crs=" + ua_layer.crs().authid(), "tmp", "memory")
+    tmp.dataProvider().addFeatures(feats)
+    surf = sum(f.geometry().area() for f in tmp.getFeatures()) / 10000
+    return f"{round(surf,4)} ha"
+
+    
 

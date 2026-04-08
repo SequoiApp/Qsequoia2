@@ -2,51 +2,7 @@
 # Import
 # ==================================================================================
 
-# Python
-from pathlib import Path
-
-# QGIS
-from qgis.core import (QgsProject,QgsMessageLog,Qgis)
-from osgeo import ogr
-
-# QSEQUOIA2
-
-from .config import get_path
-
-# ==================================================================================
-# resolve layer
-# ==================================================================================
-
-def resolve_layer(layer_key: str,project=None,project_name=None,project_folder=None,style_folder=None,parent=None):
-    """
-    Résout et retourne une couche QGIS à partir d'une clé logique.
-
-    Cette fonction utilise la clé de couche pour retrouver son chemin via
-    la fonction ``get_path`` puis recherche la couche correspondante déjà
-    chargée dans le projet QGIS.
-    """
-
-    if project is None:
-        project = QgsProject.instance()
-
-    # get_path retourne un dict {layer_key: path}
-    layer_paths_dict = get_path(layer_key,project_name=project_name,
-                                project_folder=project_folder,style_folder=style_folder,parent=parent)
-
-    if not layer_paths_dict:
-        QgsMessageLog.logMessage(f"Couche '{layer_key}' introuvable", level=Qgis.Warning)
-        return None
-
-    # Extraire le chemin réel depuis le dict
-    path = next(iter(layer_paths_dict.values()))
-    if not path:
-        QgsMessageLog.logMessage(f"Couche '{layer_key}' introuvable", level=Qgis.Warning)
-        return None
-
-    filename = Path(path).stem
-    layers = project.mapLayersByName(filename)
-    return layers[0] if layers else None
-
+from qgis.core import (QgsProject,Qgis)
 
 # ==================================================================================
 # configure_snapping

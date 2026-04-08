@@ -1,6 +1,7 @@
 import yaml
 from pathlib import Path
 from qgis.core import *
+from ..utils.plugin_vars import *
 
 _CACHE_DIR = Path(QgsApplication.qgisSettingsDirPath()) / "qsequoia2"
 _CONFIG_DIR = Path(__file__).parent / "inst"

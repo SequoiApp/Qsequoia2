@@ -12,10 +12,8 @@ from qsequoia2.scripts.forest_data.forest_data import ForestDataTabs
 from qsequoia2.scripts.tools.tools import ToolsDialog
 from qsequoia2.scripts.utils.variable import get_global_variable
 from qsequoia2.scripts.utils.seq_config import *
-from qsequoia2.scripts.utils.messageBar import *
+from qsequoia2.scripts.utils.Qmessage import *
 
-PLUGIN_DIR = Path(__file__).resolve().parent
-ICONS_DIR = PLUGIN_DIR / "icons"
 
 UI_PATH = PLUGIN_DIR / "Qsequoia2_dockwidget.ui"
 FORM_CLASS, _ = uic.loadUiType(str(UI_PATH))
@@ -149,13 +147,13 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         self._set_seq_dir_status(state, label)
 
-        self.projectChanged.emit(seq_dirname, seq_dir, seq_identifier)
+        self.projectChanged.emit(seq_dir, seq_dirname, seq_identifier)
 
 
         if state == SeqDirState.VALID:
-            self.forest_tab.actu_metadata(seq_dirname, seq_dir, seq_identifier)
-            self.table_check_tab.actu_Tabledata("Sélectionner une table",seq_dirname, seq_dir, seq_identifier)
-            self.add_data_tab.on_project_changed(seq_dirname, seq_dir, seq_identifier)
+            self.forest_tab.actu_metadata(seq_dir)
+            self.table_check_tab.actu_Tabledata("Sélectionner une table",seq_dir)
+            self.add_data_tab.on_project_changed(seq_dir)
             
             messageBar(self.iface, f"Dossier valide : {seq_dir}", "s", 10)
             self.btn_update_plugin.setVisible(True)

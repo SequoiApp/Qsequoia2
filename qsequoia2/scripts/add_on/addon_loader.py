@@ -22,7 +22,7 @@ from qgis.core import *
 
 # Qsequoia2
 from ..utils.variable import get_global_variable
-from ..utils.messageBar import *
+from ..utils.Qmessage import *
 
 # endregion
 # ==========================================================================

@@ -15,7 +15,7 @@ from PyQt5.QtWidgets import QTableWidgetItem, QHeaderView
 from PyQt5.QtCore import Qt
 
 # Qsequoia2 
-from ..utils.messageBar import *
+from ..utils.Qmessage import *
 from .data_table import *
 from ..utils.variable import *
 from ..utils.seq_config import *
@@ -54,7 +54,7 @@ class table_check(QDialog, FORM_CLASS):
     # ================================================
 
 
-    def actu_Tabledata(self, value, seq_dirname= None, seq_dir= None, seq_identifier= None):
+    def actu_Tabledata(self, value, seq_dir=None, seq_dirname=None, seq_identifier= None):
         seq_dir = get_project_variable("QS2_seq_dir") or seq_dir
         if not seq_dir:
             return
@@ -127,18 +127,23 @@ class table_check(QDialog, FORM_CLASS):
         self.cb_sspf.setEnabled(True)
         self.cb_sspf.setHidden(False)
         self.lbl_sspf.setHidden(False)
-
+        self.lbl_surf.setHidden(False)
+        self.le_surf.setHidden(False)
 
     def _setup_ui_synthese(self):
         self.forestTable.setHidden(False)
         self.cb_parcelle.setEnabled(True)
         self.cb_sspf.setHidden(True)
         self.lbl_sspf.setHidden(True)
+        self.lbl_surf.setHidden(True)
+        self.le_surf.setHidden(True)
 
     def setup_ui_selection(self):
         self.cb_parcelle.setEnabled(False)
         self.cb_sspf.setEnabled(False)
         self.forestTable.setHidden(True)
+        self.lbl_surf.setHidden(True)
+        self.le_surf.setHidden(True)
 
     # Utilitaire pour remplir les comboBox de sélection
     def populate_cb_from_field(self, cb_name, Layer, field_name):
@@ -162,6 +167,9 @@ class table_check(QDialog, FORM_CLASS):
 
             if ids is not None:
                 self.update_table_with_selection(layer, ids)
+                surf = sspf_surface_calculation(self.ua_layer)
+                if surf:
+                    self.le_surf.setText(surf)
 
         else:
             self.update_table_with_all(layer)

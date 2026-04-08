@@ -1,7 +1,6 @@
 
 from collections import defaultdict
-from ..utils.config import *
-from ..utils.messageBar import *
+from ..utils.Qmessage import *
 from ..utils.seq_config import *
 from ..utils.yaml_helper import *
 from ..utils.variable import *

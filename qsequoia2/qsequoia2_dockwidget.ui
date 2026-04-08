@@ -164,7 +164,7 @@
          <string>Actualiser</string>
         </property>
         <property name="styleSheet">
-         <string notr="true">background-color: rgb(0, 166, 237);</string>
+         <string notr="true">background-color: rgb(214, 214, 214);</string>
         </property>
         <property name="text">
          <string>🔄</string>

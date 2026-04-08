@@ -13,6 +13,7 @@ from time import time
 from qgis.PyQt.QtCore import QObject
 from qgis.core import Qgis, QgsMessageLog, QgsProject
 import qgis.utils
+from .plugin_vars import *
 
 # endregion
 #==================================
@@ -35,15 +36,13 @@ def reloadQS2(plugin, plug = "qsequoia2"):
         iface = plugin.iface
 
 
-    project = QgsProject.instance()
-
     # Enregistrer le projet courant
 
-    if not project.isDirty():
-        project.write()
+    if not PROJECT.isDirty():
+        PROJECT.write()
     else:
         # avertir l'utilisateur ou forcer sauvegarde
-        project.write()
+        PROJECT.write()
 
     # Forcer la fermeture et ouvrture d'une nouvelle fenêtre Qsequoia2
     if hasattr(plugin, "main_window") and plugin.main_window:

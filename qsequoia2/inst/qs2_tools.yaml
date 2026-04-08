@@ -4,7 +4,6 @@ Gestion de projet:
     function:
     skip_check: False
 
-
 Utilitaire:
   
   "Centroïde d'une couche vecteur":
@@ -32,41 +31,3 @@ Utilitaire:
     module:
     function:
     skip_check: False
-
-
-Outils web principaux:
-  "Carto-Futaie":
-    module: "qsequoia2.scripts.utils.go_to_net"
-    function: "go_to_cartofutaie"
-    skip_check: True
-
-  "Télédetection des essences par IA":
-    module: "qsequoia2.scripts.utils.go_to_net"
-    function: "go_to_kartennAI"
-    skip_check: True
-
-  "SequoiAPP":
-    module: "qsequoia2.scripts.utils.go_to_net"
-    function: "go_to_net"
-    skip_check: True
-  
-  "Github-SequoiAPP":
-    module: "qsequoia2.scripts.utils.go_to_net"
-    function: "go_to_net"
-    skip_check: True
-  
-  "Github du plugin":
-    module: "qsequoia2.scripts.utils.go_to_net"
-    function: "go_to_net"
-    skip_check: True
-  
-  "Signaler un bug":
-    module: "qsequoia2.scripts.utils.go_to_net"
-    function: "go_to_net"
-    skip_check: True
-  
-  "Documentation":
-    module: "qsequoia2.scripts.utils.go_to_net"
-    function: "go_to_net"
-    skip_check: True
-    

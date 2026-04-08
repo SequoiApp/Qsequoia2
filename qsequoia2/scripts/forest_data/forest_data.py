@@ -17,7 +17,7 @@ from PyQt5.QtCore import Qt
 
 # Qsequoia2 
 from .update_forest_name import *
-from ..utils.messageBar import *
+from ..utils.Qmessage import *
 from .forest_get_data import *
 from ..table_check.data_table import *
 from ..utils.variable import *
@@ -59,7 +59,7 @@ class ForestDataTabs(QDialog, FORM_CLASS):
     # ================================================
 
 
-    def actu_metadata(self, seq_dirname, seq_dir, seq_identifier):
+    def actu_metadata(self, seq_dir, seq_dirname=None, seq_identifier= None):
         """relance les fonctions de chargement des data pour actualiser l'affichage"""  
 
         # métadata build

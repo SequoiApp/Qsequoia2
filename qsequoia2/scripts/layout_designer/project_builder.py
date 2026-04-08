@@ -46,7 +46,7 @@ class ProjectBuilder:
         zoom_layer = layers.get(self.canvas_cfg.zoom_on) if self.canvas_cfg.zoom_on else None
         messageLog(f"[ZOOM_ON] zoom_layer:{zoom_layer} - self.canvas_cfg.zoom_on: {self.canvas_cfg.zoom_on}")
         if zoom_layer:
-            # Needed to ensure layer is zoomed ond
+            # Wait for Qt even loop to finish; otherwise canvas doesn't zoom to zoom_on layer
             QTimer.singleShot(0, lambda: self._zoom_to_layer(zoom_layer))
 
         self._fold_all()

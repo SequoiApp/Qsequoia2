@@ -57,7 +57,7 @@ class LayoutBuilder:
         layout = self._create_layout(layout_name, qpt)
 
         self._set_visibility()
-        # Needed to waste some time to avoid layout bug
+        # Wait for Qt even loop to finish; otherwise map scale may be incorrect
         QTimer.singleShot(0, lambda: self._configure_maps(layout, bbox))
         self._configure_legends(layout)
         self._add_parcels_table(layout)

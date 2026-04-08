@@ -1,5 +1,6 @@
 from qgis.core import *
 from PyQt5.QtCore import QVariant
+from pathlib import Path
 import processing
 
 # ==============================================
@@ -70,4 +71,27 @@ def getFinaldata(synthese):
 # ================================================
 # region vérificateur
 # ================================================
+
+# Calcul des surfaces par parcelles ou sous parcelles séléctionné
+
+def sspf_surface_calculation(ua_layer) -> str:
+    
+    if "SURF_SIG" not in [f.name() for f in ua_layer.fields()]:
+        return
+
+    ua_layer = ua_layer.source()
+
+    stat = processing.run("native:basicstatisticsforfields", 
+                    {'INPUT_LAYER':QgsProcessingFeatureSourceDefinition(ua_layer, 
+                        selectedFeaturesOnly=True, 
+                        featureLimit=-1, 
+                        geometryCheck=QgsFeatureRequest.GeometryAbortOnInvalid),
+                        'FIELD_NAME':'SURF_SIG',
+                        'OUTPUT':'TEMPORARY_OUTPUT',
+                        'OUTPUT_HTML_FILE':'TEMPORARY_OUTPUT'})
+
+    surf = str(round((stat["SUM"]),4))+ " ha"
+    return surf
+
+    
 

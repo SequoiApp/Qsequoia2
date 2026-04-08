@@ -90,6 +90,23 @@
       </widget>
      </item>
      <item>
+      <widget class="QLabel" name="lbl_surf">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>Surface SIG</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="le_surf">
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
       <spacer name="spacer_filters">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>

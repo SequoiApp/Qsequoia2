@@ -6,6 +6,7 @@ from qgis.PyQt.QtCore import pyqtSignal, Qt
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QCompleter, QFileDialog, QApplication
 
+from qsequoia2.scripts.table_check.table_check import table_check
 from qsequoia2.scripts.add_data.add_data import AddDataTabWidget
 from qsequoia2.scripts.forest_data.forest_data import ForestDataTabs
 from qsequoia2.scripts.tools.tools import ToolsDialog
@@ -153,6 +154,7 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         if state == SeqDirState.VALID:
             self.forest_tab.actu_metadata(seq_dirname, seq_dir, seq_identifier)
+            self.table_check_tab.actu_Tabledata("Sélectionner une table",seq_dirname, seq_dir, seq_identifier)
             self.add_data_tab.on_project_changed(seq_dirname, seq_dir, seq_identifier)
             
             messageBar(self.iface, f"Dossier valide : {seq_dir}", "s", 10)
@@ -182,6 +184,7 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
     def _init_tabs(self):
         self.forest_tab = ForestDataTabs(iface=self.iface, parent=self)
+        self.table_check_tab = table_check(iface=self.iface, parent=self)
         self.add_data_tab = AddDataTabWidget(iface=self.iface, parent=self)
         self.tools_tab = ToolsDialog(iface=self.iface, parent=self)
 
@@ -191,6 +194,7 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.tabWidget.setTabToolTip(self.tabWidget.count() - 1, tooltip)
 
         add_tab(self.forest_tab, "forest_data.svg", "Métadonnées")
+        add_tab(self.table_check_tab, "table_check.svg", "Vérification des données")
         add_tab(self.add_data_tab, "add_data.svg", "Ajout de données")
         add_tab(self.tools_tab, "tools.svg", "Outils")
 

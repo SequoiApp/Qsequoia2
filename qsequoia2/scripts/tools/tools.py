@@ -23,20 +23,13 @@ class ToolsDialog(QWidget, FORM_CLASS):
         self.setupUi(self)
 
         self._init_tree()
-        self.treeTOOLS.itemClicked.connect(self.on_item_clicked)
-
+        
     def _init_tree(self):
-        """Build tools tree from YAML"""
 
-        tab = QWidget()
-        layout = QVBoxLayout(tab)
-
-        self.treeTOOLS = QTreeWidget()
-        self.treeTOOLS.setObjectName("tools")
-        self.treeTOOLS.setHeaderLabels(["Outils disponibles"])
+        self.treeTOOLS.clear()
+        self.treeTOOLS.setHeaderHidden(True)
 
         yaml_path = Path(__file__).resolve().parents[2] / "inst" / "qs2_tools.yaml"
-
         data = yaml.safe_load(yaml_path.read_text(encoding="utf-8")) or {}
 
         for category_name, tools in data.items():
@@ -48,7 +41,6 @@ class ToolsDialog(QWidget, FORM_CLASS):
             for tool_name, tool_data in tools.items():
 
                 tool_item = QTreeWidgetItem([tool_name])
-
                 tool_item.setData(
                     0,
                     Qt.UserRole,
@@ -62,9 +54,7 @@ class ToolsDialog(QWidget, FORM_CLASS):
 
                 category_item.addChild(tool_item)
 
-        layout.addWidget(self.treeTOOLS)
-        self.tabWidget.addTab(tab, "OUTILS")
-
+        self.treeTOOLS.itemClicked.connect(self.on_item_clicked)
 
     def on_item_clicked(self, item):
 
@@ -81,7 +71,6 @@ class ToolsDialog(QWidget, FORM_CLASS):
         seq_dir = get_project_variable("QS2_seq_dir")
         seq_identifier = get_project_variable("QS2_seq_identifier")
         style_folder = get_global_variable("QS2_styles_directory")
-        print(seq_dirname, seq_dir, seq_identifier, style_folder)
         
         skip_check = action.get("skip_check", False)
 

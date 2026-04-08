@@ -13,6 +13,48 @@
   <property name="windowTitle">
    <string>Importer des couches</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">QTreeWidget {
+    border: none;
+    background-color: transparent;
+    outline: none;
+}
+
+QTreeWidget::item {
+    padding: 4px 6px;
+    margin: 0px;
+}
+
+QTreeWidget::item:hover {
+    background-color: rgb(209, 209, 209);
+}
+
+QTreeWidget::item:selected {
+    background-color: #818181;
+    color: white;
+}
+
+QTreeWidget:focus {
+    outline: none;
+}
+
+QTreeWidget::item:focus {
+    outline: none;
+}
+
+QHeaderView::section {
+    background-color: transparent;
+    border: none;
+}
+
+QHeaderView {
+    max-height: 0px;
+    min-height: 0px;
+    margin: 0px;
+    padding: 0px;
+    border: none;
+}</string>
+  </property>
  </widget>
  <resources/>
  <connections/>

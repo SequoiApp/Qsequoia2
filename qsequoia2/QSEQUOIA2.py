@@ -16,7 +16,7 @@ from qsequoia2.scripts.utils.Qmessage import *
 from qsequoia2.scripts.utils.reloader import reloadQS2
 from qsequoia2.scripts.utils.variable import *
 from qsequoia2.scripts.utils.qgz_project import *
-from qsequoia2.scripts.utils.layers import *
+from qsequoia2.scripts.utils.configure_snapping import *
 
 
 from .qsequoia2_dockwidget import Qsequoia2DockWidget

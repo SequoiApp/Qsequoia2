@@ -18,7 +18,7 @@ from qgis.PyQt.QtXml import QDomDocument
 from ..utils.variable import get_global_variable
 from ..utils.config import get_path
 from .processing import buffer, multipart_to_singleparts
-from ..utils.layers import resolve_layer
+from ..utils.configure_snapping import resolve_layer
 from .ConfigLoader import ConfigLoader
 from ..utils.Qmessage import messageBar
 

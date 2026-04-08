@@ -6,8 +6,7 @@ from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtCore import Qt
 from qgis.PyQt.QtWidgets import QWidget, QTreeWidget, QVBoxLayout, QTreeWidgetItem
 from PyQt5 import uic
-
-from qsequoia2.scripts.tools.python_scripts.go_to_net import go_to_net
+from ..utils.Qmessage import *
 from qsequoia2.scripts.utils.variable import get_global_variable
 
 UI_PATH = Path(__file__).parent / "tools.ui"
@@ -75,11 +74,6 @@ class ToolsDialog(QWidget, FORM_CLASS):
 
         parent = item.parent()
         category = parent.text(0) if parent else None
-
-        if category == "Outils web principaux":
-            go_to_net(action, self.iface)
-            return
-
         self._call_function(action)
 
     def _call_function(self, action):
@@ -115,11 +109,8 @@ class ToolsDialog(QWidget, FORM_CLASS):
         func_name = action.get("function")
 
         if not mod_name or not func_name:
-            QMessageBox.warning(
-                self,
-                "Action incomplète",
-                "Cette action n'est pas encore implémentée."
-            )
+
+            messageBar(self.iface, "Cette action n'est pas encore disponible","w",10)
             return
 
         module = importlib.import_module(mod_name)

@@ -24,7 +24,7 @@ from PyQt5 import uic
 # Import from utils folder
 from .ConfigLoader import ConfigLoader
 from .LayoutDesigner_service import LayoutService
-from ..utils.layers import configure_snapping 
+from ..utils.configure_snapping import configure_snapping 
 from .ProjectBuilder import ProjectBuilder
 from ..utils.variable import set_project_variable
 from ..utils.Qmessage import messageBar

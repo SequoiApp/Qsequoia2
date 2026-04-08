@@ -180,18 +180,18 @@ def get_style(layer_key, style_folder):
 
     return None
 
-def seq_read(key, project_folder, add_to_project=False, group_name=None, style_folder=None):
+def seq_read(key, seq_dir, add_to_project=False, group_name=None, style_folder=None):
 
     meta = seq_layer(key)
     layer_type = meta["type"]
     layer_name = meta["name"]
     filename = meta["filename"]
 
-    project_folder = Path(project_folder)
+    seq_dir = Path(seq_dir)
 
-    matches = list(project_folder.rglob(f"*{filename}"))
+    matches = list(seq_dir.rglob(f"*{filename}"))
     if not matches:
-        raise FileNotFoundError(f"Layer '{filename}' not found in '{project_folder}'")
+        raise FileNotFoundError(f"Layer '{filename}' not found in '{seq_dir}'")
 
     if len(matches) > 1:
         paths_str = "\n".join(str(p) for p in matches)
@@ -205,6 +205,8 @@ def seq_read(key, project_folder, add_to_project=False, group_name=None, style_f
         layer = QgsVectorLayer(str(path), layer_name, "ogr")
     elif layer_type == "rast":
         layer = QgsRasterLayer(str(path), layer_name)
+    elif layer_type == "xlsx":
+        layer = QgsVectorLayer(str(path), layer_name, "ogr")
     else:
         raise ValueError(f"Unsupported layer type: {layer_type}")
 

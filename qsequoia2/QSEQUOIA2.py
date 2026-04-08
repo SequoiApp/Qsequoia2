@@ -22,7 +22,6 @@ from qsequoia2.scripts.utils.qgz_project import *
 from qsequoia2.scripts.utils.configure_snapping import *
 from qsequoia2.scripts.utils.plugin_vars import *
 
-
 from .qsequoia2_dockwidget import Qsequoia2DockWidget
 
 watchdog_path = str(PLUGIN_DIR / "inst" / "lib")
@@ -126,7 +125,6 @@ class Qsequoia2:
         dw.btn_reload.clicked.connect(self._reload_plugin)
         dw.btn_open_seq_dir.clicked.connect(self._open_seq_dir)
         dw.btn_issue.clicked.connect(self._open_qsequoia_issue)
-        dw.btn_update_plugin.clicked.connect(self._update_plugin)
     
     def _on_closed_plugin(self):
         """Cleanup when dockwidget is closed"""
@@ -139,24 +137,14 @@ class Qsequoia2:
 
             self.dockwidget = None
 
-    def _on_project_changed(self, seq_dir, seq_dirname=None, seq_identifier= None):
+    def _on_project_changed(self, seq_dir, seq_id):
         """Handle project selection from UI"""
-        
-        set_project_variable("QS2_seq_dirname", seq_dirname)
+
         set_project_variable("QS2_seq_dir", seq_dir)
-        set_project_variable("QS2_seq_identifier", seq_identifier)
+        set_project_variable("QS2_seq_id", seq_id)
 
-        messageLog(f"SEQ_DIRNAME: {seq_dirname}", "i")
-        messageLog(f"SEQ_DIR: {seq_dir}", "i")
-
-
-        seq_qgz_project = str(get_global_variable("QS2_default_project")).strip().lower()
-
-        if seq_qgz_project == "true":
-                find_qgis_project(seq_dir, seq_dirname)
-        
-        configure_snapping()
-
+        messageLog(f"Project id: {seq_id}", "i")
+        messageLog(f"Project folder: {seq_dir}", "i")
 
     def _open_global_settings(self):
         """Ouvre la fenêtre de configuration globale du plugin."""
@@ -187,23 +175,7 @@ class Qsequoia2:
         url = QUrl("https://github.com/SequoiApp/Qsequoia2/issues")
         QDesktopServices.openUrl(url)
 
-    def _update_plugin(self, seq_dir):
-        """force plugin to reload the data in seq_dir and qgis project"""
-        QApplication.setOverrideCursor(Qt.WaitCursor)
-        try:
-            seq_dir = get_project_variable("QS2_seq_dir") or ""
-            if seq_dir:
-                fdt = ForestDataTabs(iface=self.iface, parent=None)
-                tc = table_check(iface=self.iface, parent=None)
-                ad = AddDataTabWidget(iface=self.iface, parent=None)
-                fdt.actu_metadata(seq_dir)
-                tc.actu_Tabledata("Sélectionner une table",seq_dir)
-                ad.on_project_changed(seq_dir)
-                messageBar(self.iface, f"seq_dir reload : {seq_dir}","i",10)
-        finally:
-            QApplication.restoreOverrideCursor()
-
-        
+    
     def unload(self):
 
         # Remove actions

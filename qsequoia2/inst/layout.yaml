@@ -1,0 +1,266 @@
+assemblage:
+  alias : "Assemblage cadastral"
+  canvas:
+    zoom_on: v.seq.parca.poly
+    readonly: [v.seq.parca.poly]
+    layers:
+      sequoia: &assemblage_seq
+        - v.com.topo.line
+        - v.com.topo.point
+        - v.infra.point
+        - v.infra.line
+        - v.infra.poly
+        - v.toponyme.point
+        - v.road.line
+        - v.roadway.line
+        - v.roadway.poly
+        - v.hydro.poly
+        - v.hydro.line
+        - v.vege.poly
+        - v.curves.line
+        # Order is important here, we want parca to be at the back so vectoriel layers are visible on top of it
+        - v.seq.owner.line
+        - v.seq.parca.poly
+      wmts: &assemblage_wmts
+        - wmts_scan25
+        - wmts_scan25_grey
+        - wmts_scan100
+        - wmts_pci
+
+  layout:
+    maps:
+      - id: map1
+        main_map: true
+        scale: 7500
+        layers: *assemblage_seq
+    legends:
+      - id: legend1
+        map: map1
+        layers: *assemblage_seq
+
+situation:
+  alias: "Situation"
+
+  canvas:
+    zoom_on: "v.seq.forest.poly"
+    layers:
+      sequoia: &situation_seq
+        - v.seq.forest.point
+        - v.seq.forest.poly
+        - v.com.topo.line
+        - v.curves.line
+        - v.secu.prsf.point
+        - v.infra.point
+        - v.infra.line
+        - v.infra.poly
+        - v.road.line
+        - v.roadway.line
+        - v.roadway.poly
+        - v.toponyme.point
+        - v.hydro.point
+        - v.hydro.line
+        - v.hydro.poly
+        - v.vege.point
+        - v.vege.line
+        - v.vege.poly
+      tms: &situation_tms
+        - tms.plan_ign.standard
+        - tms.plan_ign.classique
+      wmts: &situation_wmts
+        - wmts_scan25
+        - wmts_scan25_grey
+        - wmts_scan100
+
+  layout:
+    maps:
+      - id: map1
+        main_map: true
+        scale: 25000
+        layers: *situation_seq
+      - id: map2
+        main_map: false
+        scale: 800000
+        layers:
+          - v.seq.forest.point
+          - tms.plan_ign.classique
+    legends:
+      - id: legend1
+        map: map1
+        layers: *situation_seq
+
+peuplement:
+  alias: "Peuplements"
+
+  canvas:
+    zoom_on: "v.seq.forest.poly"
+    layers:
+      sequoia: &peuplement_seq
+        - v.com.topo.line
+        - v.com.topo.point
+        - v.infra.point
+        - v.infra.line
+        - v.infra.poly
+        - v.toponyme.point
+        - v.road.line
+        - v.roadway.line
+        - v.roadway.poly
+        - v.hydro.poly
+        - v.hydro.line
+        - v.vege.poly
+        - v.curves.line
+        - v.seq.forest.line
+        - v.seq.pf.line
+        - v.seq.pf.poly
+        - v.seq.sspf.poly
+        - v.seq.sspf.poly
+        - v.seq.parca.poly
+        - v.seq.ua.poly
+      tms: &peuplement_tms
+        - tms.plan_ign.standard
+        - tms.plan_ign.classique
+      wmts: &peuplement_wmts
+        - wmts_irc
+        - wmts_rgb
+
+  layout:
+    maps:
+      - id: map1
+        main_map: true
+        scale: 7500
+        layers: *peuplement_seq
+    legends:
+      - id: legend1
+        map: map1
+        layers: *peuplement_seq
+
+enjeux_env:
+  alias: "Enjeux environnementaux"
+
+  canvas:
+    zoom_on: "v.seq.forest.line"
+    layers:
+      sequoia: &enjeux_env_seq
+        - v.mnhn.apb.poly
+        - v.mnhn.apg.poly
+        - v.mnhn.aphn.poly
+        - v.mnhn.aplg.poly
+        - v.mnhn.bios.poly
+        - v.mnhn.unesco.poly
+        - v.mnhn.cdl.poly
+        - v.mnhn.cen.poly
+        - v.mnhn.geoparc.poly
+        - v.mnhn.gsf.poly
+        - v.mnhn.inpg.poly
+        - v.mnhn.ospar.poly
+        - v.mnhn.pgsf.poly
+        - v.mnhn.pn.poly
+        - v.mnhn.pn2.poly
+        - v.mnhn.pnm.poly
+        - v.mnhn.pnr.poly
+        - v.mnhn.pprnn.poly
+        - v.mnhn.ramsar.poly
+        - v.mnhn.rb.poly
+        - v.mnhn.ripn.poly
+        - v.mnhn.rnc.poly
+        - v.mnhn.rncfs.poly
+        - v.mnhn.rnn.poly
+        - v.mnhn.rnr.poly
+        - v.mnhn.sc.poly
+        - v.mnhn.sic.poly
+        - v.mnhn.znieff1.poly
+        - v.mnhn.znieffmer1.poly
+        - v.mnhn.znieff2.poly
+        - v.mnhn.znieffmer2.poly
+        - v.mnhn.zpr.poly
+        - v.mnhn.zps.poly
+        # SEQUOIA
+        - v.seq.forest.line
+        - v.seq.pf.line
+        - v.seq.pf.poly
+        - v.seq.sspf.poly
+        - v.seq.sspf.poly
+        - v.seq.parca.poly
+        - v.seq.ua.poly
+      tms: &enjeux_env_tms
+        - tms.plan_ign.standard
+        - tms.plan_ign.classique
+        - tms.plan_ign.epure
+
+  layout:
+    maps:
+      - id: map1
+        main_map: true
+        scale: 15000
+        layers: [*enjeux_env_seq, tms.plan_ign.epure]
+    legends:
+      - id: legend1
+        map: map1
+        layers: *enjeux_env_seq
+
+enjeux_pat:
+  alias : "Enjeux patrimoniaux"
+
+  canvas:
+    zoom_on: "v.seq.forest.line"
+    layers:
+      sequoia: &enjeux_pat_seq
+        - v.pat.imdn.poly
+        - v.pat.padn.poly
+        - v.pat.immh.poly
+        - v.pat.pamh.poly
+        - v.pat.imun.poly
+        - v.pat.paun.poly
+        - v.pat.sici.poly
+        - v.pat.sipr.poly
+        - v.pat.lacr.poly
+        - v.pat.zppa.poly
+        # SEQUOIA
+        - v.seq.forest.line
+        - v.seq.pf.line
+        - v.seq.pf.poly
+        - v.seq.sspf.poly
+        - v.seq.sspf.poly
+        - v.seq.parca.poly
+        - v.seq.ua.poly
+      tms: &enjeux_pat_tms
+        - tms.plan_ign.standard
+        - tms.plan_ign.classique
+        - tms.plan_ign.epure
+
+  layout:
+    maps:
+      - id: map1
+        main_map: true
+        scale: 15000
+        layers: [*enjeux_pat_seq, tms.plan_ign.epure]
+    legends:
+      - id: legend1
+        map: map1
+        layers: *enjeux_pat_seq
+
+geologie:
+  alias : "Géologie"
+  canvas:
+    zoom_on: "v.seq.forest.line"
+    layers:
+      sequoia: &geologie_seq
+        - v.sol.bdcharm50.poly
+        - v.sol.carhab.poly
+        # SEQUOIA
+        - v.seq.forest.line
+        - v.seq.pf.line
+        - v.seq.sspf.poly
+        - v.seq.sspf.point
+      wmts: &geologie_wmts
+        - wmts_geol
+
+  layout:
+    maps:
+      - id: map1
+        main_map: true
+        scale: 15000
+        layers: [*geologie_seq, wmts_geol]
+    legends:
+      - id: legend1
+        map: map1
+        layers: *geologie_seq

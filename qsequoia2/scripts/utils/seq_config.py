@@ -2,6 +2,7 @@ from pathlib import Path
 import urllib.request
 import yaml
 import os
+from .messageBar import messageBar, messageLog
 
 from .plugin_vars import *
 from qgis.core import *
@@ -136,6 +137,25 @@ def seq_layer(key):
 
     return result
 
+def resolve_seq_layer(key, project, seq_id=None):
+    meta = seq_layer(key)
+
+    filename = meta["filename"]
+    if seq_id:
+        filename = f"{seq_id}_{filename}"
+
+    expected_dir = meta["path"]
+
+    for layer in project.mapLayers().values():
+        messageLog(f"Checking layer '{layer.name()}' with source '{layer.source()}'...")
+        source = layer.source().split("|")[0]  # remove provider suffix : path|layername=...
+        path = Path(source)
+
+        if path.name == filename and expected_dir in path.parts:
+            return layer
+
+    return None
+
 def seq_field(field: str) -> dict:
 
     cfg = get_seq_config("seq_fields")
@@ -175,7 +195,7 @@ def get_style(layer_key, style_folder):
 
     return None
 
-def seq_read(key, seq_dir, add_to_project=False, group_name=None, style_folder=None):
+def seq_read(key, seq_dir, add_to_project=False, group=None, style_folder=None):
 
     meta = seq_layer(key)
     layer_type = meta["type"]
@@ -195,9 +215,18 @@ def seq_read(key, seq_dir, add_to_project=False, group_name=None, style_folder=N
         )
 
     path = matches[0]
+    path_str = str(path)
+
+    # Check if layer already exists in the group
+    if group:
+        for node in group.findLayers():
+            existing_layer = node.layer()
+            if existing_layer and existing_layer.source().startswith(path_str):
+                messageLog(f"Layer already in group: '{existing_layer.name()}' ({existing_layer.source()})")
+                return existing_layer
 
     if layer_type == "vect":
-        layer = QgsVectorLayer(str(path), layer_name, "ogr")
+        layer = QgsVectorLayer(path_str, layer_name, "ogr")
     elif layer_type == "rast":
         layer = QgsRasterLayer(str(path), layer_name)
     elif layer_type == "xlsx":
@@ -208,6 +237,7 @@ def seq_read(key, seq_dir, add_to_project=False, group_name=None, style_folder=N
     if not layer.isValid():
         raise RuntimeError(f"Invalid layer: {path}")
 
+
     if style_folder:
         style_path = get_style(key, style_folder)
         if style_path:
@@ -216,18 +246,10 @@ def seq_read(key, seq_dir, add_to_project=False, group_name=None, style_folder=N
 
     if add_to_project:
         project = QgsProject.instance()
-        root = project.layerTreeRoot()
+        project.addMapLayer(layer, not bool(group))
 
-        if group_name:
-            group = root.findGroup(group_name)
-            if not group:
-                group = root.addGroup(group_name)
-
-            project.addMapLayer(layer, False)
+        if group:
             group.addLayer(layer)
-
-        else:
-            project.addMapLayer(layer)
 
     return layer
 
@@ -281,7 +303,7 @@ def find_all_seq_dir(root_dir, max_dirs=5000):
 
     return projects
 
-def find_seq_identifier(seq_dir):
+def find_seq_id(seq_dir):
     layer = seq_read("parca", seq_dir)
     field_name = seq_field("identifier")["name"]
 

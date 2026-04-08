@@ -48,7 +48,13 @@ class LayoutBuilder:
             raise RuntimeError("[LAYOUT] Couche 'parca' absente du contexte")
 
         fmt, orient, bbox = self._compute_layout_info(parca)
-        layout = self._create_layout(fmt, orient)
+        layout_name, qpt = self._create_layout_name(fmt, orient)
+
+        layout = self._resolve_layout(layout_name)
+        if layout:
+            return layout
+
+        layout = self._create_layout(layout_name, qpt)
 
         self._set_visibility()
         # Needed to waste some time to avoid layout bug
@@ -119,11 +125,35 @@ class LayoutBuilder:
 
     @staticmethod
     def _pick_orient(bbox):
-        return "portrait" if bbox.height() >= bbox.width() else "landscape"
+        return "portrait" if bbox.height() >= bbox.width() else "landscape"  
 
-    def _create_layout(self, fmt: str, orient: str) -> QgsPrintLayout:
+    def _resolve_layout(self, layout_name):
         lm = self.project.layoutManager()
+        existing = lm.layoutByName(layout_name)
 
+        if not existing:
+            return None
+
+        overwrite = QMessageBox.question(
+            self.iface.mainWindow(),
+            "Layout existant",
+            f"Le layout '{layout_name}' existe déjà.\nVoulez-vous l'écraser ?",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No,
+        )
+
+        if overwrite == QMessageBox.No:
+            return existing
+
+        try:
+            self.iface.closeLayoutDesigner(existing)
+        except Exception:
+            pass
+
+        lm.removeLayout(existing)
+        return None
+
+    def _create_layout_name(self, fmt: str, orient: str):
         qpt, final_orient = self._find_template(
             [
                 Path(get_global_variable("QS2_models_directory") or ""),
@@ -136,22 +166,10 @@ class LayoutBuilder:
         messageLog(f"[TEMPLATE] Template trouvé: {qpt} (format={fmt}, orient={final_orient})")
 
         layout_name = f"{self.seq_id}_{self.key}_{fmt}_{final_orient}"
+        return layout_name, qpt
 
-        existing = lm.layoutByName(layout_name)
-        if existing:
-            reply = QMessageBox.question(
-                self.iface.mainWindow(),
-                "Layout existant",
-                f"Le layout '{layout_name}' existe déjà.\nVoulez-vous l'écraser ?",
-                QMessageBox.Yes | QMessageBox.No,
-                QMessageBox.No,
-            )
-
-            if reply == QMessageBox.No:
-                return existing
-
-            # overwrite
-            lm.removeLayout(existing)
+    def _create_layout(self, layout_name, qpt) -> QgsPrintLayout:
+        lm = self.project.layoutManager()
 
         layout = QgsPrintLayout(self.project)
         layout.initializeDefaults()

@@ -54,7 +54,7 @@ class table_check(QDialog, FORM_CLASS):
     # ================================================
 
 
-    def actu_Tabledata(self, value, seq_dirname= None, seq_dir= None, seq_identifier= None):
+    def actu_Tabledata(self, value, seq_dir=None, seq_dirname=None, seq_identifier= None):
         seq_dir = get_project_variable("QS2_seq_dir") or seq_dir
         if not seq_dir:
             return

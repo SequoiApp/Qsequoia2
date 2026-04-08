@@ -8,12 +8,15 @@ from qgis.PyQt.QtWidgets import QAction, QApplication
 from qgis.core import *
 
 from qsequoia2.scripts.global_settings.global_settings import GlobalSettingsDialog
-from qsequoia2.scripts.utils.disabled_v_external_grass import disabled_v_external_grass
 from qsequoia2.scripts.watchdog.dogwatcher import DogWatcher
+from qsequoia2.scripts.forest_data.forest_data import ForestDataTabs
+from qsequoia2.scripts.table_check.table_check import table_check
+from qsequoia2.scripts.add_data.add_data import AddDataTabWidget
+from qsequoia2.scripts.utils.disabled_v_external_grass import disabled_v_external_grass
 from qsequoia2.scripts.utils.get_download_folder import get_download_folder
-from qsequoia2.scripts.utils.seq_config import sync_seq_configs
+from qsequoia2.scripts.utils.seq_config import *
 from qsequoia2.scripts.utils.Qmessage import *
-from qsequoia2.scripts.utils.reloader import reloadQS2
+from qsequoia2.scripts.utils.reloader import *
 from qsequoia2.scripts.utils.variable import *
 from qsequoia2.scripts.utils.qgz_project import *
 from qsequoia2.scripts.utils.configure_snapping import *
@@ -136,7 +139,7 @@ class Qsequoia2:
 
             self.dockwidget = None
 
-    def _on_project_changed(self, seq_dirname, seq_dir, seq_identifier):
+    def _on_project_changed(self, seq_dir, seq_dirname=None, seq_identifier= None):
         """Handle project selection from UI"""
         
         set_project_variable("QS2_seq_dirname", seq_dirname)
@@ -190,7 +193,12 @@ class Qsequoia2:
         try:
             seq_dir = get_project_variable("QS2_seq_dir") or ""
             if seq_dir:
-                self.dockwidget._select_project(seq_dir)
+                fdt = ForestDataTabs(iface=self.iface, parent=None)
+                tc = table_check(iface=self.iface, parent=None)
+                ad = AddDataTabWidget(iface=self.iface, parent=None)
+                fdt.actu_metadata(seq_dir)
+                tc.actu_Tabledata("Sélectionner une table",seq_dir)
+                ad.on_project_changed(seq_dir)
                 messageBar(self.iface, f"seq_dir reload : {seq_dir}","i",10)
         finally:
             QApplication.restoreOverrideCursor()

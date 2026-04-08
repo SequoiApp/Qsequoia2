@@ -59,7 +59,7 @@ class ForestDataTabs(QDialog, FORM_CLASS):
     # ================================================
 
 
-    def actu_metadata(self, seq_dirname, seq_dir, seq_identifier):
+    def actu_metadata(self, seq_dir, seq_dirname=None, seq_identifier= None):
         """relance les fonctions de chargement des data pour actualiser l'affichage"""  
 
         # métadata build

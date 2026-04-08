@@ -200,7 +200,6 @@ def get_style(layer_key, style_folder):
 
     return None
 
-
 def seq_read(key, project_folder, add_to_project=False, group=None, style_folder=None):
 
     meta = seq_layer(key)

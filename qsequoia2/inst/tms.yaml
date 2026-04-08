@@ -2,22 +2,28 @@ tms.plan_ign.classique:
   display_name: "PLAN IGN (Classique)"
   family: plan
   url: https://data.geopf.fr/tms/1.0.0/PLAN.IGN/{z}/{x}/{y}.pbf
-  style: "https://data.geopf.fr/annexes/ressources/vectorTiles/styles/PLAN.IGN/classique.json"
+  style: https://data.geopf.fr/annexes/ressources/vectorTiles/styles/PLAN.IGN/classique.json
 
 tms.plan_ign.standard:
   display_name: "PLAN IGN (Standard)"
   family: plan
   url: https://data.geopf.fr/tms/1.0.0/PLAN.IGN/{z}/{x}/{y}.pbf
-  style: "https://data.geopf.fr/annexes/ressources/vectorTiles/styles/PLAN.IGN/standard.json"
+  style: https://data.geopf.fr/annexes/ressources/vectorTiles/styles/PLAN.IGN/standard.json
 
 tms.plan_ign.gris:
   display_name: "PLAN IGN (Gris)"
   family: plan
   url: https://data.geopf.fr/tms/1.0.0/PLAN.IGN/{z}/{x}/{y}.pbf
-  style: "https://data.geopf.fr/annexes/ressources/vectorTiles/styles/PLAN.IGN/gris.json"
+  style: https://data.geopf.fr/annexes/ressources/vectorTiles/styles/PLAN.IGN/gris.json
 
 tms.plan_ign.epure:
   display_name: "PLAN IGN (Epuré)"
   family: plan
   url: https://data.geopf.fr/tms/1.0.0/PLAN.IGN/{z}/{x}/{y}.pbf
-  style: "https://data.geopf.fr/annexes/ressources/vectorTiles/styles/PLAN.IGN/epure.json"
+  style: https://data.geopf.fr/annexes/ressources/vectorTiles/styles/PLAN.IGN/epure.json
+
+tms.plan_ign.transparent:
+  display_name: "PLAN IGN (Transparent)"
+  family: plan
+  url: https://data.geopf.fr/tms/1.0.0/PLAN.IGN/{z}/{x}/{y}.pbf
+  style: https://data.geopf.fr/annexes/ressources/vectorTiles/styles/PLAN.IGN/transparent.json

@@ -21,7 +21,7 @@ class LayoutMap:
     id: str
     layers: list[str]
     scale: int | None = None
-    follow_canvas: bool = False
+    main_map: bool = False
 
 @dataclass
 class LegendSpec:
@@ -32,7 +32,7 @@ class LegendSpec:
 @dataclass
 class ProjectLayout:
     key: str
-    scale: int | None = None
+    main_scale: int | None = None
     maps: list[LayoutMap] = field(default_factory=list)
     legends: list[LegendSpec] = field(default_factory=list)
 
@@ -94,36 +94,39 @@ class ProjectConfigLoader:
 
         # --- maps ---
         maps_raw = raw.get("maps")
-        if not maps_raw:
-            raise ValueError(f"[CONFIG] '{key}' layout.maps is required")
-
-        if not isinstance(maps_raw, list):
-            raise TypeError(f"[CONFIG] '{key}' layout.maps must be a list")
+        if not isinstance(maps_raw, list) or not maps_raw:
+            raise ValueError(f"[CONFIG] '{key}' layout.maps must be a non-empty list")
 
         maps = []
         for item in maps_raw:
-            if "id" not in item:
+            map_id = item.get("id")
+            if not map_id:
                 raise ValueError(f"[CONFIG] map missing 'id' in '{key}'")
 
             layers = self._flatten(item.get("layers", []))
             if not layers:
-                raise ValueError(f"[CONFIG] map '{item['id']}' has no layers")
+                raise ValueError(f"[CONFIG] map '{map_id}' has no layers")
 
             maps.append(
                 LayoutMap(
-                    id=item["id"],
+                    id=map_id,
                     layers=layers,
                     scale=item.get("scale"),
-                    follow_canvas=item.get("follow_canvas"),
+                    main_map=item.get("main_map"),
                 )
             )
 
-        # --- duplicate map ids ---
+        # --- duplicate ids ---
         ids = [m.id for m in maps]
         if len(ids) != len(set(ids)):
             raise ValueError(f"[CONFIG] duplicate map ids in '{key}': {ids}")
 
         map_ids = set(ids)
+
+        # --- main scale ---
+        main_scale = next((m.scale for m in maps if m.main_map), None)
+        if main_scale is None:
+            main_scale = next((m.scale for m in maps if m.scale is not None), None)
 
         # --- legends ---
         legends_raw = raw.get("legends", [])
@@ -132,32 +135,31 @@ class ProjectConfigLoader:
 
         legends = []
         for item in legends_raw:
-            if "id" not in item:
+            legend_id = item.get("id")
+            if not legend_id:
                 raise ValueError(f"[CONFIG] legend missing 'id' in '{key}'")
 
-            if "map" not in item:
-                raise ValueError(f"[CONFIG] legend '{item['id']}' missing 'map'")
-
-            if item["map"] not in map_ids:
+            map_ref = item.get("map")
+            if map_ref not in map_ids:
                 raise ValueError(
-                    f"[CONFIG] legend '{item['id']}' references unknown map '{item['map']}'"
+                    f"[CONFIG] legend '{legend_id}' references unknown map '{map_ref}'"
                 )
 
             layers = self._flatten(item.get("layers", []))
             if not layers:
-                raise ValueError(f"[CONFIG] legend '{item['id']}' has no layers")
+                raise ValueError(f"[CONFIG] legend '{legend_id}' has no layers")
 
             legends.append(
                 LegendSpec(
-                    id=item["id"],
+                    id=legend_id,
                     layers=layers,
-                    map=item["map"],
+                    map=map_ref,
                 )
             )
 
         return ProjectLayout(
             key=key,
-            scale=raw.get("scale"),
             maps=maps,
             legends=legends,
+            main_scale=main_scale,
         )

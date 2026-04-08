@@ -95,7 +95,7 @@ class LayoutBuilder:
         return feat.geometry()
 
     def _pick_format(self, bbox: QgsRectangle) -> str:
-        scale = self.layout.scale
+        scale = self.layout.main_scale
         if scale is None:
             raise ValueError("[LAYOUT] layout.scale est requis pour calculer le format")
 
@@ -204,9 +204,9 @@ class LayoutBuilder:
 
         for map_spec in self.layout.maps:
             map_item = self._get_map_item(layout, map_spec.id)
-            messageLog(f"[LAYOUT] configuring: {map_spec.id} with layers: {map_spec.layers} (follow_canvas={map_spec.follow_canvas})")
+            messageLog(f"[LAYOUT] configuring: {map_spec.id} with layers: {map_spec.layers} (main_map={map_spec.main_map})")
 
-            if map_spec.follow_canvas:
+            if map_spec.main_map:
                 map_item.setKeepLayerSet(False)
                 map_item.setFollowVisibilityPreset(False)
                 map_item.zoomToExtent(canvas.extent())
@@ -221,7 +221,7 @@ class LayoutBuilder:
                 map_item.zoomToExtent(canvas.extent())
 
             # scale (common logic)
-            scale = map_spec.scale or self.layout.scale
+            scale = map_spec.scale or self.layout.main_scale
             if scale:
                 map_item.setScale(scale)
 

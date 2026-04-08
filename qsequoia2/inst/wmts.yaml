@@ -28,10 +28,50 @@ wmts_rgb:
   family: ortho
   url: contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&featureCount=10&format=image/jpeg&layers=HR.ORTHOIMAGERY.ORTHOPHOTOS&styles=normal&tileMatrixSet=PM_6_19&tilePixelRatio=0&url=https://data.geopf.fr/wmts?SERVICE%3DWMTS%26VERSION%3D1.0.0%26REQUEST%3DGetCapabilities
 
+wmts_spot_2021:
+  display_name: "spot 6-7 2021"
+  family: satellite
+  url: contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&featureCount=10&format=image/jpeg&layers=ORTHOIMAGERY.ORTHO-SAT.SPOT.2021&styles=normal&tileMatrixSet=PM_0_17&tilePixelRatio=0&url=https://data.geopf.fr/wmts?SERVICE%3DWMTS%26VERSION%3D1.0.0%26REQUEST%3DGetCapabilities
+
+wmts_spot_2022:
+  display_name: "spot 6-7 2022"
+  family: satellite
+  url: contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&featureCount=10&format=image/jpeg&layers=ORTHOIMAGERY.ORTHO-SAT.SPOT.2022&styles=normal&tileMatrixSet=PM_0_17&tilePixelRatio=0&url=https://data.geopf.fr/wmts?SERVICE%3DWMTS%26VERSION%3D1.0.0%26REQUEST%3DGetCapabilities
+
 wmts_spot_2023:
   display_name: "spot 6-7 2023"
   family: satellite
   url: contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&featureCount=10&format=image/jpeg&layers=ORTHOIMAGERY.ORTHO-SAT.SPOT.2023&styles=normal&tileMatrixSet=PM_0_17&tilePixelRatio=0&url=https://data.geopf.fr/wmts?SERVICE%3DWMTS%26VERSION%3D1.0.0%26REQUEST%3DGetCapabilities
+
+wmts_spot_2024:
+  display_name: "spot 6-7 2024"
+  family: satellite
+  url: contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&featureCount=10&format=image/jpeg&layers=ORTHOIMAGERY.ORTHO-SAT.SPOT.2024&styles=normal&tileMatrixSet=PM_0_17&tilePixelRatio=0&url=https://data.geopf.fr/wmts?SERVICE%3DWMTS%26VERSION%3D1.0.0%26REQUEST%3DGetCapabilities
+
+wmts_spot_2025:
+  display_name: "spot 6-7 2025"
+  family: satellite
+  url: contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&featureCount=10&format=image/jpeg&layers=ORTHOIMAGERY.ORTHO-SAT.SPOT.2025&styles=normal&tileMatrixSet=PM_0_17&tilePixelRatio=0&url=https://data.geopf.fr/wmts?SERVICE%3DWMTS%26VERSION%3D1.0.0%26REQUEST%3DGetCapabilities
+
+wmts_pleiade_2022:
+  display_name: "Pléiades 2022"
+  family: satellite
+  url: contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&featureCount=10&format=image/png&layers=ORTHOIMAGERY.ORTHO-SAT.PLEIADES.2022&styles=normal&tileMatrixSet=PM_0_18&tilePixelRatio=0&url=https://data.geopf.fr/wmts?SERVICE%3DWMTS%26VERSION%3D1.0.0%26REQUEST%3DGetCapabilities
+
+wmts_pleiade_2023:
+  display_name: "Pléiades 2023"
+  family: satellite
+  url: contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&featureCount=10&format=image/png&layers=ORTHOIMAGERY.ORTHO-SAT.PLEIADES.2023&styles=normal&tileMatrixSet=PM_0_18&tilePixelRatio=0&url=https://data.geopf.fr/wmts?SERVICE%3DWMTS%26VERSION%3D1.0.0%26REQUEST%3DGetCapabilities
+
+wmts_pleiade_2024:
+  display_name: "Pléiades 2024"
+  family: satellite
+  url: contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&featureCount=10&format=image/png&layers=ORTHOIMAGERY.ORTHO-SAT.PLEIADES.2024&styles=normal&tileMatrixSet=PM_0_18&tilePixelRatio=0&url=https://data.geopf.fr/wmts?SERVICE%3DWMTS%26VERSION%3D1.0.0%26REQUEST%3DGetCapabilities
+
+wmts_pleiade_2025:
+  display_name: "Pléiades 2025"
+  family: satellite
+  url: contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&featureCount=10&format=image/png&layers=ORTHOIMAGERY.ORTHO-SAT.PLEIADES.2025&styles=normal&tileMatrixSet=PM_0_18&tilePixelRatio=0&url=https://data.geopf.fr/wmts?SERVICE%3DWMTS%26VERSION%3D1.0.0%26REQUEST%3DGetCapabilities
 
 wmts_pci:
   display_name: "IGN Parcellaire Image"

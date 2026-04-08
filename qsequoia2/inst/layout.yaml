@@ -28,14 +28,18 @@ assemblage:
         - wmts_pci
 
   layout:
-    scale: 7500
-    layers: *assemblage_seq
+    maps:
+      - id: map1
+        main_map: true
+        scale: 7500
+        layers: *assemblage_seq
     legends:
       - id: legend1
+        map: map1
         layers: *assemblage_seq
 
 situation:
-  alias: "Carte de situation"
+  alias: "Situation"
 
   canvas:
     zoom_on: "v.seq.forest.poly"
@@ -68,14 +72,13 @@ situation:
         - wmts_scan100
 
   layout:
-    scale: 25000
     maps:
       - id: map1
-        follow_canvas: true
+        main_map: true
         scale: 25000
         layers: *situation_seq
       - id: map2
-        follow_canvas: false
+        main_map: false
         scale: 800000
         layers:
           - v.seq.forest.point
@@ -85,125 +88,155 @@ situation:
         map: map1
         layers: *situation_seq
 
-# peuplements:
-#   alias : "Cartographie des peuplements forestiers"
-#   canvas:
-#     scale: 7500
-#     zoom_on: 'parca_polygon_lgd_peuplements'
-#     readonly: [parca_polygon_lgd_peuplements, parca_polygon_occup, ua_polygon_plt]
-#     groups:
-#       - name: LEGEND
-#         type: vector
-#         layers: ['parca_polygon_lgd_peuplements']
-#       - name: VECTEUR
-#         type: vector
-#         layers: &peuplements_w_vect ['com_line', 'com_point', 'infra_point_peuplements', 'infra_line', 'topo_line', 'infra_polygon', 'lieudit_point', 'road_line', 'road_polygon', 'route_line', 'route_polygon']
-#       - name: SEQUOIA
-#         type: vector
-#         layers: &peuplements_w_seq ['prop_line', 'pf_line', 'pf_polygon', 'sspf_polygon', 'sspf_polygon_plt', 'parca_polygon_occup', 'ua_polygon', 'ua_polygon_plt', 'ua_polygon_ame']
-#       - name: WMTS
-#         type: wmts
-#         layers: &peuplements_w_wmts ['wmts_scan25_grey', 'wmts_scan100', 'wmts_scan1000', 'wmts_pci', 'wmts_irc', 'wmts_rgb']
+peuplement:
+  alias: "Peuplements"
 
-#     themes:
-#       - name: peuplements
-#         show: [*peuplements_w_vect, *peuplements_w_seq]
-#       - name: peuplements+WMTS
-#         show: [*peuplements_w_vect, *peuplements_w_seq, *peuplements_w_wmts]
+  canvas:
+    zoom_on: "v.seq.forest.poly"
+    layers:
+      sequoia: &peuplement_seq
+        - v.com.topo.line
+        - v.com.topo.point
+        - v.infra.point
+        - v.infra.line
+        - v.infra.poly
+        - v.toponyme.point
+        - v.road.line
+        - v.roadway.line
+        - v.roadway.poly
+        - v.hydro.poly
+        - v.hydro.line
+        - v.vege.poly
+        - v.curves.line
+        - v.seq.forest.line
+        - v.seq.pf.line
+        - v.seq.pf.poly
+        - v.seq.sspf.poly
+        - v.seq.sspf.poly
+        - v.seq.parca.poly
+        - v.seq.ua.poly
+      tms: &peuplement_tms
+        - tms.plan_ign.standard
+        - tms.plan_ign.classique
+      wmts: &peuplement_wmts
+        - wmts_irc
+        - wmts_rgb
 
+  layout:
+    maps:
+      - id: map1
+        main_map: true
+        scale: 7500
+        layers: *peuplement_seq
+    legends:
+      - id: legend1
+        map: map1
+        layers: *peuplement_seq
 
-#   layout:
-#     theme: 'peuplements'
-#     legends:
-#       - name: legend1
-#         layers: ['SEQ_SSPF_poly']
-#       - name: legend2
-#         layers: ['sspf_polygon_plt']
+enjeux_env:
+  alias: "Enjeux environnementaux"
 
-# enjeux_environnementaux:
-#   alias : "Cartographie des enjeux environnementaux"
-#   canvas:
-#     scale: 15000
-#     zoom_on: SEQ_PARCA_poly
-#     readonly: [SEQ_PARCA_poly]
+  canvas:
+    zoom_on: "v.seq.forest.line"
+    layers:
+      sequoia: &enjeux_env_seq
+        - v.mnhn.apb.poly
+        - v.mnhn.apg.poly
+        - v.mnhn.aphn.poly
+        - v.mnhn.aplg.poly
+        - v.mnhn.bios.poly
+        - v.mnhn.unesco.poly
+        - v.mnhn.cdl.poly
+        - v.mnhn.cen.poly
+        - v.mnhn.geoparc.poly
+        - v.mnhn.gsf.poly
+        - v.mnhn.inpg.poly
+        - v.mnhn.ospar.poly
+        - v.mnhn.pgsf.poly
+        - v.mnhn.pn.poly
+        - v.mnhn.pn2.poly
+        - v.mnhn.pnm.poly
+        - v.mnhn.pnr.poly
+        - v.mnhn.pprnn.poly
+        - v.mnhn.ramsar.poly
+        - v.mnhn.rb.poly
+        - v.mnhn.ripn.poly
+        - v.mnhn.rnc.poly
+        - v.mnhn.rncfs.poly
+        - v.mnhn.rnn.poly
+        - v.mnhn.rnr.poly
+        - v.mnhn.sc.poly
+        - v.mnhn.sic.poly
+        - v.mnhn.znieff1.poly
+        - v.mnhn.znieffmer1.poly
+        - v.mnhn.znieff2.poly
+        - v.mnhn.znieffmer2.poly
+        - v.mnhn.zpr.poly
+        - v.mnhn.zps.poly
+        # SEQUOIA
+        - v.seq.forest.line
+        - v.seq.pf.line
+        - v.seq.pf.poly
+        - v.seq.sspf.poly
+        - v.seq.sspf.poly
+        - v.seq.parca.poly
+        - v.seq.ua.poly
+      tms: &enjeux_env_tms
+        - tms.plan_ign.standard
+        - tms.plan_ign.classique
+        - tms.plan_ign.epure
 
-#     groups:
-#       - name : SEQUOIA
-#         type : vector
-#         layers : &enjeux_env_w_seq ['prop_line', 'pf_line', 'pf_polygon', 'pnr', 'znieff1', 'znieff2', 'zico', 'pn', 'sic', 'zps', 'ramsar', 'bios']
-#       - name : WMTS
-#         type : wmts
-#         layers : &enjeux_env_w_wmts ['wmts_scan25_grey']
+  layout:
+    maps:
+      - id: map1
+        main_map: true
+        scale: 15000
+        layers: [*enjeux_env_seq, tms.plan_ign.epure]
+    legends:
+      - id: legend1
+        map: map1
+        layers: *enjeux_env_seq
 
-#     themes:
-#       - name: environnement
-#         show: [*enjeux_env_w_seq, *enjeux_env_w_wmts]
+enjeux_pat:
+  alias : "Enjeux patrimoniaux"
+  canvas:
+    zoom_on: "v.seq.forest.line"
+    layers:
+      sequoia: &enjeux_pat_seq
+        - v.pat.imdn.poly
+        - v.pat.padn.poly
+        - v.pat.immh.poly
+        - v.pat.pamh.poly
+        - v.pat.imun.poly
+        - v.pat.paun.poly
+        - v.pat.sici.poly
+        - v.pat.sipr.poly
+        - v.pat.lacr.poly
+        - v.pat.zppa.poly
+        # SEQUOIA
+        - v.seq.forest.line
+        - v.seq.pf.line
+        - v.seq.pf.poly
+        - v.seq.sspf.poly
+        - v.seq.sspf.poly
+        - v.seq.parca.poly
+        - v.seq.ua.poly
+      tms: &enjeux_pat_tms
+        - tms.plan_ign.standard
+        - tms.plan_ign.classique
+        - tms.plan_ign.epure
 
-#   layout:
-#     theme: 'environnement'
-#     legends:
-#       - name: legend1
-#         layers: ['SEQ_PARCA_poly']
-#       - name: legend2
-#         layers: ['prop_line', 'pf_line', 'pf_polygon', 'pnr', 'znieff1', 'znieff2', 'zico', 'pn', 'sic', 'zps', 'ramsar', 'bios']
+  layout:
+    maps:
+      - id: map1
+        main_map: true
+        scale: 15000
+        layers: [*enjeux_env_seq, tms.plan_ign.epure]
+    legends:
+      - id: legend1
+        map: map1
+        layers: *enjeux_env_seq
 
-# enjeux_sociaux:
-#   alias : "Cartographie des enjeux sociaux"
-#   canvas:
-#     scale: 15000
-#     zoom_on: SEQ_PARCA_poly
-#     readonly: [SEQ_PARCA_poly]
-#     groups:
-#       - name : LEGEND
-#         type : vector
-#         layers : [SEQ_PARCA_poly]
-#       - name : SEQUOIA
-#         type : vector
-#         layers : &enjeux_sociaux_w_seq ['prop_line', 'pf_line', 'pf_polygon', 'ppi', 'ppr', 'ppe']
-#       - name : WMTS
-#         type : wmts
-#         layers : &enjeux_sociaux_w_wmts ['wmts_scan25_grey']
-
-#     themes:
-#       - name: social
-#         show: [*enjeux_sociaux_w_seq, *enjeux_sociaux_w_wmts]
-
-#   layout:
-#     theme: 'social'
-#     legends:
-#       - name: legend1
-#         layers: ['SEQ_PARCA_poly']
-#       - name: legend2
-#         layers: ['ppi', 'ppr', 'ppe']
-
-# enjeux_patrimoniaux:
-#   alias : "Cartographie des enjeux patrimoniaux"
-#   canvas:
-#     scale: 15000
-#     zoom_on: SEQ_PARCA_poly
-#     readonly: [SEQ_PARCA_poly]
-
-#     groups:
-#       - name : LEGEND
-#         type : vector
-#         layers : ['SEQ_PARCA_poly']
-#       - name : SEQUOIA
-#         type : vector
-#         layers : &enjeux_pat_w_seq ['prop_line', 'pf_line', 'pf_polygon', 'mh', 'ppmh', 'site']
-#       - name : WMTS
-#         type : wmts
-#         layers : &enjeux_pat_w_wmts ['wmts_scan25_grey']
-#     themes:
-#       - name: patrimoine
-#         show: [*enjeux_pat_w_seq, *enjeux_pat_w_wmts]
-
-#   layout:
-#     theme: 'patrimoine'
-#     legends:
-#       - name: legend1
-#         layers: ['SEQ_PARCA_poly']
-#       - name: legend2
-#         layers: ['mh', 'ppmh', 'site']
 
 # geologie:
 #   alias : "Cartographie géologique et stationnelle"

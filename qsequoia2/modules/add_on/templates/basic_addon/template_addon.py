@@ -16,7 +16,7 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
- Alexandre Le Bars - comité des forêts 2026  - SequoiAPP(Qsequoia2)
+SequoiAPP(Qsequoia2)
 """
 
 # ==============================================================

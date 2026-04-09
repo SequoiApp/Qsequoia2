@@ -8,8 +8,8 @@ from qgis.core import QgsProject, QgsApplication
 # Utils
 from ..utils.variable import get_global_variable, set_global_variable
 from ..utils.Qmessage import messageLog
-from ..add_on.addon_creator import addonCreator
-from .go_to_maps import open_maps
+from ..add_on.addon_creator import *
+from .go_to_maps import *
 
 FORM_CLASS, _ = uic.loadUiType(
     str(Path(__file__).parent / "global_settings.ui")
@@ -188,7 +188,7 @@ class GlobalSettingsDialog(QDialog, FORM_CLASS):
             QMessageBox.warning(self, "Dossier manquant", "Veuillez sélectionner un dossier d'addons.")
             return
 
-        dialog = addonCreator(iface=self.iface,addon_folder=addon_folder,plugin=self.plugin,parent=self)
+        dialog = on_new_addon_clicked(self.iface, addon_folder, self.plugin)
         dialog.on_new_addon_clicked()
 
 

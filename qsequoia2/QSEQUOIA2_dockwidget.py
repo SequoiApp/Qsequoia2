@@ -8,9 +8,10 @@ from qgis.PyQt.QtWidgets import QCompleter, QFileDialog, QApplication
 
 from qsequoia2.modules.table_check.table_check import table_check
 from qsequoia2.modules.add_data.add_data import AddDataTabWidget
-from qsequoia2.modules.layout_designer.layout_designer import LayoutDesignerWidget
+#from qsequoia2.modules.layout_designer.layout_designer import LayoutDesignerWidget
 from qsequoia2.modules.forest_data.forest_data import ForestDataTabs
 from qsequoia2.modules.tools.tools import ToolsDialog
+from qsequoia2.modules.add_on.addon_loader import *
 from qsequoia2.modules.utils.variable import get_global_variable
 from qsequoia2.modules.utils.seq_config import *
 from qsequoia2.modules.utils.Qmessage import *
@@ -192,8 +193,12 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.forest_tab = add_tab(ForestDataTabs(iface=self.iface, parent=self), "forest_data.svg", "Métadonnées")
         self.table_check_tab = add_tab(table_check(iface=self.iface, parent=self),"table_check.svg", "Vérification des données")
         self.add_data_tab = add_tab(AddDataTabWidget(iface=self.iface, parent=self), "add_data.svg", "Ajout de données")
-        self.layout_tab = add_tab(LayoutDesignerWidget(iface=self.iface, parent=self), "layout.svg", "Conception de mise en page")
+        #self.layout_tab = add_tab(LayoutDesignerWidget(iface=self.iface, parent=self), "layout.svg", "Conception de mise en page")
         self.tools_tab = add_tab(ToolsDialog(iface=self.iface, parent=self), "tools.svg",  "Outils")
+
+        #load_addons(plugin= self.parent, iface=self.iface)
+
+        
 
     def refresh(self):
         self._update_project_visibility()

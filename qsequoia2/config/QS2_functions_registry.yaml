@@ -43,22 +43,22 @@ load_actions:
   args: []
 AddDataTabWidget:
   type: class
-  path: qsequoia2.scripts.add_data.add_data
+  path: qsequoia2.modules.add_data.add_data
   name: AddDataTabWidget
 addonCreator:
   type: class
-  path: qsequoia2.scripts.add_on.addon_creator
+  path: qsequoia2.modules.add_on.addon_creator
   name: addonCreator
 load_addons:
   type: function
-  path: qsequoia2.scripts.add_on.addon_loader
+  path: qsequoia2.modules.add_on.addon_loader
   name: load_addons
   args:
   - plugin
   - iface
 test:
   type: function
-  path: qsequoia2.scripts.add_on.test
+  path: qsequoia2.modules.add_on.test
   name: test
   args:
   - self
@@ -66,56 +66,40 @@ test:
   - args
 ForestDataTabs:
   type: class
-  path: qsequoia2.scripts.forest_data.forest_data
+  path: qsequoia2.modules.forest_data.forest_data
   name: ForestDataTabs
 getForestdata:
   type: class
-  path: qsequoia2.scripts.forest_data.forest_get_data
+  path: qsequoia2.modules.forest_data.forest_get_data
   name: getForestdata
 update_forest_name:
   type: function
-  path: qsequoia2.scripts.forest_data.update_forest_name
+  path: qsequoia2.modules.forest_data.update_forest_name
   name: update_forest_name
   args:
   - prefix
   - seq_identifier
 GlobalSettingsDialog:
   type: class
-  path: qsequoia2.scripts.global_settings.global_settings
+  path: qsequoia2.modules.global_settings.global_settings
   name: GlobalSettingsDialog
 open_maps:
   type: function
-  path: qsequoia2.scripts.global_settings.go_to_maps
+  path: qsequoia2.modules.global_settings.go_to_maps
   name: open_maps
   args:
   - adress
-ProjectCanvas:
+LayoutBuilder:
   type: class
-  path: qsequoia2.scripts.LayoutDesigner.ConfigLoader
-  name: ProjectCanvas
-ProjectLayout:
+  path: qsequoia2.modules.layout_designer.layout_builder
+  name: LayoutBuilder
+LayoutDesignerWidget:
   type: class
-  path: qsequoia2.scripts.LayoutDesigner.ConfigLoader
-  name: ProjectLayout
-ConfigLoader:
-  type: class
-  path: qsequoia2.scripts.LayoutDesigner.ConfigLoader
-  name: ConfigLoader
-LayoutDesignerDialog:
-  type: class
-  path: qsequoia2.scripts.LayoutDesigner.LayoutDesigner
-  name: LayoutDesignerDialog
-MapInfo:
-  type: class
-  path: qsequoia2.scripts.LayoutDesigner.LayoutDesigner_service
-  name: MapInfo
-LayoutService:
-  type: class
-  path: qsequoia2.scripts.LayoutDesigner.LayoutDesigner_service
-  name: LayoutService
+  path: qsequoia2.modules.layout_designer.layout_designer
+  name: LayoutDesignerWidget
 buffer:
   type: function
-  path: qsequoia2.scripts.LayoutDesigner.processing
+  path: qsequoia2.modules.layout_designer.processing
   name: buffer
   args:
   - layer
@@ -124,85 +108,109 @@ buffer:
   - segments
 multipart_to_singleparts:
   type: function
-  path: qsequoia2.scripts.LayoutDesigner.processing
+  path: qsequoia2.modules.layout_designer.processing
   name: multipart_to_singleparts
   args:
   - layer
+BuildContext:
+  type: class
+  path: qsequoia2.modules.layout_designer.project_builder
+  name: BuildContext
 ProjectBuilder:
   type: class
-  path: qsequoia2.scripts.LayoutDesigner.ProjectBuilder
+  path: qsequoia2.modules.layout_designer.project_builder
   name: ProjectBuilder
+ProjectCanvas:
+  type: class
+  path: qsequoia2.modules.layout_designer.project_config_loader
+  name: ProjectCanvas
+LayoutMap:
+  type: class
+  path: qsequoia2.modules.layout_designer.project_config_loader
+  name: LayoutMap
+LegendSpec:
+  type: class
+  path: qsequoia2.modules.layout_designer.project_config_loader
+  name: LegendSpec
+ProjectLayout:
+  type: class
+  path: qsequoia2.modules.layout_designer.project_config_loader
+  name: ProjectLayout
+ProjectConfigLoader:
+  type: class
+  path: qsequoia2.modules.layout_designer.project_config_loader
+  name: ProjectConfigLoader
 getFinaldata:
   type: function
-  path: qsequoia2.scripts.table_check.data_table
+  path: qsequoia2.modules.table_check.data_table
   name: getFinaldata
   args:
   - synthese
 sspf_surface_calculation:
   type: function
-  path: qsequoia2.scripts.table_check.data_table
+  path: qsequoia2.modules.table_check.data_table
   name: sspf_surface_calculation
   args:
   - ua_layer
 table_check:
   type: class
-  path: qsequoia2.scripts.table_check.table_check
+  path: qsequoia2.modules.table_check.table_check
   name: table_check
 ToolsDialog:
   type: class
-  path: qsequoia2.scripts.tools.tools
+  path: qsequoia2.modules.tools.tools
   name: ToolsDialog
 sync_seq_configs:
   type: function
-  path: qsequoia2.scripts.utils.seq_config
+  path: qsequoia2.modules.utils.seq_config
   name: sync_seq_configs
   args:
   - timeout
 get_seq_config_path:
   type: function
-  path: qsequoia2.scripts.utils.seq_config
+  path: qsequoia2.modules.utils.seq_config
   name: get_seq_config_path
   args:
   - name
 get_seq_config:
   type: function
-  path: qsequoia2.scripts.utils.seq_config
+  path: qsequoia2.modules.utils.seq_config
   name: get_seq_config
   args:
   - name
 configure_snapping:
   type: function
-  path: qsequoia2.scripts.utils.configure_snapping
+  path: qsequoia2.modules.utils.configure_snapping
   name: configure_snapping
   args: []
 disabled_v_external_grass:
   type: function
-  path: qsequoia2.scripts.utils.disabled_v_external_grass
+  path: qsequoia2.modules.utils.disabled_v_external_grass
   name: disabled_v_external_grass
   args:
   - iface
 get_download_folder:
   type: function
-  path: qsequoia2.scripts.utils.get_download_folder
+  path: qsequoia2.modules.utils.get_download_folder
   name: get_download_folder
   args: []
 find_qgis_project:
   type: function
-  path: qsequoia2.scripts.utils.qgz_project
+  path: qsequoia2.modules.utils.qgz_project
   name: find_qgis_project
   args:
   - seq_dir
   - seq_dirname
 Load_qgis_project:
   type: function
-  path: qsequoia2.scripts.utils.qgz_project
+  path: qsequoia2.modules.utils.qgz_project
   name: Load_qgis_project
   args:
   - seq_dir
   - seq_dirname
 create_qgis_project:
   type: function
-  path: qsequoia2.scripts.utils.qgz_project
+  path: qsequoia2.modules.utils.qgz_project
   name: create_qgis_project
   args:
   - seq_dir
@@ -210,12 +218,12 @@ create_qgis_project:
   - datum
 close_qgis_project:
   type: function
-  path: qsequoia2.scripts.utils.qgz_project
+  path: qsequoia2.modules.utils.qgz_project
   name: close_qgis_project
   args: []
 messageBar:
   type: function
-  path: qsequoia2.scripts.utils.Qmessage
+  path: qsequoia2.modules.utils.Qmessage
   name: messageBar
   args:
   - iface
@@ -224,46 +232,46 @@ messageBar:
   - duration
 messageLog:
   type: function
-  path: qsequoia2.scripts.utils.Qmessage
+  path: qsequoia2.modules.utils.Qmessage
   name: messageLog
   args:
   - text
   - level
 reloadQS2:
   type: function
-  path: qsequoia2.scripts.utils.reloader
+  path: qsequoia2.modules.utils.reloader
   name: reloadQS2
   args:
   - plugin
   - plug
 seq_key:
   type: function
-  path: qsequoia2.scripts.utils.seq_config
+  path: qsequoia2.modules.utils.seq_config
   name: seq_key
   args:
   - key
 seq_layer:
   type: function
-  path: qsequoia2.scripts.utils.seq_config
+  path: qsequoia2.modules.utils.seq_config
   name: seq_layer
   args:
   - key
 seq_field:
   type: function
-  path: qsequoia2.scripts.utils.seq_config
+  path: qsequoia2.modules.utils.seq_config
   name: seq_field
   args:
   - field
 get_style:
   type: function
-  path: qsequoia2.scripts.utils.seq_config
+  path: qsequoia2.modules.utils.seq_config
   name: get_style
   args:
   - layer_key
   - style_folder
 seq_read:
   type: function
-  path: qsequoia2.scripts.utils.seq_config
+  path: qsequoia2.modules.utils.seq_config
   name: seq_read
   args:
   - key
@@ -273,46 +281,46 @@ seq_read:
   - style_folder
 find_all_seq_dir:
   type: function
-  path: qsequoia2.scripts.utils.seq_config
+  path: qsequoia2.modules.utils.seq_config
   name: find_all_seq_dir
   args:
   - root_dir
   - max_dirs
 find_seq_identifier:
   type: function
-  path: qsequoia2.scripts.utils.seq_config
+  path: qsequoia2.modules.utils.seq_config
   name: find_seq_identifier
   args:
   - seq_dir
 get_global_variable:
   type: function
-  path: qsequoia2.scripts.utils.variable
+  path: qsequoia2.modules.utils.variable
   name: get_global_variable
   args:
   - name
 set_global_variable:
   type: function
-  path: qsequoia2.scripts.utils.variable
+  path: qsequoia2.modules.utils.variable
   name: set_global_variable
   args:
   - name
   - value
 get_project_variable:
   type: function
-  path: qsequoia2.scripts.utils.variable
+  path: qsequoia2.modules.utils.variable
   name: get_project_variable
   args:
   - name
 set_project_variable:
   type: function
-  path: qsequoia2.scripts.utils.variable
+  path: qsequoia2.modules.utils.variable
   name: set_project_variable
   args:
   - name
   - value
 _safe_set:
   type: function
-  path: qsequoia2.scripts.utils.variable
+  path: qsequoia2.modules.utils.variable
   name: _safe_set
   args:
   - setter
@@ -320,7 +328,7 @@ _safe_set:
   - value
 yaml_loader:
   type: function
-  path: qsequoia2.scripts.utils.yaml_helper
+  path: qsequoia2.modules.utils.yaml_helper
   name: yaml_loader
   args:
   - name
@@ -328,7 +336,7 @@ yaml_loader:
   - dir
 yaml_creator:
   type: function
-  path: qsequoia2.scripts.utils.yaml_helper
+  path: qsequoia2.modules.utils.yaml_helper
   name: yaml_creator
   args:
   - name
@@ -336,11 +344,11 @@ yaml_creator:
   - dir
 DogWatcher:
   type: class
-  path: qsequoia2.scripts.watchdog.dogwatcher
+  path: qsequoia2.modules.watchdog.dogwatcher
   name: DogWatcher
 show_add_banner:
   type: function
-  path: qsequoia2.scripts.watchdog.extract_files
+  path: qsequoia2.modules.watchdog.extract_files
   name: show_add_banner
   args:
   - project_folder
@@ -351,7 +359,7 @@ show_add_banner:
   - dockwidget
 real_extract_files:
   type: function
-  path: qsequoia2.scripts.watchdog.extract_files
+  path: qsequoia2.modules.watchdog.extract_files
   name: real_extract_files
   args:
   - project_folder
@@ -360,11 +368,11 @@ real_extract_files:
   - dockwidget
 DownloadEventHandler:
   type: class
-  path: qsequoia2.scripts.watchdog.watchdog_handler
+  path: qsequoia2.modules.watchdog.watchdog_handler
   name: DownloadEventHandler
 PluginExemple:
   type: function
-  path: qsequoia2.scripts.add_on.templates.basic_addon.python.exemple
+  path: qsequoia2.modules.add_on.templates.basic_addon.python.exemple
   name: PluginExemple
   args:
   - pf
@@ -373,7 +381,7 @@ PluginExemple:
   - args
 AddonExemple:
   type: function
-  path: qsequoia2.scripts.add_on.templates.basic_addon.python.exemple
+  path: qsequoia2.modules.add_on.templates.basic_addon.python.exemple
   name: AddonExemple
   args:
   - self

@@ -10,7 +10,7 @@ import json
 
 # Qgis
 from PyQt5 import uic
-from qgis.PyQt.QtWidgets import QDialog
+from qgis.PyQt.QtWidgets import QWidget
 from qgis.core import *
 from PyQt5.QtWidgets import QTableWidgetItem, QHeaderView, QButtonGroup
 from PyQt5.QtCore import Qt
@@ -30,7 +30,7 @@ FORM_CLASS, _ = uic.loadUiType(str(UI_PATH))
 # region initalisation
 # ==========================================================================
 
-class ForestDataTabs(QDialog, FORM_CLASS):
+class ForestDataTabs(QWidget, FORM_CLASS):
     """Classe principale du module Forestdata de Qsequoia2"""
     def __init__(self, iface, parent=None):
         super().__init__(parent)
@@ -49,8 +49,8 @@ class ForestDataTabs(QDialog, FORM_CLASS):
         }
 
         for rb in self.forestType_rb:
-            rb.setVisible(False)
-            self.lbl_type.setVisible(False)
+            rb.setEnabled(False)
+            self.lbl_type.setEnabled(False)
             rb.toggled.connect(self.on_checkbox_toggled)
 
     # endregion
@@ -69,8 +69,8 @@ class ForestDataTabs(QDialog, FORM_CLASS):
         self.ua_layer = seq_read("ua", seq_dir)
 
         for rb in self.forestType_rb:
-            rb.setVisible(True)
-            self.lbl_type.setVisible(True)
+            rb.setEnabled(True)
+            self.lbl_type.setEnabled(True)
 
         # création des métadata 
         seq_metadata = self.run_calculation(seq_dir)

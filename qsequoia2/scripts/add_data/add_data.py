@@ -218,7 +218,7 @@ class AddDataTabWidget(QTabWidget, FORM_CLASS):
     # region ADD LAYER TO QGIS
     def on_seq_layer_clicked(self, item, column):
 
-        project_folder = get_project_variable("QS2_seq_dir")
+        seq_dir = get_project_variable("QS2_seq_dir")
         style_folder = get_global_variable("QS2_styles_directory")
 
         data = item.data(0, Qt.UserRole)
@@ -227,7 +227,7 @@ class AddDataTabWidget(QTabWidget, FORM_CLASS):
         if not data:
             return
 
-        if not project_folder:
+        if not seq_dir:
             messageBar(self.iface, "Aucun projet sélectionné", "w")
             return
 
@@ -242,7 +242,7 @@ class AddDataTabWidget(QTabWidget, FORM_CLASS):
         try:
             seq_read(
                 key=key,
-                seq_dir=project_folder,
+                seq_dir=seq_dir,
                 add_to_project=True,
                 group=group,
                 style_folder=style_folder

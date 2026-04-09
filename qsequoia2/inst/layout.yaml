@@ -92,7 +92,7 @@ peuplement:
   alias: "Peuplements"
 
   canvas:
-    zoom_on: "v.seq.forest.poly"
+    zoom_on: "v.seq.forest.line"
     layers:
       sequoia: &peuplement_seq
         - v.com.topo.line

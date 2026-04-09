@@ -65,10 +65,10 @@ class ProjectBuilder:
         return group if group else parent.addGroup(name)
 
     def _load_seq_layers(self, keys, main_group) -> dict[str, QgsMapLayer]:
-        project_folder = get_project_variable("QS2_seq_dir")
+        seq_dir = get_project_variable("QS2_seq_dir")
         style_folder = get_global_variable("QS2_styles_directory")
 
-        if not project_folder:
+        if not seq_dir:
             raise RuntimeError("[Projet] Aucun projet sélectionné")
 
         loaded = {}
@@ -81,7 +81,7 @@ class ProjectBuilder:
 
                 layer = seq_read(
                     key,
-                    project_folder=project_folder,
+                    seq_dir=seq_dir,
                     add_to_project=True,
                     group=group,
                     style_folder=style_folder,

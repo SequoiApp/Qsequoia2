@@ -7,20 +7,20 @@ from qgis.PyQt.QtGui import QIcon, QDesktopServices
 from qgis.PyQt.QtWidgets import QAction, QApplication
 from qgis.core import *
 
-from qsequoia2.scripts.global_settings.global_settings import GlobalSettingsDialog
-from qsequoia2.scripts.watchdog.dogwatcher import DogWatcher
-from qsequoia2.scripts.forest_data.forest_data import ForestDataTabs
-from qsequoia2.scripts.table_check.table_check import table_check
-from qsequoia2.scripts.add_data.add_data import AddDataTabWidget
-from qsequoia2.scripts.utils.disabled_v_external_grass import disabled_v_external_grass
-from qsequoia2.scripts.utils.get_download_folder import get_download_folder
-from qsequoia2.scripts.utils.seq_config import *
-from qsequoia2.scripts.utils.Qmessage import *
-from qsequoia2.scripts.utils.reloader import *
-from qsequoia2.scripts.utils.variable import *
-from qsequoia2.scripts.utils.qgz_project import *
-from qsequoia2.scripts.utils.configure_snapping import *
-from qsequoia2.scripts.utils.plugin_vars import *
+from qsequoia2.modules.global_settings.global_settings import GlobalSettingsDialog
+from qsequoia2.modules.watchdog.dogwatcher import DogWatcher
+from qsequoia2.modules.forest_data.forest_data import ForestDataTabs
+from qsequoia2.modules.table_check.table_check import table_check
+from qsequoia2.modules.add_data.add_data import AddDataTabWidget
+from qsequoia2.modules.utils.disabled_v_external_grass import disabled_v_external_grass
+from qsequoia2.modules.utils.get_download_folder import get_download_folder
+from qsequoia2.modules.utils.seq_config import *
+from qsequoia2.modules.utils.Qmessage import *
+from qsequoia2.modules.utils.reloader import *
+from qsequoia2.modules.utils.variable import *
+from qsequoia2.modules.utils.qgz_project import *
+from qsequoia2.modules.utils.configure_snapping import *
+from qsequoia2.modules.utils.plugin_vars import *
 
 from .qsequoia2_dockwidget import Qsequoia2DockWidget
 

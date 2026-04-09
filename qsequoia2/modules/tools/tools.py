@@ -7,7 +7,7 @@ from PyQt5.QtCore import Qt
 from qgis.PyQt.QtWidgets import QWidget, QTreeWidget, QVBoxLayout, QTreeWidgetItem
 from PyQt5 import uic
 from ..utils.Qmessage import *
-from qsequoia2.scripts.utils.variable import get_global_variable, get_project_variable
+from qsequoia2.modules.utils.variable import get_global_variable, get_project_variable
 
 UI_PATH = Path(__file__).parent / "tools.ui"
 FORM_CLASS, _ = uic.loadUiType(str(UI_PATH))

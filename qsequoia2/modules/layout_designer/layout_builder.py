@@ -1,16 +1,7 @@
 from pathlib import Path
 
 from qgis.PyQt.QtXml import QDomDocument
-from qgis.core import (
-    QgsLayoutFrame,
-    QgsLayoutItemMap,
-    QgsPrintLayout,
-    QgsReadWriteContext,
-    QgsRectangle,
-    QgsUnitTypes,
-    QgsVectorLayer,
-    QgsWkbTypes,
-)
+from qgis.core import *
 
 from ..utils.Qmessage import *
 from ..utils.variable import get_global_variable, get_project_variable

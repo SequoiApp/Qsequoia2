@@ -4,7 +4,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication
 from qgis.core import QgsMapLayer, QgsProject
 
-from qsequoia2.scripts.utils.variable import get_global_variable, get_project_variable
+from qsequoia2.modules.utils.variable import get_global_variable, get_project_variable
 
 from ..utils.Qmessage import messageBar, messageLog
 from ..utils.seq_config import seq_layer, seq_read

@@ -4,7 +4,7 @@ from pathlib import Path
 # QGIS
 from qgis.core import (QgsProject,QgsCoordinateReferenceSystem)
 
-from qsequoia2.scripts.utils.variable import *
+from qsequoia2.modules.utils.variable import *
 
 from .plugin_vars import *
 

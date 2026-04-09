@@ -141,7 +141,7 @@ class AddDataTabWidget(QTabWidget, FORM_CLASS):
         tree.setObjectName("wmts_tree")
         tree.setHeaderLabels(["WMTS"])
 
-        yaml_path = Path(__file__).parents[2] / "inst" / "wmts.yaml"
+        yaml_path = Path(__file__).parents[2] / "config" / "wmts.yaml"
         wmts_cfg = yaml.safe_load(yaml_path.read_text(encoding="utf-8")) or {}
 
         wmts_items = sorted(

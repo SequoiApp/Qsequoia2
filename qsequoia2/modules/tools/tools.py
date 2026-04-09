@@ -29,7 +29,7 @@ class ToolsDialog(QWidget, FORM_CLASS):
         self.treeTOOLS.clear()
         self.treeTOOLS.setHeaderHidden(True)
 
-        yaml_path = Path(__file__).resolve().parents[2] / "inst" / "qs2_tools.yaml"
+        yaml_path = Path(__file__).resolve().parents[2] / "config" / "qs2_tools.yaml"
         data = yaml.safe_load(yaml_path.read_text(encoding="utf-8")) or {}
 
         for category_name, tools in data.items():

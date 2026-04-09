@@ -8,8 +8,8 @@ from qsequoia2.modules.utils.variable import get_global_variable, get_project_va
 
 from ..utils.Qmessage import messageBar, messageLog
 from ..utils.seq_config import seq_layer, seq_read
-from ..utils.wmts import wmts_layer, wmts_read
-from ..utils.tms import tms_layer, tms_read
+#from ..utils.wmts import wmts_layer, wmts_read
+#from ..utils.tms import tms_layer, tms_read
 
 @dataclass
 class BuildContext:

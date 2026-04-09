@@ -4,7 +4,7 @@ from qgis.core import *
 from ..utils.plugin_vars import *
 
 _CACHE_DIR = Path(QgsApplication.qgisSettingsDirPath()) / "qsequoia2"
-_CONFIG_DIR = Path(__file__).parent / "inst"
+_CONFIG_DIR = Path(__file__).parent / "config"
 
 def yaml_loader(name : str, level: str, dir = None) -> dict:
     """

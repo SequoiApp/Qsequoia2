@@ -8,7 +8,7 @@ from qgis.PyQt.QtWidgets import QCompleter, QFileDialog, QApplication
 
 from qsequoia2.modules.table_check.table_check import table_check
 from qsequoia2.modules.add_data.add_data import AddDataTabWidget
-#from qsequoia2.modules.layout_designer.layout_designer import LayoutDesignerWidget
+from qsequoia2.modules.layout_designer.layout_designer import LayoutDesignerWidget
 from qsequoia2.modules.forest_data.forest_data import ForestDataTabs
 from qsequoia2.modules.tools.tools import ToolsDialog
 from qsequoia2.modules.add_on.addon_loader import *
@@ -183,11 +183,14 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             return widget 
 
         forest_tab = add_tab(ForestDataTabs(iface=self.iface, parent=self), "forest_data.svg", "Métadonnées")
+        table_check_tab = add_tab(table_check(self.iface,parent=self), "table_check.svg", "Vérification des données")
         add_data_tab = add_tab(AddDataTabWidget(iface=self.iface, parent=self), "add_data.svg", "Ajout de données")
         layout_tab = add_tab(LayoutDesignerWidget(iface=self.iface, parent=self), "layout.svg", "Conception de mise en page")
         tools_tab = add_tab(ToolsDialog(iface=self.iface, parent=self), "tools.svg",  "Outils")
 
         self.projectChanged.connect(add_data_tab.on_project_changed)
+        self.projectChanged.connect(forest_tab.actu_metadata)
+        self.projectChanged.connect(table_check.actu_Tabledata)
 
     def refresh(self):
         self._update_project_visibility()

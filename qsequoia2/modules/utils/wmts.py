@@ -2,8 +2,8 @@ from pathlib import Path
 import yaml
 
 from qgis.core import QgsRasterLayer, QgsProject
-from qsequoia2.scripts.utils.messageBar import messageBar, messageLog
-from qsequoia2.scripts.utils.seq_config import _CONFIG_CACHE
+from qsequoia2.modules.utils.Qmessage import messageBar, messageLog
+from qsequoia2.modules.utils.seq_config import _CONFIG_CACHE
 
 def get_wmts_config_path() -> Path:
     path = Path(__file__).parents[2] / "inst" / "wmts.yaml"

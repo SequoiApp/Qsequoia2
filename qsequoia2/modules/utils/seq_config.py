@@ -2,7 +2,7 @@ from pathlib import Path
 import urllib.request
 import yaml
 import os
-from .messageBar import messageBar, messageLog
+from .Qmessage import messageBar, messageLog
 
 from .plugin_vars import *
 from qgis.core import *

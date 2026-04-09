@@ -2,8 +2,8 @@ from pathlib import Path
 import yaml
 
 from qgis.core import QgsVectorTileLayer, QgsProject
-from qsequoia2.scripts.utils.messageBar import messageLog
-from qsequoia2.scripts.utils.seq_config import _CONFIG_CACHE
+from qsequoia2.modules.utils.Qmessage import messageLog
+from qsequoia2.modules.utils.seq_config import _CONFIG_CACHE
 
 def get_tms_config_path() -> Path:
     path = Path(__file__).parents[2] / "inst" / "tms.yaml"

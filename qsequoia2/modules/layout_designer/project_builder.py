@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 from PyQt5.QtCore import Qt
+from qgis.PyQt.QtCore import QTimer
 from PyQt5.QtWidgets import QApplication
 from qgis.core import QgsMapLayer, QgsProject
 
@@ -8,8 +9,8 @@ from qsequoia2.modules.utils.variable import get_global_variable, get_project_va
 
 from ..utils.Qmessage import messageBar, messageLog
 from ..utils.seq_config import seq_layer, seq_read
-#from ..utils.wmts import wmts_layer, wmts_read
-#from ..utils.tms import tms_layer, tms_read
+from ..utils.wmts import wmts_layer, wmts_read
+from ..utils.tms import tms_layer, tms_read
 
 @dataclass
 class BuildContext:
@@ -18,41 +19,43 @@ class BuildContext:
     layers: dict[str, QgsMapLayer]
 
 class ProjectBuilder:
-    def __init__(self, iface, project: QgsProject, seq_id: str | None, canvas):
+    def __init__(self, iface, project: QgsProject, seq_id: str | None, canvas_cfg):
         self.iface = iface
         self.project = project
         self.seq_id = seq_id
-        self.canvas = canvas
+        self.canvas_cfg = canvas_cfg
 
     def build(self) -> BuildContext:
-        messageBar(self.iface, f"Chargement du projet {self.canvas.alias}", "i", 8)
+        messageBar(self.iface, f"Chargement du projet {self.canvas_cfg.alias}", "i", 8)
 
         group_name = (
-            f"{self.seq_id} - {self.canvas.key.upper()}"
-            if self.seq_id else self.canvas.key.upper()
+            f"{self.seq_id} - {self.canvas_cfg.key.upper()}"
+            if self.seq_id else self.canvas_cfg.key.upper()
         )
         main_group = self._get_group(group_name)
 
         QApplication.setOverrideCursor(Qt.WaitCursor)
         try:
             layers = {}
-            layers |= self._load_seq_layers(self.canvas.layers.sequoia, main_group)
-            layers |= self._load_wmts_layers(self.canvas.layers.wmts, main_group)
-            layers |= self._load_tms_layers(self.canvas.layers.tms, main_group)
+            layers |= self._load_seq_layers(self.canvas_cfg.layers.sequoia, main_group)
+            layers |= self._load_wmts_layers(self.canvas_cfg.layers.wmts, main_group)
+            layers |= self._load_tms_layers(self.canvas_cfg.layers.tms, main_group)
         finally:
             QApplication.restoreOverrideCursor()
 
-        zoom_layer = layers.get(self.canvas.zoom_on) if self.canvas.zoom_on else None
+        zoom_layer = layers.get(self.canvas_cfg.zoom_on) if self.canvas_cfg.zoom_on else None
+        messageLog(f"[ZOOM_ON] zoom_layer:{zoom_layer} - self.canvas_cfg.zoom_on: {self.canvas_cfg.zoom_on}")
         if zoom_layer:
-            self._zoom_to_layer(zoom_layer)
+            # Wait for Qt even loop to finish; otherwise canvas doesn't zoom to zoom_on layer
+            QTimer.singleShot(0, lambda: self._zoom_to_layer(zoom_layer))
 
         self._fold_all()
 
-        messageBar(self.iface, f"Projet chargé : {self.canvas.alias}", "s", 8)
+        messageBar(self.iface, f"Projet chargé : {self.canvas_cfg.alias}", "s", 8)
 
         return BuildContext(
             seq_id=self.seq_id,
-            canvas=self.canvas,
+            canvas=self.canvas_cfg,
             layers=layers,
         )
 
@@ -80,7 +83,7 @@ class ProjectBuilder:
                     key,
                     seq_dir=seq_dir,
                     add_to_project=True,
-                    group_name=group,
+                    group=group,
                     style_folder=style_folder,
                 )
 

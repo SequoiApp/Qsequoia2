@@ -128,22 +128,22 @@ class ForestDataTabs(QWidget, FORM_CLASS):
         self.total_surface = load_var("total_surface")
         self.surface_formatted = load_var("surface_formatted")
         self.forest_name = load_var("forest_name")
-        self.seq_identifier = load_var("seq_identifier")
+        self.seq_id = load_var("seq_id")
 
 
     def display_base_metadata(self):
         """Affiche les metadata"""
 
-        self.forest_name_edit.setText(str(self.seq_identifier))
-        self.departement_edit.setText(str(self.dep_str))
+        self.seq_id_edit.setText(str(self.seq_id))
+        self.deps_edit.setText(str(self.dep_str))
         self.city_edit.setText(str(self.city_str))
-        self.surface_edit.setText(str(self.surface_formatted))
-        self.surface_boisee_edit.setText(str(self.wooded_surface))
-        self.surface_non_boisee_edit.setText(str(self.no_wooded_surface))
+        self.surf_edit.setText(str(self.surface_formatted))
+        self.wooded_surf_edit.setText(str(self.wooded_surface))
+        self.no_wooded_surf_edit.setText(str(self.no_wooded_surface))
         self.owner_edit.setText(str(self.owner_str))        
 
         if self.forest_name :
-            self.forest_name_edit.setText(str(self.forest_name))
+            self.seq_id_edit.setText(str(self.forest_name))
             prefix = self.forest_name.split(" ")[0]
             for cb, label in self.forestType_rb.items():
                 cb.setChecked(label == prefix)
@@ -163,14 +163,14 @@ class ForestDataTabs(QWidget, FORM_CLASS):
 
         """
         seq_dir = get_project_variable("QS2_seq_dir")
-        seq_identifier = get_project_variable("QS2_seq_identifier")
+        seq_id = get_project_variable("QS2_seq_id")
 
         if not checked:
             return
 
-        if not seq_dir or not seq_identifier :
+        if not seq_dir or not seq_id :
             # Aucun projet => décocher toutes
-            for rb in self.nom_checkbox:
+            for rb in self.forestType_rb:
                 if rb.isChecked():
                     rb.blockSignals(True)
                     rb.setChecked(False)
@@ -189,10 +189,10 @@ class ForestDataTabs(QWidget, FORM_CLASS):
                     rb.blockSignals(False)
 
         prefix = next((label for rb, label in self.forestType_rb.items() if rb.isChecked()), "")
-        forest_name = update_forest_name(prefix, seq_identifier)
+        forest_name = update_forest_name(prefix, seq_id)
 
         set_project_variable("QS2_forest_name", forest_name)
 
-        self.forest_name_edit.setText(str(forest_name))
+        self.seq_id_edit.setText(str(forest_name))
 
     # endregion

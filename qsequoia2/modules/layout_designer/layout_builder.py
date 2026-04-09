@@ -1,9 +1,21 @@
 from pathlib import Path
 
 from qgis.PyQt.QtXml import QDomDocument
-from qgis.core import *
+from qgis.core import (
+    QgsLayoutFrame,
+    QgsLayoutItemMap,
+    QgsPrintLayout,
+    QgsReadWriteContext,
+    QgsRectangle,
+    QgsUnitTypes,
+    QgsVectorLayer,
+    QgsWkbTypes,
+)
 
-from ..utils.Qmessage import *
+from qgis.PyQt.QtCore import QTimer
+from qgis.PyQt.QtWidgets import QMessageBox
+
+from ..utils.Qmessage import messageBar, messageLog
 from ..utils.variable import get_global_variable, get_project_variable
 from ..utils.seq_config import seq_field, seq_read
 from .processing import buffer, multipart_to_singleparts
@@ -31,15 +43,22 @@ class LayoutBuilder:
 
     def build(self):
         seq_dir = get_project_variable("QS2_seq_dir") or None
-        parca = seq_read("parca", add_to_project=False, seq_dir=seq_dir)
+        parca = seq_read("parca", seq_dir=seq_dir, add_to_project=False)
         if not parca:
             raise RuntimeError("[LAYOUT] Couche 'parca' absente du contexte")
 
-        fmt, orient = self._compute_layout_info(parca)
-        layout = self._create_layout(fmt, orient)
+        fmt, orient, bbox = self._compute_layout_info(parca)
+        layout_name, qpt = self._create_layout_name(fmt, orient)
+
+        layout = self._resolve_layout(layout_name)
+        if layout:
+            return layout
+
+        layout = self._create_layout(layout_name, qpt)
 
         self._set_visibility()
-        self._configure_maps(layout)
+        # Wait for Qt even loop to finish; otherwise map scale may be incorrect
+        QTimer.singleShot(0, lambda: self._configure_maps(layout, bbox))
         self._configure_legends(layout)
         self._add_parcels_table(layout)
 
@@ -67,7 +86,7 @@ class LayoutBuilder:
         fmt = self._pick_format(bbox)
         orient = self._pick_orient(bbox)
 
-        return fmt, orient
+        return fmt, orient, bbox
 
     def _get_main_massif(self, layer: QgsVectorLayer):
         buffered = buffer(layer, distance=100, dissolve=True)
@@ -106,11 +125,35 @@ class LayoutBuilder:
 
     @staticmethod
     def _pick_orient(bbox):
-        return "portrait" if bbox.height() >= bbox.width() else "landscape"
+        return "portrait" if bbox.height() >= bbox.width() else "landscape"  
 
-    def _create_layout(self, fmt: str, orient: str) -> QgsPrintLayout:
+    def _resolve_layout(self, layout_name):
         lm = self.project.layoutManager()
+        existing = lm.layoutByName(layout_name)
 
+        if not existing:
+            return None
+
+        overwrite = QMessageBox.question(
+            self.iface.mainWindow(),
+            "Layout existant",
+            f"Le layout '{layout_name}' existe déjà.\nVoulez-vous l'écraser ?",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No,
+        )
+
+        if overwrite == QMessageBox.No:
+            return existing
+
+        try:
+            self.iface.closeLayoutDesigner(existing)
+        except Exception:
+            pass
+
+        lm.removeLayout(existing)
+        return None
+
+    def _create_layout_name(self, fmt: str, orient: str):
         qpt, final_orient = self._find_template(
             [
                 Path(get_global_variable("QS2_models_directory") or ""),
@@ -123,10 +166,10 @@ class LayoutBuilder:
         messageLog(f"[TEMPLATE] Template trouvé: {qpt} (format={fmt}, orient={final_orient})")
 
         layout_name = f"{self.seq_id}_{self.key}_{fmt}_{final_orient}"
+        return layout_name, qpt
 
-        existing = lm.layoutByName(layout_name)
-        if existing:
-            return existing
+    def _create_layout(self, layout_name, qpt) -> QgsPrintLayout:
+        lm = self.project.layoutManager()
 
         layout = QgsPrintLayout(self.project)
         layout.initializeDefaults()
@@ -190,29 +233,25 @@ class LayoutBuilder:
 
         return map_layers
 
-    def _configure_maps(self, layout):
-        canvas = self.iface.mapCanvas()
+    def _configure_maps(self, layout, bbox):
 
         for map_spec in self.layout.maps:
             map_item = self._get_map_item(layout, map_spec.id)
             messageLog(f"[LAYOUT] configuring: {map_spec.id} with layers: {map_spec.layers} (main_map={map_spec.main_map})")
 
+            map_item.setFollowVisibilityPreset(False)
+            map_item.zoomToExtent(bbox)    
+
             if map_spec.main_map:
                 map_item.setKeepLayerSet(False)
-                map_item.setFollowVisibilityPreset(False)
-                map_item.zoomToExtent(canvas.extent())
-
             else:
-                map_layers = self._resolve_map_layers(map_spec)
-
                 map_item.setKeepLayerSet(True)
-                map_item.setFollowVisibilityPreset(False)
+                map_layers = self._resolve_map_layers(map_spec)
                 map_item.setLayers(map_layers)
 
-                map_item.zoomToExtent(canvas.extent())
-
             # scale (common logic)
-            scale = map_spec.scale or self.layout.main_scale
+            scale = map_spec.scale
+            messageLog(f"[SCALE] scale:{scale} - map_item:{map_item}")
             if scale:
                 map_item.setScale(scale)
 

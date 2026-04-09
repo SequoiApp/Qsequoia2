@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>795</width>
-    <height>299</height>
+    <height>442</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -102,7 +102,7 @@ font: 75 9pt &quot;Garamond&quot;;</string>
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="dep_edit">
+      <widget class="QLineEdit" name="deps_edit">
        <property name="enabled">
         <bool>true</bool>
        </property>

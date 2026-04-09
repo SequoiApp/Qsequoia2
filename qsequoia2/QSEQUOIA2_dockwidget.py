@@ -8,6 +8,7 @@ from qgis.PyQt.QtWidgets import QCompleter, QFileDialog, QApplication
 
 from qsequoia2.scripts.table_check.table_check import table_check
 from qsequoia2.scripts.add_data.add_data import AddDataTabWidget
+from qsequoia2.scripts.layout_designer.layout_designer import LayoutDesignerWidget
 from qsequoia2.scripts.forest_data.forest_data import ForestDataTabs
 from qsequoia2.scripts.tools.tools import ToolsDialog
 from qsequoia2.scripts.utils.variable import get_global_variable
@@ -181,22 +182,18 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.lbl_forest_id.show()
 
     def _init_tabs(self):
-        self.forest_tab = ForestDataTabs(iface=self.iface, parent=self)
-        self.table_check_tab = table_check(iface=self.iface, parent=self)
-        self.add_data_tab = AddDataTabWidget(iface=self.iface, parent=self)
-        self.tools_tab = ToolsDialog(iface=self.iface, parent=self)
 
         def add_tab(widget, icon_name, tooltip):
             icon = QIcon(str(ICONS_DIR / icon_name))
             self.tabWidget.addTab(widget, icon, "")
             self.tabWidget.setTabToolTip(self.tabWidget.count() - 1, tooltip)
+            return widget 
 
-        add_tab(self.forest_tab, "forest_data.svg", "Métadonnées")
-        add_tab(self.table_check_tab, "table_check.svg", "Vérification des données")
-        add_tab(self.add_data_tab, "add_data.svg", "Ajout de données")
-        add_tab(self.tools_tab, "tools.svg", "Outils")
-
-
+        self.forest_tab = add_tab(ForestDataTabs(iface=self.iface, parent=self), "forest_data.svg", "Métadonnées")
+        self.table_check_tab = add_tab(table_check(iface=self.iface, parent=self),"table_check.svg", "Vérification des données")
+        self.add_data_tab = add_tab(AddDataTabWidget(iface=self.iface, parent=self), "add_data.svg", "Ajout de données")
+        self.layout_tab = add_tab(LayoutDesignerWidget(iface=self.iface, parent=self), "layout.svg", "Conception de mise en page")
+        self.tools_tab = add_tab(ToolsDialog(iface=self.iface, parent=self), "tools.svg",  "Outils")
 
     def refresh(self):
         self._update_project_visibility()

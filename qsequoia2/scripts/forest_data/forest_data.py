@@ -12,7 +12,7 @@ import json
 from PyQt5 import uic
 from qgis.PyQt.QtWidgets import QDialog
 from qgis.core import *
-from PyQt5.QtWidgets import QTableWidgetItem, QHeaderView
+from PyQt5.QtWidgets import QTableWidgetItem, QHeaderView, QButtonGroup
 from PyQt5.QtCore import Qt
 
 # Qsequoia2 
@@ -41,17 +41,17 @@ class ForestDataTabs(QDialog, FORM_CLASS):
         self.setupUi(self)
 
         # checkboxes de type de forêt
-        self.forestType_checkbox = {
-            self.checkBox_domaine: "Domaine",
-            self.checkBox_massif: "Massif",
-            self.checkBox_foret: "Forêt",
-            self.checkBox_bois: "Bois"
+        self.forestType_rb = {
+            self.rb_domaine: "Domaine",
+            self.rb_massif: "Massif",
+            self.rb_foret: "Forêt",
+            self.rb_bois: "Bois"
         }
 
-        for cb in self.forestType_checkbox:
-            cb.setVisible(False)
-            cb.toggled.connect(self.on_checkbox_toggled)
-
+        for rb in self.forestType_rb:
+            rb.setVisible(False)
+            self.lbl_type.setVisible(False)
+            rb.toggled.connect(self.on_checkbox_toggled)
 
     # endregion
     # ================================================
@@ -68,8 +68,9 @@ class ForestDataTabs(QDialog, FORM_CLASS):
         self.parca_layer = seq_read("parca", seq_dir)
         self.ua_layer = seq_read("ua", seq_dir)
 
-        for cb in self.forestType_checkbox:
-            cb.setVisible(True)
+        for rb in self.forestType_rb:
+            rb.setVisible(True)
+            self.lbl_type.setVisible(True)
 
         # création des métadata 
         seq_metadata = self.run_calculation(seq_dir)
@@ -144,7 +145,7 @@ class ForestDataTabs(QDialog, FORM_CLASS):
         if self.forest_name :
             self.forest_name_edit.setText(str(self.forest_name))
             prefix = self.forest_name.split(" ")[0]
-            for cb, label in self.forestType_checkbox.items():
+            for cb, label in self.forestType_rb.items():
                 cb.setChecked(label == prefix)
 
     # endregion
@@ -169,25 +170,25 @@ class ForestDataTabs(QDialog, FORM_CLASS):
 
         if not seq_dir or not seq_identifier :
             # Aucun projet => décocher toutes
-            for cb in self.nom_checkbox:
-                if cb.isChecked():
-                    cb.blockSignals(True)
-                    cb.setChecked(False)
-                    cb.blockSignals(False)
+            for rb in self.nom_checkbox:
+                if rb.isChecked():
+                    rb.blockSignals(True)
+                    rb.setChecked(False)
+                    rb.blockSignals(False)
             return
         
         seq_dir = Path(seq_dir)
 
         if checked:
             # Une checkbox a été cochée, décocher toutes les autres
-            sender_cb = self.sender()
-            for cb in self.forestType_checkbox:
-                if cb != sender_cb and cb.isChecked():
-                    cb.blockSignals(True)
-                    cb.setChecked(False)
-                    cb.blockSignals(False)
+            sender_rb = self.sender()
+            for rb in self.forestType_rb:
+                if rb != sender_rb and rb.isChecked():
+                    rb.blockSignals(True)
+                    rb.setChecked(False)
+                    rb.blockSignals(False)
 
-        prefix = next((label for cb, label in self.forestType_checkbox.items() if cb.isChecked()), "")
+        prefix = next((label for rb, label in self.forestType_rb.items() if rb.isChecked()), "")
         forest_name = update_forest_name(prefix, seq_identifier)
 
         set_project_variable("QS2_forest_name", forest_name)

@@ -38,10 +38,62 @@ font: 75 9pt &quot;Garamond&quot;;</string>
        </property>
       </widget>
      </item>
+     <item row="1" column="1">
+      <layout class="QHBoxLayout" name="HL2">
+       <item>
+        <widget class="QLabel" name="lbl_type">
+         <property name="text">
+          <string>Type de propriété :</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="rb_bois">
+         <property name="text">
+          <string>Bois</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="rb_foret">
+         <property name="text">
+          <string>Forêt</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="rb_domaine">
+         <property name="text">
+          <string>Domaine</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="rb_massif">
+         <property name="text">
+          <string>Massif</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </item>
      <item row="2" column="0">
       <widget class="QLabel" name="label_departement">
        <property name="text">
-        <string>Département :</string>
+        <string>Département(s) :</string>
        </property>
       </widget>
      </item>
@@ -62,7 +114,7 @@ font: 9pt &quot;Garamond&quot;;</string>
      <item row="3" column="0">
       <widget class="QLabel" name="label_city">
        <property name="text">
-        <string>Commune :</string>
+        <string>Commune(s) :</string>
        </property>
       </widget>
      </item>
@@ -146,7 +198,7 @@ font: 9pt &quot;Garamond&quot;;</string>
      <item row="7" column="0">
       <widget class="QLabel" name="label_owner">
        <property name="text">
-        <string>Propriétaire :</string>
+        <string>Propriétaire(s):</string>
        </property>
       </widget>
      </item>
@@ -163,51 +215,6 @@ font: 9pt &quot;Garamond&quot;;</string>
         <bool>true</bool>
        </property>
       </widget>
-     </item>
-     <item row="1" column="1">
-      <layout class="QHBoxLayout" name="typeLayout_2">
-       <item>
-        <spacer>
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>0</width>
-           <height>0</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="checkBox_massif">
-         <property name="text">
-          <string>Massif</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="checkBox_domaine">
-         <property name="text">
-          <string>Domaine</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="checkBox_foret">
-         <property name="text">
-          <string>Forêt</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="checkBox_bois">
-         <property name="text">
-          <string>Bois</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
      </item>
     </layout>
    </item>

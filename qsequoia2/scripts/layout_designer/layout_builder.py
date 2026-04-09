@@ -42,8 +42,8 @@ class LayoutBuilder:
         self.coeff_cadre = coeff_cadre
 
     def build(self):
-        project_folder = get_project_variable("QS2_seq_dir") or None
-        parca = seq_read("parca", add_to_project=False, project_folder=project_folder)
+        seq_dir = get_project_variable("QS2_seq_dir") or None
+        parca = seq_read("parca", seq_dir=seq_dir, add_to_project=False)
         if not parca:
             raise RuntimeError("[LAYOUT] Couche 'parca' absente du contexte")
 

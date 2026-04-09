@@ -83,8 +83,6 @@ class getForestdata:
 
         return city_list, city_str
 
-
-    
     def set_owner_data(self, parca_layer):
         """résout le nom des propriétaire"""
         owner_field = seq_field("owner")["name"]
@@ -109,7 +107,6 @@ class getForestdata:
     # --------------------------------------------------------
     # Récupération du ou des départements de la forêt
     # --------------------------------------------------------
-
     def forest_departements(self, parca_layer):
         """Récupère et agrège les départements de la propriété"""
         try:
@@ -126,7 +123,6 @@ class getForestdata:
 
         except Exception as e:
             raise TypeError(f"Erreur dans forest_departements : {e}")
-
 
     def _aggregate_values(self, parca_layer, value_field, surface_field, filter_field=None, result_key=None):
         """
@@ -209,7 +205,6 @@ class getForestdata:
 
         return wooded_surface, no_wooded_surface , total_surface, formatted_surface
 
-
     def _select_surface_layer(self, ua_layer, parca_layer):
         ua_field = seq_field("cor_area")["name"]
         if ua_layer and ua_layer.isValid() and ua_field in ua_layer.fields().names():
@@ -266,7 +261,6 @@ class getForestdata:
 
         return formatted_surface
     
-
     def formatting_data_str(self,values):
         """Mise en forme des données"""
 

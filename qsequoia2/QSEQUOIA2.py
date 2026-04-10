@@ -8,7 +8,6 @@ from qgis.PyQt.QtWidgets import QAction, QApplication
 from qgis.core import *
 
 from qsequoia2.modules.global_settings.global_settings import GlobalSettingsDialog
-from qsequoia2.modules.watchdog.dogwatcher import DogWatcher
 from qsequoia2.modules.forest_data.forest_data import ForestDataTabs
 from qsequoia2.modules.table_check.table_check import table_check
 from qsequoia2.modules.add_data.add_data import AddDataTabWidget
@@ -23,10 +22,6 @@ from qsequoia2.modules.utils.configure_snapping import configure_snapping
 from qsequoia2.modules.utils.plugin_vars import *
 
 from .qsequoia2_dockwidget import Qsequoia2DockWidget
-
-watchdog_path = str(PLUGIN_DIR / "CONFIG" / "lib")
-if watchdog_path not in sys.path:
-    sys.path.insert(0, watchdog_path)
 
 class Qsequoia2:
 
@@ -52,12 +47,6 @@ class Qsequoia2:
         self.dockwidget = None
         self.dlg = None
 
-        # Watchdog
-        self.watch_mode = "auto"
-        self.downloads_path = get_download_folder()
-        self.connect_dialog = None
-        self.dogwatcher = None 
-
     def tr(self, message):
         return QCoreApplication.translate('Qsequoia2', message)
 
@@ -80,14 +69,6 @@ class Qsequoia2:
         sync_seq_configs()
         disabled_v_external_grass(self.iface)
         configure_snapping()
-
-        # Lazy init watchdog
-        if self.dogwatcher is None:
-            self.dogwatcher = DogWatcher(
-                iface=self.iface,
-                get_context_callback=self.get_watchdog_context,
-                parent=None
-            )
 
     def run(self):
 
@@ -196,24 +177,3 @@ class Qsequoia2:
         # Remove translator
         if hasattr(self, "translator"):
             QCoreApplication.removeTranslator(self.translator)
-
-    def get_watchdog_context(self):
-        """
-        Retourne l'état courant du plugin utilisé par le système de surveillance (watchdog).
-
-        Les informations retournées incluent :
-        - le nom du projet actif,
-        - le dossier du projet,
-        - le dossier des téléchargements,
-        - le dossier des styles,
-        - le mode de surveillance utilisé.
-        """
-
-        return {
-            "project_name": self.current_project_name,
-            "project_folder": self.current_project_folder,
-            "downloads_path": self.downloads_path,
-            "style_folder": self.current_style_folder,
-            "watch_mode": self.watch_mode
-        }
-    

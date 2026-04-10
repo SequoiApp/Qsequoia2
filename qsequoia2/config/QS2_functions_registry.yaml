@@ -342,34 +342,7 @@ yaml_creator:
   - name
   - data_to_save
   - dir
-DogWatcher:
-  type: class
-  path: qsequoia2.modules.watchdog.dogwatcher
-  name: DogWatcher
-show_add_banner:
-  type: function
-  path: qsequoia2.modules.watchdog.extract_files
-  name: show_add_banner
-  args:
-  - project_folder
-  - downloads_path
-  - project_name
-  - style_folder
-  - _zip_path
-  - dockwidget
-real_extract_files:
-  type: function
-  path: qsequoia2.modules.watchdog.extract_files
-  name: real_extract_files
-  args:
-  - project_folder
-  - _zip_path
-  - in_folder
-  - dockwidget
-DownloadEventHandler:
-  type: class
-  path: qsequoia2.modules.watchdog.watchdog_handler
-  name: DownloadEventHandler
+
 PluginExemple:
   type: function
   path: qsequoia2.modules.add_on.templates.basic_addon.python.exemple

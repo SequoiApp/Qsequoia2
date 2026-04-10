@@ -7,24 +7,24 @@ from qgis.PyQt.QtGui import QIcon, QDesktopServices
 from qgis.PyQt.QtWidgets import QAction, QApplication
 from qgis.core import *
 
-from qsequoia2.scripts.global_settings.global_settings import GlobalSettingsDialog
-from qsequoia2.scripts.watchdog.dogwatcher import DogWatcher
-from qsequoia2.scripts.forest_data.forest_data import ForestDataTabs
-from qsequoia2.scripts.table_check.table_check import table_check
-from qsequoia2.scripts.add_data.add_data import AddDataTabWidget
-from qsequoia2.scripts.utils.disabled_v_external_grass import disabled_v_external_grass
-from qsequoia2.scripts.utils.get_download_folder import get_download_folder
-from qsequoia2.scripts.utils.seq_config import *
-from qsequoia2.scripts.utils.Qmessage import *
-from qsequoia2.scripts.utils.reloader import *
-from qsequoia2.scripts.utils.variable import *
-from qsequoia2.scripts.utils.qgz_project import *
-from qsequoia2.scripts.utils.configure_snapping import *
-from qsequoia2.scripts.utils.plugin_vars import *
+from qsequoia2.modules.global_settings.global_settings import GlobalSettingsDialog
+from qsequoia2.modules.watchdog.dogwatcher import DogWatcher
+from qsequoia2.modules.forest_data.forest_data import ForestDataTabs
+from qsequoia2.modules.table_check.table_check import table_check
+from qsequoia2.modules.add_data.add_data import AddDataTabWidget
+from qsequoia2.modules.utils.disabled_v_external_grass import disabled_v_external_grass
+from qsequoia2.modules.utils.get_download_folder import get_download_folder
+from qsequoia2.modules.utils.seq_config import *
+from qsequoia2.modules.utils.Qmessage import *
+from qsequoia2.modules.utils.reloader import *
+from qsequoia2.modules.utils.variable import *
+from qsequoia2.modules.utils.qgz_project import *
+from qsequoia2.modules.utils.configure_snapping import configure_snapping
+from qsequoia2.modules.utils.plugin_vars import *
 
 from .qsequoia2_dockwidget import Qsequoia2DockWidget
 
-watchdog_path = str(PLUGIN_DIR / "inst" / "lib")
+watchdog_path = str(PLUGIN_DIR / "CONFIG" / "lib")
 if watchdog_path not in sys.path:
     sys.path.insert(0, watchdog_path)
 
@@ -77,12 +77,14 @@ class Qsequoia2:
 
         # close the current project if it is a Qsequoia2 project to avoid conflicts with the new one that will be loaded
 
-        close_qgis_project()
+        close_qgis_project(self.iface)
 
         # Fetch Rsequoia2 config
         sync_seq_configs()
         
         disabled_v_external_grass(self.iface)
+
+        configure_snapping()
 
         # Lazy init watchdog
         if self.dogwatcher is None:
@@ -145,6 +147,10 @@ class Qsequoia2:
 
         messageLog(f"Project id: {seq_id}", "i")
         messageLog(f"Project folder: {seq_dir}", "i")
+        seq_qgz_project = str(get_global_variable("QS2_default_project")).strip().lower()
+
+        if seq_qgz_project == "true":
+                find_qgis_project(seq_dir, seq_id)
 
     def _open_global_settings(self):
         """Ouvre la fenêtre de configuration globale du plugin."""

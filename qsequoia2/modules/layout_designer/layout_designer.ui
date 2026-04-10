@@ -7,10 +7,10 @@
     <x>0</x>
     <y>0</y>
     <width>456</width>
-    <height>327</height>
+    <height>346</height>
    </rect>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,0,0">
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,0">
    <item>
     <layout class="QHBoxLayout" name="hbox_project">
      <item>
@@ -67,113 +67,6 @@
           </property>
           <property name="value">
            <double>90.000000000000000</double>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
-    <widget class="QGroupBox" name="gbox_cartouche">
-     <property name="title">
-      <string>Cartouche et données principales</string>
-     </property>
-     <layout class="QVBoxLayout">
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout">
-        <item>
-         <widget class="QLabel" name="lbl_type">
-          <property name="text">
-           <string>Type de propriété :</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QRadioButton" name="rb_bois">
-          <property name="text">
-           <string>Bois</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QRadioButton" name="rb_foret">
-          <property name="text">
-           <string>Forêt</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QRadioButton" name="rb_domaine">
-          <property name="text">
-           <string>Domaine</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QRadioButton" name="rb_massif">
-          <property name="text">
-           <string>Massif</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="horizontalSpacer">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QFormLayout" name="fl_cartouche_default">
-        <item row="0" column="0">
-         <widget class="QLabel" name="lbl_propriete">
-          <property name="text">
-           <string>Propriété :</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="QLineEdit" name="le_propriete">
-          <property name="readOnly">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="QLabel" name="lbl_commune">
-          <property name="text">
-           <string>Commune(s) :</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="QLineEdit" name="le_commune">
-          <property name="readOnly">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="0">
-         <widget class="QLabel" name="lbl_proprietaire">
-          <property name="text">
-           <string>Propriétaire(s) :</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="1">
-         <widget class="QLineEdit" name="le_proprietaire">
-          <property name="readOnly">
-           <bool>false</bool>
           </property>
          </widget>
         </item>

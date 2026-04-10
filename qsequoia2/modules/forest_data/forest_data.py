@@ -26,6 +26,8 @@ from ..utils.seq_config import *
 UI_PATH = Path(__file__).parent / 'forest_data.ui'
 FORM_CLASS, _ = uic.loadUiType(str(UI_PATH))
 
+PROJECT = QgsProject.instance()
+
 # ==========================================================================
 # region initalisation
 # ==========================================================================
@@ -75,17 +77,17 @@ class ForestDataTabs(QWidget, FORM_CLASS):
         # création des métadata 
         seq_metadata = self.run_calculation(seq_dir)
         self.export_to_project_variables(seq_metadata, seq_dir)
+        PROJECT.write() # sauvegarde du projet pour que les variables soient prises en compte dans les expressions QGIS
 
         # lecture des metadata
-        self.get_base_metadata()
-        self.display_base_metadata()
+        self.display_base_metadata(seq_metadata)
 
 
     def run_calculation(self, seq_dir):
         try : 
-            seq_metadata = getForestdata(self.iface, seq_dir)
-
-            return seq_metadata.build(self.ua_layer, self.parca_layer)
+            get_metadata = getForestdata(self.iface, seq_dir)
+            seq_matadata = get_metadata.build(self.ua_layer, self.parca_layer)
+            return seq_matadata
 
         except Exception as e :
             messageBar(self.iface, f"Erreur lors de la construction des metadata : {e}","w",10)
@@ -96,9 +98,8 @@ class ForestDataTabs(QWidget, FORM_CLASS):
         """ajoute les données dans les varaibles projets"""
 
         for key, value in seq_metadata.items():
-            if isinstance(value, (list, dict)):
-                value = json.dumps(value)
-            set_project_variable(f"QS2_{key}", value)
+            print("Export metadata : ", f"QS2_{key} : {value}")
+            set_project_variable(f"QS2_{key}", str(value))
 
         messageLog(f"-- metadata build pour {seq_dir} --!","i")
 
@@ -107,46 +108,53 @@ class ForestDataTabs(QWidget, FORM_CLASS):
     # Metadata Lecture et affichage
     # ================================================
 
-    def get_base_metadata(self):
-        """Récupère les metadata"""
+    def _extract_group(self, seq_metadata, prefix):
+        items = []
 
-        def load_var(key):
-            val = get_project_variable(f"QS2_{key}")
-            try:
-                return json.loads(val)
-            except (TypeError, json.JSONDecodeError):
-                return val
+        i = 1
+        while True:
+            name_key = f"QS2_{prefix}_{i}_name"
+            surf_key = f"QS2_{prefix}_{i}_surface"
 
-        self.city_list = load_var("city_list")
-        self.city_str = load_var("city_str")
-        self.owner_list = load_var("owner_list")
-        self.owner_str = load_var("owner_str")
-        self.dep_list = load_var("departement_list")
-        self.dep_str = load_var("departement_str")
-        self.wooded_surface = load_var("wooded_surface")
-        self.no_wooded_surface = load_var("no_wooded_surface")
-        self.total_surface = load_var("total_surface")
-        self.surface_formatted = load_var("surface_formatted")
-        self.forest_name = load_var("forest_name")
-        self.seq_id = load_var("seq_id")
+            if name_key not in seq_metadata:
+                break
 
+            items.append({
+                "name": seq_metadata.get(name_key, ""),
+                "surface": seq_metadata.get(surf_key, 0)
+            })
 
-    def display_base_metadata(self):
-        """Affiche les metadata"""
+            i += 1
 
-        self.seq_id_edit.setText(str(self.seq_id))
-        self.deps_edit.setText(str(self.dep_str))
-        self.city_edit.setText(str(self.city_str))
-        self.surf_edit.setText(str(self.surface_formatted))
-        self.wooded_surf_edit.setText(str(self.wooded_surface))
-        self.no_wooded_surf_edit.setText(str(self.no_wooded_surface))
-        self.owner_edit.setText(str(self.owner_str))        
+        return items
 
-        if self.forest_name :
-            self.seq_id_edit.setText(str(self.forest_name))
-            prefix = self.forest_name.split(" ")[0]
-            for cb, label in self.forestType_rb.items():
-                cb.setChecked(label == prefix)
+    def display_base_metadata(self, m):
+
+        ui_map = {
+            "city": self.city_le,
+            "owner": self.owner_le,
+            "dep_name": self.dep_code_le,
+            "reg_name": self.reg_name_le,
+        }
+
+        for prefix, widget in ui_map.items():
+            group = self._extract_group(m, prefix)
+            widget.setText(", ".join([g["name"] for g in group]))
+
+        scalar_map = {
+            "total_surface": self.total_surface_le,
+            "wooded_surface": self.wooded_surface_le,
+            "no_wooded_surface": self.no_wooded_surface_le,
+        }
+
+        for key, widget in scalar_map.items():
+            widget.setText(str(m.get(key, "")))
+
+        # if self.forest_name :
+        #     self.seq_id_edit.setText(str(self.forest_name))
+        #     prefix = self.forest_name.split(" ")[0]
+        #     for cb, label in self.forestType_rb.items():
+        #         cb.setChecked(label == prefix)
 
     # endregion
     # ================================================

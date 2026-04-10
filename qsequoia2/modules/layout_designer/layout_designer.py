@@ -33,11 +33,6 @@ class LayoutDesignerWidget(QWidget, FORM_CLASS):
         self._init_ui()
 
     def _init_ui(self):
-        self.type_group = QButtonGroup(self)
-        for btn in (self.rb_domaine, self.rb_massif, self.rb_foret, self.rb_bois):
-            self.type_group.addButton(btn)
-
-        self.type_group.buttonClicked.connect(self._on_type_changed)
 
         self.combo_project.clear()
         for key, alias in self.cfg.get_projects():

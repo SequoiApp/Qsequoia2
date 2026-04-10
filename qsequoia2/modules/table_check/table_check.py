@@ -43,7 +43,7 @@ class table_check(QDialog, FORM_CLASS):
 
 
         # réaction au changement de type de données à afficher
-        self.cb_dataType.currentTextChanged.connect(self.actu_Tabledata)
+        # self.cb_dataType.currentTextChanged.connect(self.actu_Tabledata)
         # réaction au changement de parcelle sélectionnée
         self.cb_parcelle.currentTextChanged.connect(self.on_cb_parcelle_changed)
         self.cb_sspf.currentTextChanged.connect(self.on_cb_parcelle_changed)
@@ -59,7 +59,7 @@ class table_check(QDialog, FORM_CLASS):
         if not seq_dir:
             return
         
-        self.cb_dataType.setEnabled(True)
+        # self.cb_dataType.setEnabled(True)
         self.parca_layer = seq_read("parca", seq_dir)
         self.ua_layer = seq_read("ua", seq_dir)
 

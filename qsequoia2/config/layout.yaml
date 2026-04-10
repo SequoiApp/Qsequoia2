@@ -5,20 +5,25 @@ assemblage:
     readonly: [v.seq.parca.poly]
     layers:
       sequoia: &assemblage_seq
-        - v.com.topo.line
-        - v.com.topo.point
-        - v.infra.point
-        - v.infra.line
-        - v.infra.poly
-        - v.toponyme.point
+        - v.access.entry.point
+        - v.com.graphic.line
+        - v.com.graphic.point
         - v.road.line
+        - v.curves.line
+        - v.toponyme.point
+        - v.infra.point
+        - v.vege.point
+        - v.hydro.point
+        - v.infra.line
+        - v.vege.line
+        - v.hydro.line
+        - v.infra.poly
+        - v.vege.poly
+        - v.hydro.poly
         - v.roadway.line
         - v.roadway.poly
-        - v.hydro.poly
-        - v.hydro.line
-        - v.vege.poly
-        - v.curves.line
         # Order is important here, we want parca to be at the back so vectoriel layers are visible on top of it
+        - v.seq.forest.line
         - v.seq.owner.line
         - v.seq.parca.poly
       wmts: &assemblage_wmts
@@ -26,6 +31,10 @@ assemblage:
         - wmts_scan25_grey
         - wmts_scan100
         - wmts_pci
+      tms: &assemblage_tms
+        - tms.plan_ign.standard
+        - tms.plan_ign.classique
+        - tms.plan_ign.epure
 
   layout:
     maps:
@@ -36,8 +45,31 @@ assemblage:
     legends:
       - id: legend1
         map: map1
-        layers: *assemblage_seq
-
+        layers:
+          - v.access.entry.point
+          - v.com.graphic.line
+          - v.com.graphic.point
+          - v.road.line
+          - v.curves.line
+          - v.toponyme.point
+          - v.infra.point
+          - v.vege.point
+          - v.hydro.point
+          - v.infra.line
+          - v.vege.line
+          - v.hydro.line
+          - v.infra.poly
+          - v.vege.poly
+          - v.hydro.poly
+          - v.roadway.line
+          - v.roadway.poly
+      - id: legend2
+        map: map1
+        layers:
+          - v.seq.forest.line
+          - v.seq.owner.line
+          - v.seq.parca.poly
+          
 situation:
   alias: "Situation"
 
@@ -45,24 +77,16 @@ situation:
     zoom_on: "v.seq.forest.poly"
     layers:
       sequoia: &situation_seq
-        - v.seq.forest.point
-        - v.seq.forest.poly
+        - v.com.topo.point
         - v.com.topo.line
-        - v.curves.line
+        - v.access.entry.point
         - v.secu.prsf.point
-        - v.infra.point
-        - v.infra.line
-        - v.infra.poly
+        - v.curves.line
         - v.road.line
-        - v.roadway.line
-        - v.roadway.poly
-        - v.toponyme.point
-        - v.hydro.point
-        - v.hydro.line
-        - v.hydro.poly
-        - v.vege.point
-        - v.vege.line
-        - v.vege.poly
+        - v.seq.forest.point
+        - v.seq.forest.line
+        - v.seq.forest.poly
+        - v.seq.ua.poly
       tms: &situation_tms
         - tms.plan_ign.standard
         - tms.plan_ign.classique
@@ -76,7 +100,16 @@ situation:
       - id: map1
         main_map: true
         scale: 25000
-        layers: *situation_seq
+        layers: 
+          - v.com.topo.point
+          - v.com.topo.line
+          - v.curves.line
+          - v.access.entry.point
+          - v.access.prsf.point
+          - v.seq.forest.line
+          - v.seq.forest.poly
+          - v.seq.ua.poly
+          - tms.plan_ign.epure
       - id: map2
         main_map: false
         scale: 800000
@@ -95,25 +128,31 @@ peuplement:
     zoom_on: "v.seq.forest.line"
     layers:
       sequoia: &peuplement_seq
-        - v.com.topo.line
-        - v.com.topo.point
-        - v.infra.point
-        - v.infra.line
-        - v.infra.poly
-        - v.toponyme.point
+        - v.access.entry.point
+        - v.com.graphic.line
+        - v.com.graphic.point
         - v.road.line
+        - v.curves.line
+        - v.toponyme.point
+        - v.infra.point
+        - v.vege.point
+        - v.hydro.point
+        - v.infra.line
+        - v.vege.line
+        - v.hydro.line
+        - v.infra.poly
+        - v.vege.poly
+        - v.hydro.poly
         - v.roadway.line
         - v.roadway.poly
-        - v.hydro.poly
-        - v.hydro.line
-        - v.vege.poly
-        - v.curves.line
+        # Order is important here, we want parca to be at the back so vectoriel layers are visible on top of it
         - v.seq.forest.line
+        - v.seq.pf.point
         - v.seq.pf.line
         - v.seq.pf.poly
+        - v.seq.sspf.point
+        - v.seq.sspf.line
         - v.seq.sspf.poly
-        - v.seq.sspf.poly
-        - v.seq.parca.poly
         - v.seq.ua.poly
       tms: &peuplement_tms
         - tms.plan_ign.standard
@@ -121,6 +160,7 @@ peuplement:
       wmts: &peuplement_wmts
         - wmts_irc
         - wmts_rgb
+        - wmts_lidar_mnt
 
   layout:
     maps:
@@ -175,12 +215,9 @@ enjeux_env:
         - v.mnhn.zps.poly
         # SEQUOIA
         - v.seq.forest.line
+        - v.seq.pf.point
         - v.seq.pf.line
         - v.seq.pf.poly
-        - v.seq.sspf.poly
-        - v.seq.sspf.poly
-        - v.seq.parca.poly
-        - v.seq.ua.poly
       tms: &enjeux_env_tms
         - tms.plan_ign.standard
         - tms.plan_ign.classique
@@ -216,12 +253,9 @@ enjeux_pat:
         - v.pat.zppa.poly
         # SEQUOIA
         - v.seq.forest.line
+        - v.seq.pf.point
         - v.seq.pf.line
         - v.seq.pf.poly
-        - v.seq.sspf.poly
-        - v.seq.sspf.poly
-        - v.seq.parca.poly
-        - v.seq.ua.poly
       tms: &enjeux_pat_tms
         - tms.plan_ign.standard
         - tms.plan_ign.classique
@@ -245,12 +279,12 @@ geologie:
     layers:
       sequoia: &geologie_seq
         - v.sol.bdcharm50.poly
-        - v.sol.carhab.poly
+        # - v.sol.carhab.poly
         # SEQUOIA
         - v.seq.forest.line
+        - v.seq.pf.point
         - v.seq.pf.line
-        - v.seq.sspf.poly
-        - v.seq.sspf.point
+        - v.seq.pf.poly
       wmts: &geologie_wmts
         - wmts_geol
 

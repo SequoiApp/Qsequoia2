@@ -32,6 +32,7 @@ class Qsequoia2:
 
     def __init__(self, iface):
         self.iface = iface
+        self.project = QgsProject.instance()
 
         # Locale
         locale_value = QSettings().value('locale/userLocale', 'en')
@@ -75,15 +76,9 @@ class Qsequoia2:
 
         self.actions.append(action)
 
-        # close the current project if it is a Qsequoia2 project to avoid conflicts with the new one that will be loaded
-
-        close_qgis_project(self.iface)
-
         # Fetch Rsequoia2 config
         sync_seq_configs()
-        
         disabled_v_external_grass(self.iface)
-
         configure_snapping()
 
         # Lazy init watchdog
@@ -93,7 +88,6 @@ class Qsequoia2:
                 get_context_callback=self.get_watchdog_context,
                 parent=None
             )
-
 
     def run(self):
 
@@ -140,17 +134,23 @@ class Qsequoia2:
             self.dockwidget = None
 
     def _on_project_changed(self, seq_dir, seq_id):
-        """Handle project selection from UI"""
+
+        path = open_seq_project(
+            self.project,
+            self.iface,
+            seq_id,
+            seq_dir,
+            suffix = "SEQUOIA"
+        )
+
+        if not path:
+            return
+
+        messageLog(f"[PROJECT] Opened project: {path}")
+        messageBar(self.iface, f"Projet prêt : {seq_id}", level="success")
 
         set_project_variable("QS2_seq_dir", seq_dir)
         set_project_variable("QS2_seq_id", seq_id)
-
-        messageLog(f"Project id: {seq_id}", "i")
-        messageLog(f"Project folder: {seq_dir}", "i")
-        seq_qgz_project = str(get_global_variable("QS2_default_project")).strip().lower()
-
-        if seq_qgz_project == "true":
-                find_qgis_project(seq_dir, seq_id)
 
     def _open_global_settings(self):
         """Ouvre la fenêtre de configuration globale du plugin."""
@@ -180,8 +180,7 @@ class Qsequoia2:
     def _open_qsequoia_issue(self):
         url = QUrl("https://github.com/SequoiApp/Qsequoia2/issues")
         QDesktopServices.openUrl(url)
-
-    
+ 
     def unload(self):
 
         # Remove actions

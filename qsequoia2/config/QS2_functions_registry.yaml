@@ -201,10 +201,10 @@ find_qgis_project:
   args:
   - seq_dir
   - seq_dirname
-Load_qgis_project:
+load_qgis_project:
   type: function
   path: qsequoia2.modules.utils.qgz_project
-  name: Load_qgis_project
+  name: load_qgis_project
   args:
   - seq_dir
   - seq_dirname

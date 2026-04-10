@@ -148,10 +148,12 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             messageBar(self.iface, str(e), "c", 10)
 
         self._set_seq_dir_status(state, label)
+        messageLog(f"[DEBUG] isDirty before signal emition: {QgsProject.instance().isDirty()}")
         self.projectChanged.emit(seq_dir, seq_id)
 
         if state == SeqDirState.VALID:
             messageBar(self.iface, f"Dossier valide : {seq_dir}", "s", 10)
+    
 
     def _set_seq_dir_status(self, state: SeqDirState, label: str | None = None):
         status_map = {
@@ -189,8 +191,8 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         tools_tab = add_tab(ToolsDialog(iface=self.iface, parent=self), "tools.svg",  "Outils")
 
         self.projectChanged.connect(add_data_tab.on_project_changed)
-        self.projectChanged.connect(forest_tab.actu_metadata)
-        self.projectChanged.connect(table_check.actu_Tabledata)
+        # self.projectChanged.connect(forest_tab.actu_metadata)
+        # self.projectChanged.connect(table_check.actu_Tabledata)
 
     def refresh(self):
         self._update_project_visibility()

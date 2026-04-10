@@ -6,68 +6,102 @@ from qgis.core import (QgsProject,QgsCoordinateReferenceSystem)
 from qgis.PyQt.QtWidgets import QMessageBox
 from qsequoia2.modules.utils.variable import *
 from PyQt5.QtWidgets import QFileDialog
+from .Qmessage import messageBar
 
 from .plugin_vars import *
-PROJECT = QgsProject.instance()
 
-def find_qgis_project(seq_dir, seq_id):
+def load_project(project, path):
+    if not project.read(str(path)):
+        raise RuntimeError(f"Failed to load project: {path}")
+  
+def find_seq_project(seq_id, seq_dir, suffix):
     seq_dir = Path(seq_dir)
-    qgz_files = list(seq_dir.glob("**/*.qgz"))
+    pattern = f"{seq_id}_{suffix}.qgz"
 
-    for f in qgz_files:
-        if seq_id in f.name:
+    matches = list(seq_dir.rglob(pattern))
 
-            return Load_qgis_project(seq_dir, seq_id)
+    if len(matches) > 1:
+        raise RuntimeError(
+            f"Multiple QGIS projects found for '{pattern}':\n" +
+            "\n".join(map(str, matches))
+        )
 
-    create_qgis_project(seq_dir, seq_id)
+    return matches[0] if matches else None
 
-    return Load_qgis_project(seq_dir, seq_id)
+def confirm_project_close(project, iface) -> bool:
+    """Return False if user cancels"""
 
-        
-# create_QGIS_project
+    if not project.isDirty():
+        return True
 
-def Load_qgis_project(seq_dir, seq_id):
-    """load a qgis project from seq_dir"""
+    msg = QMessageBox(iface.mainWindow())
+    msg.setWindowTitle("Projet non enregistré")
+    msg.setText("Le projet courant contient des modifications non enregistrées.")
 
-    seq_dir = Path(seq_dir)
-    project_path = seq_dir / f"{seq_id}_SEQUOIA.qgz"
-    PROJECT.read(str(project_path))
+    save_btn = msg.addButton("Enregistrer", QMessageBox.AcceptRole)
+    discard_btn = msg.addButton("Ignorer", QMessageBox.DestructiveRole)
+    cancel_btn = msg.addButton("Annuler", QMessageBox.RejectRole)
 
-def create_qgis_project(seq_dir, seq_id, datum="EPSG:2154"):
-    """create a qgis project to seq_dir with the seq_dirname"""
+    msg.exec_()
 
-    seq_dir = Path(seq_dir)
-    project_path = seq_dir / f"{seq_id}_SEQUOIA.qgz"
-    crs = QgsCoordinateReferenceSystem(datum)
-    PROJECT.setCrs(crs)
-    PROJECT.setDirty(True)
-    PROJECT.write(str(project_path))
+    if msg.clickedButton() == cancel_btn:
+        return False
 
-def close_qgis_project(iface):
-    """close the current qgis project if it is a SEQUIOA2 project"""
+    if msg.clickedButton() == save_btn:
+        if not project.write():
+            messageBar(iface, "Échec de l'enregistrement", level="error")
+            return False
 
-    seq_dir = get_project_variable("QS2_seq_dir")
+    return True
+  
+def new_seq_project(project, iface, seq_id, seq_dir, suffix,
+                       datum="EPSG:2154", ask=True):
 
-    if not seq_dir:
-        return
-    
-    if seq_dir:
-        seq_dir = Path(seq_dir)
-        write = QMessageBox.question(
+    if ask:
+        create = QMessageBox.question(
             iface.mainWindow(),
-            "Projet courant",
-            f"Enregistrer le projet courant ?",
+            "Projet SEQUOIA",
+            f"Aucun projet {seq_id}_{suffix}.qgz trouvé.\nCréer un nouveau projet ?",
             QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.No)
+            QMessageBox.No
+        )
 
-        if write == QMessageBox.No:
-            return
-        if write == QMessageBox.Yes:
-            PROJECT.instance().write()
-            
-        PROJECT.instance().clear()
+        if create == QMessageBox.No:
+            return None
 
+    seq_dir = Path(seq_dir)
+    project_path = seq_dir / f"{seq_id}_{suffix}.qgz"
 
-    
+    project.clear() 
+    project.setCrs(QgsCoordinateReferenceSystem(datum))
+    project.setFileName(str(project_path))
 
+    if not project.write():
+        raise RuntimeError(f"Failed to create project: {project_path}")
 
+    return project_path
+
+def open_seq_project(
+        project,
+        iface,
+        seq_id,
+        seq_dir,
+        suffix,
+        ask_unsaved=True,
+        ask_create=True
+    ):
+    """
+    Full workflow:
+    - check unsaved
+    - load existing OR create new
+    """
+
+    if ask_unsaved and not confirm_project_close(project, iface):
+        return None
+
+    path = find_seq_project(seq_id, seq_dir, suffix)
+    if path:
+        load_project(project, path)
+        return path
+
+    return new_seq_project(project, iface, seq_id, seq_dir, suffix, ask=ask_create)

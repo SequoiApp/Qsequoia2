@@ -6,53 +6,14 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>708</width>
-    <height>602</height>
+    <width>712</width>
+    <height>611</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_main">
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <item>
-      <widget class="QComboBox" name="cb_dataType">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <item>
-        <property name="text">
-         <string>Sélectionner une table</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Vérificateur de données</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Synthèse</string>
-        </property>
-       </item>
-      </widget>
-     </item>
-     <item>
-      <spacer name="spacer_top">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>0</width>
-         <height>0</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-    </layout>
-   </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_3">
      <item>

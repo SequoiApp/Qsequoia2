@@ -108,6 +108,8 @@ class ForestDataTabs(QWidget, FORM_CLASS):
     # Metadata Lecture et affichage
     # ================================================
 
+    # TODO : Revoir ca ne fonctionne pas les varaibles sont néanmoins dispo via @..  
+
     def _extract_group(self, seq_metadata, prefix):
         items = []
 
@@ -127,27 +129,26 @@ class ForestDataTabs(QWidget, FORM_CLASS):
             i += 1
 
         return items
-
+    
     def display_base_metadata(self, m):
 
-        ui_map = {
+
+        for prefix, widget in {
             "city": self.city_le,
             "owner": self.owner_le,
             "dep_name": self.dep_code_le,
             "reg_name": self.reg_name_le,
-        }
+        }.items():
 
-        for prefix, widget in ui_map.items():
             group = self._extract_group(m, prefix)
-            widget.setText(", ".join([g["name"] for g in group]))
+            widget.setText(", ".join(g["name"] for g in group))
 
-        scalar_map = {
+        for key, widget in {
             "total_surface": self.total_surface_le,
             "wooded_surface": self.wooded_surface_le,
             "no_wooded_surface": self.no_wooded_surface_le,
-        }
+        }.items():
 
-        for key, widget in scalar_map.items():
             widget.setText(str(m.get(key, "")))
 
         # if self.forest_name :

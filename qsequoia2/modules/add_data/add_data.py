@@ -11,6 +11,7 @@ from qgis.core import QgsRasterLayer, QgsProject
 
 from ..utils.seq_config import seq_layer, get_seq_config, seq_read
 from ..utils.tms import get_tms_config, tms_read
+from ..utils.wmts import get_wmts_config, wmts_read
 from ..utils.variable import get_global_variable, get_project_variable
 from ..utils.Qmessage import *
 
@@ -136,7 +137,6 @@ class AddDataTabWidget(QTabWidget, FORM_CLASS):
         return tab
         
     def add_wmts_tab(self):
-
         tab = QWidget()
         layout = QVBoxLayout(tab)
 
@@ -144,31 +144,15 @@ class AddDataTabWidget(QTabWidget, FORM_CLASS):
         tree.setObjectName("wmts_tree")
         tree.setHeaderLabels(["WMTS"])
 
-        yaml_path = Path(__file__).parents[2] / "config" / "wmts.yaml"
-        wmts_cfg = yaml.safe_load(yaml_path.read_text(encoding="utf-8")) or {}
-
-        wmts_items = sorted(
-            wmts_cfg.values(),
-            key=lambda w: (w.get("family") or "autres").lower()
-        )
-
         categories = {}
+        for key, layer in get_wmts_config().items():
+            family = (layer.get("family") or "autres").capitalize()
 
-        for wmts in wmts_items:
+            if family not in categories:
+                categories[family] = QTreeWidgetItem(tree, [family])
 
-            raw_family = wmts.get("family", "autres")
-            family_key = raw_family.lower()
-            family_label = raw_family.capitalize()
-
-            if family_key not in categories:
-                cat_item = QTreeWidgetItem([family_label])
-                tree.addTopLevelItem(cat_item)
-                categories[family_key] = cat_item
-
-            item = QTreeWidgetItem([wmts["display_name"]])
-            item.setData(0, Qt.UserRole, wmts)
-
-            categories[family_key].addChild(item)
+            item = QTreeWidgetItem(categories[family], [layer["display_name"]])
+            item.setData(0, Qt.UserRole, key)
 
         layout.addWidget(tree)
         self.insertTab(WTAB_INDEX, tab, "WMTS")
@@ -186,21 +170,14 @@ class AddDataTabWidget(QTabWidget, FORM_CLASS):
         tree.setHeaderLabels(["TMS"])
 
         categories = {}
-        for key, tms in get_tms_config().items():
+        for key, layer in get_wmts_config().items():
+            family = (layer.get("family") or "autres").capitalize()
 
-            raw_family = tms.get("family", "autres")
-            family_key = raw_family.lower()
-            family_label = raw_family.capitalize()
+            if family not in categories:
+                categories[family] = QTreeWidgetItem(tree, [family])
 
-            if family_key not in categories:
-                cat_item = QTreeWidgetItem([family_label])
-                tree.addTopLevelItem(cat_item)
-                categories[family_key] = cat_item
-
-            item = QTreeWidgetItem([tms["display_name"]])
-            item.setData(0, Qt.UserRole, (key, family_key))
-
-            categories[family_key].addChild(item)
+            item = QTreeWidgetItem(categories[family], [layer["display_name"]])
+            item.setData(0, Qt.UserRole, key)
 
         layout.addWidget(tree)
         self.insertTab(TTAB_INDEX, tab, "TMS")
@@ -254,40 +231,14 @@ class AddDataTabWidget(QTabWidget, FORM_CLASS):
     def on_wmts_clicked(self, item, column):
 
         data = item.data(0, Qt.UserRole)
-
-        # Ignore category clicks
         if not data:
             return
 
-        url = data.get("url")
-        name = item.text(0)
-
-        if not url:
-            messageBar(self.iface, "URL WMTS invalide", "w")
-            return
-
-        group_name = "WMTS"
-
+        key = data[0]
         try:
-            # Create WMTS layer
-            layer = QgsRasterLayer(url, name, "wms")
-            messageLog(f"layer:{layer}")
-
-            if not layer.isValid():
-                raise RuntimeError("WMTS layer invalide")
-
-            root = self.project.layerTreeRoot()
-
-            # Add to group
-            group = root.findGroup(group_name)
-            if not group:
-                group = root.addGroup(group_name)
-
-            self.project.addMapLayer(layer, False)
-            group.addLayer(layer)
-
+            wmts_read(key=key)
         except Exception as e:
-            messageBar(self.iface, f"Erreur WMTS: {e}", "c")
+            messageBar(self.iface, f"Erreur: {e}", "c")
     
     def on_tms_clicked(self, item, column):
 
@@ -295,22 +246,12 @@ class AddDataTabWidget(QTabWidget, FORM_CLASS):
         if not data:
             return
 
-        # Safe group name
-        key, family_key = data[0], data[1]
-        messageLog(f"TMS data: {data}")
-        messageLog(f"TMS key: {key}, family_key: {family_key}")
-
-        root = self.project.layerTreeRoot()
-        group_name = family_key.upper()
-
-        group = root.findGroup(group_name)
-        if not group:
-            group = root.addGroup(group_name)
-
+        key = data[0]
         try:
-            tms_read(key=key, group=group)
+            tms_read(key=key)
         except Exception as e:
             messageBar(self.iface, f"Erreur: {e}", "c")
+
     # endregion
 
     # region UPDATE FROM SIGNAL

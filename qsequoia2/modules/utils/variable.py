@@ -36,6 +36,18 @@ def set_project_variable(name: str, value: Any) -> None:
     """
     _safe_set(QgsExpressionContextUtils.setProjectVariable, name, value)
 
+def get_qs2_project_variables(project = None) -> dict:
+    if not project:
+        project = QgsProject.instance()
+
+    qs2_vars = {
+        name: value
+        for name, value in project.customVariables().items()
+        if name.startswith("QS2_")
+    }
+
+    return qs2_vars
+
 def _safe_set(setter, name: str, value: Any) -> None:
     if not isinstance(value, (str, int, float, bool)):
         print(f"[Warn] {name!r}: {type(value).__name__} → str")
@@ -45,5 +57,4 @@ def _safe_set(setter, name: str, value: Any) -> None:
         setter(QgsProject.instance(), name, value)  # *ignored* by global setter
     except Exception as err:
         print(f"[Error] cannot set {name!r}: {value!r}  →  {err}")
-
 

@@ -2,8 +2,9 @@ from pathlib import Path
 import yaml
 
 from qgis.core import QgsVectorTileLayer, QgsProject
-from qsequoia2.modules.utils.Qmessage import messageLog
-from qsequoia2.modules.utils.seq_config import _CONFIG_CACHE
+from .Qmessage import messageLog
+from .layer_tree import get_group
+from .seq_config import _CONFIG_CACHE
 
 def get_tms_config_path() -> Path:
     path = Path(__file__).parents[2] / "inst" / "tms.yaml"
@@ -41,52 +42,40 @@ def _build_uri(url: str, style: str | None = None) -> str:
 
     return uri
 
-def _find_existing_layer(name: str, group=None):
-    """
-    Avoid duplicate layers using layer name
-    """
+def _find_existing_tms(source: str, group=None):
     project = QgsProject.instance()
-
-    layers = (
-        [n.layer() for n in group.findLayers()]
-        if group
-        else project.mapLayers().values()
-    )
+    layers = [n.layer() for n in group.findLayers()] if group else project.mapLayers().values()
 
     for layer in layers:
-        if isinstance(layer, QgsVectorTileLayer) and layer.name() == name:
+        if isinstance(layer, QgsVectorTileLayer) and layer.source() == source:
             return layer
 
     return None
 
-def tms_read(key: str, group=None, load_style=True):
-    """
-    Load a vector tile TMS layer from config
-    """
-
-    tms = tms_layer(key)
-    if not tms:
+def tms_read(key: str, group=None, load_style: bool = True):
+    meta = tms_layer(key)
+    if not meta:
         raise RuntimeError(f"TMS inconnu: {key}")
 
-    url = tms.get("url")
-    name = tms.get("display_name")
-    style = tms.get("style")
+    url = meta.get("url")
+    name = meta.get("display_name") or key
+    style = meta.get("style")
+    family = (meta.get("family") or "autres").upper()
 
     if not url:
-        raise RuntimeError("URL TMS invalide")
+        raise RuntimeError(f"URL TMS invalide: {key}")
 
-    existing = _find_existing_layer(name, group)
-    if existing:
-        messageLog(f"[TMS] TMS already {existing.name()} in group: '{group.name() if group else 'root'}'")
-        return existing
-
+    project = QgsProject.instance()
+    group = group or get_group(family, project=project)
 
     uri = _build_uri(url, style)
 
-    opts = QgsVectorTileLayer.LayerOptions(
-        QgsProject.instance().transformContext()
-    )
+    existing = _find_existing_tms(uri, group)
+    if existing:
+        messageLog(f"[TMS] Déjà chargé : {existing.name()} dans '{group.name()}'")
+        return existing
 
+    opts = QgsVectorTileLayer.LayerOptions(project.transformContext())
     layer = QgsVectorTileLayer(uri, name, opts)
 
     if not layer.isValid():
@@ -95,10 +84,7 @@ def tms_read(key: str, group=None, load_style=True):
     if load_style:
         layer.loadDefaultStyle()
 
-    project = QgsProject.instance()
-    project.addMapLayer(layer, not bool(group))
-
-    if group:
-        group.addLayer(layer)
+    project.addMapLayer(layer, False)
+    group.addLayer(layer)
 
     return layer

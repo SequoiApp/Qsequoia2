@@ -22,7 +22,7 @@ class table_check(QWidget, FORM_CLASS):
         self.project = QgsProject.instance()
         self.setupUi(self)
 
-        self.forestTable.setHidden(True)
+        self.forestTable.setVisible(False)
 
         self.btn_refresh.setIcon(QgsApplication.getThemeIcon("/mActionRefresh.svg"))
         self.btn_refresh.clicked.connect(self.on_ua_layer_loaded)
@@ -31,6 +31,7 @@ class table_check(QWidget, FORM_CLASS):
         # réaction au changement de parcelle sélectionnée, lambda pour éviter de devoir passer la valeur à la fonction
         self.cb_parcelle.currentTextChanged.connect(lambda value: self._on_cb_parcelle_changed(value))
         self.cb_sspf.currentTextChanged.connect(lambda value: self._on_cb_parcelle_changed(value))
+        QgsProject.instance().layersRemoved.connect(self._on_layers_removed)
 
     def on_project_loaded(self):
         # attendre que QGIS ait fini de charger les couches et le projet
@@ -48,12 +49,14 @@ class table_check(QWidget, FORM_CLASS):
 
         if not layer:
             self.ua_status(state=False)
+            self._setup_ui_verif(state = False)
             return
 
         self.ua_layer = layer
+        self.ua_layer_id = layer.id()
 
         self.ua_status(state=True)
-        self._setup_ui_verif()
+        self._setup_ui_verif(state = True)
         self._check_data()
         self.populate_cb_from_field("cb_parcelle", layer, "N_PARFOR")
         self.populate_cb_from_field("cb_sspf", layer, "N_SSPARFOR")
@@ -80,14 +83,22 @@ class table_check(QWidget, FORM_CLASS):
         self.fill_table(self.ua_layer, ua_feats)
 
     # Utilitaire pour UI 
-    def _setup_ui_verif(self):
-        self.forestTable.setHidden(False)
-        self.cb_parcelle.setEnabled(True)
-        self.cb_sspf.setEnabled(True)
-        self.cb_sspf.setEnabled(True)
-        self.lbl_sspf.setEnabled(True)
-        self.lbl_surf.setEnabled(True)
-        self.le_surf.setEnabled(True)
+    def _setup_ui_verif(self, state):
+        self.forestTable.setVisible(state)
+
+        self.forestTable.clearContents()
+        self.forestTable.setRowCount(0)
+
+        self.cb_parcelle.setEnabled(state)
+        self.cb_sspf.setEnabled(state)
+        self.cb_sspf.setEnabled(state)
+        self.lbl_sspf.setEnabled(state)
+        self.lbl_surf.setEnabled(state)
+        self.le_surf.setEnabled(state)
+    
+
+    def _on_layers_removed(self, layer_ids):
+        QTimer.singleShot(0,self.on_ua_layer_loaded)
 
     # Utilitaire pour remplir les comboBox de sélection
 

@@ -38,6 +38,9 @@ class ForestDataTabs(QWidget, FORM_CLASS):
             rb.setEnabled(False)
             self.lbl_type.setEnabled(False)
             rb.toggled.connect(self.on_checkbox_toggled)
+        # nom de la foret changé manuellement
+        self.seq_id_le.returnPressed.connect(self._on_seq_id_entered)
+        self.seq_id_le.editingFinished.connect(self._on_seq_id_entered)
 
     def on_project_loaded(self, seq_dir, seq_id):
         # attendre que QGIS ait fini de charger les couches
@@ -47,11 +50,16 @@ class ForestDataTabs(QWidget, FORM_CLASS):
         """relance les fonctions de chargement des data pour actualiser l'affichage"""  
 
         # métadata build
-
         seq_dir = Path(seq_dir)
-        self.parca_layer = seq_read("parca", seq_dir)
-        self.ua_layer = seq_read("ua", seq_dir)
-
+        try: 
+            self.parca_layer = seq_read("parca", seq_dir)
+            self.ua_layer = seq_read("ua", seq_dir)
+        except :
+            self._ua_status(state=False)
+            return
+        
+        self._ua_status(state=True)
+        
         for rb in self.forestType_rb:
             rb.setEnabled(True)
             self.lbl_type.setEnabled(True)
@@ -64,7 +72,13 @@ class ForestDataTabs(QWidget, FORM_CLASS):
         
         self.display_base_metadata(seq_metadata)
         self.display_forest_name()
-
+        
+    def _ua_status(self, state):
+        if state:
+            self.lbl_ua_status.setVisible(False)
+        else:
+            self.lbl_ua_status.setText("Couche UA non présente ou invalide")
+            self.lbl_ua_status.setStyleSheet("color: red;")
 
     def run_calculation(self, seq_dir):
         try : 
@@ -110,11 +124,13 @@ class ForestDataTabs(QWidget, FORM_CLASS):
     def display_forest_name(self):
 
         forest_name = get_project_variable("QS2_forest_name")
+        print(f"forest_name: {forest_name}")
 
         if not forest_name :
             self.seq_id_le.setText("Séléctionnez un Type de propriété")
             return
         
+        self.seq_id_le.clear()
         self.seq_id_le.setText(str(forest_name))
         prefix = forest_name.split(" ")[0]
         for cb, label in self.forestType_rb.items():
@@ -149,6 +165,15 @@ class ForestDataTabs(QWidget, FORM_CLASS):
 
         prefix = next((label for rb, label in self.forestType_rb.items() if rb.isChecked()), "")
         forest_name = update_forest_name(prefix, seq_id)
+        self.save_forest_name(forest_name)
+
+    def _on_seq_id_entered(self):
+        forest_name = self.seq_id_le.text().strip()
+        if not forest_name:
+            return
+        self.save_forest_name(forest_name)
+
+    def save_forest_name(self, forest_name):
 
         set_project_variable("QS2_forest_name", forest_name)
 

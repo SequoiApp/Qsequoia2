@@ -6,14 +6,21 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>795</width>
-    <height>442</height>
+    <width>791</width>
+    <height>433</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Choix de forêt</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="lbl_ua_status">
+     <property name="text">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+    </widget>
+   </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
@@ -29,9 +36,7 @@
         <bool>true</bool>
        </property>
        <property name="styleSheet">
-        <string notr="true">background-color: rgb(241, 241, 241);
-border-color: rgb(241, 241, 241);
-font: 75 9pt &quot;Garamond&quot;;</string>
+        <string notr="true"/>
        </property>
        <property name="text">
         <string>Sélectionnez un type de proriété</string>
@@ -110,8 +115,7 @@ font: 75 9pt &quot;Garamond&quot;;</string>
         <bool>true</bool>
        </property>
        <property name="styleSheet">
-        <string notr="true">background-color: rgb(241, 241, 241);
-font: 9pt &quot;Garamond&quot;;</string>
+        <string notr="true"/>
        </property>
        <property name="readOnly">
         <bool>true</bool>
@@ -135,8 +139,7 @@ font: 9pt &quot;Garamond&quot;;</string>
         <bool>true</bool>
        </property>
        <property name="styleSheet">
-        <string notr="true">background-color: rgb(241, 241, 241);
-font: 9pt &quot;Garamond&quot;;</string>
+        <string notr="true"/>
        </property>
        <property name="readOnly">
         <bool>true</bool>
@@ -160,8 +163,7 @@ font: 9pt &quot;Garamond&quot;;</string>
         <bool>true</bool>
        </property>
        <property name="styleSheet">
-        <string notr="true">background-color: rgb(241, 241, 241);
-font: 9pt &quot;Garamond&quot;;</string>
+        <string notr="true"/>
        </property>
        <property name="readOnly">
         <bool>true</bool>
@@ -185,8 +187,7 @@ font: 9pt &quot;Garamond&quot;;</string>
         <bool>true</bool>
        </property>
        <property name="styleSheet">
-        <string notr="true">background-color: rgb(241, 241, 241);
-font: 9pt &quot;Garamond&quot;;</string>
+        <string notr="true"/>
        </property>
        <property name="readOnly">
         <bool>true</bool>
@@ -210,8 +211,7 @@ font: 9pt &quot;Garamond&quot;;</string>
         <bool>true</bool>
        </property>
        <property name="styleSheet">
-        <string notr="true">background-color: rgb(241, 241, 241);
-font: 9pt &quot;Garamond&quot;;</string>
+        <string notr="true"/>
        </property>
        <property name="readOnly">
         <bool>true</bool>
@@ -235,8 +235,7 @@ font: 9pt &quot;Garamond&quot;;</string>
         <bool>true</bool>
        </property>
        <property name="styleSheet">
-        <string notr="true">background-color: rgb(241, 241, 241);
-font: 9pt &quot;Garamond&quot;;</string>
+        <string notr="true"/>
        </property>
        <property name="readOnly">
         <bool>true</bool>
@@ -260,8 +259,7 @@ font: 9pt &quot;Garamond&quot;;</string>
         <bool>true</bool>
        </property>
        <property name="styleSheet">
-        <string notr="true">background-color: rgb(241, 241, 241);
-font: 9pt &quot;Garamond&quot;;</string>
+        <string notr="true"/>
        </property>
        <property name="readOnly">
         <bool>true</bool>

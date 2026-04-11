@@ -6,7 +6,6 @@ from qgis.core import *
 from PyQt5.QtWidgets import QTableWidgetItem, QHeaderView
 from PyQt5.QtCore import Qt, QTimer
 
-from .data_table import sspf_surface_calculation
 from ..utils.seq_config import seq_layer
 
 UI_PATH = Path(__file__).parent / 'table_check.ui'
@@ -38,7 +37,6 @@ class table_check(QWidget, FORM_CLASS):
         QTimer.singleShot(300, self.on_ua_layer_loaded)
 
     def on_ua_layer_loaded(self):
-
         layer_name = seq_layer("ua")["name"]
 
         layer = None
@@ -48,20 +46,18 @@ class table_check(QWidget, FORM_CLASS):
                 break
 
         if not layer:
-            self.ua_status(state=False)
+            self._ua_status(state=False)
             self._setup_ui_verif(state = False)
             return
 
         self.ua_layer = layer
-        self.ua_layer_id = layer.id()
-
-        self.ua_status(state=True)
+        self._ua_status(state=True)
         self._setup_ui_verif(state = True)
         self._check_data()
         self.populate_cb_from_field("cb_parcelle", layer, "N_PARFOR")
         self.populate_cb_from_field("cb_sspf", layer, "N_SSPARFOR")
 
-    def ua_status(self, state):
+    def _ua_status(self, state):
         if state:
             self.lbl_ua_status.setText("Couche UA chargée")
             self.lbl_ua_status.setStyleSheet("color: green;")
@@ -79,6 +75,8 @@ class table_check(QWidget, FORM_CLASS):
         else:
             ua_feats = list(self.ua_layer.getFeatures())
             self.ua_layer.removeSelection()
+            surf = self.sspf_surface_calculation(self.ua_layer)
+            self.le_surf.setText(surf)
 
         self.fill_table(self.ua_layer, ua_feats)
 
@@ -121,7 +119,7 @@ class table_check(QWidget, FORM_CLASS):
 
             if ids is not None:
                 self._check_data(ids=ids)
-                surf = sspf_surface_calculation(self.ua_layer)
+                surf = self.sspf_surface_calculation(self.ua_layer)
                 if surf:
                     self.le_surf.setText(surf)
 
@@ -199,4 +197,14 @@ class table_check(QWidget, FORM_CLASS):
         self.iface.mapCanvas().refresh()
 
         return ids
-    
+        
+    def sspf_surface_calculation(self,ua_layer) -> str:
+
+        feats = list(ua_layer.getSelectedFeatures())
+        if not feats: 
+            surf = sum(f.geometry().area() for f in ua_layer.getFeatures()) / 10000
+            return f"{round(surf,4)} ha"
+        tmp = QgsVectorLayer("Polygon?crs=" + ua_layer.crs().authid(), "tmp", "memory")
+        tmp.dataProvider().addFeatures(feats)
+        surf = sum(f.geometry().area() for f in tmp.getFeatures()) / 10000
+        return f"{round(surf,4)} ha"

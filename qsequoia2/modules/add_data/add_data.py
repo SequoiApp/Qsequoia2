@@ -54,7 +54,7 @@ class AddDataTabWidget(QTabWidget, FORM_CLASS):
 
         tree = QTreeWidget()
         tree.setObjectName("vtree")
-        tree.setHeaderLabels(["Vecteurs"])
+        tree.setHeaderHidden(True)
 
         # Filter + sort layers
         layers_vect = [l for l in self.layers if l["type"] == "vect"]
@@ -98,7 +98,7 @@ class AddDataTabWidget(QTabWidget, FORM_CLASS):
 
         tree = QTreeWidget()
         tree.setObjectName("rtree")
-        tree.setHeaderLabels(["Raster"])
+        tree.setHeaderHidden(True)
 
         # Filter + sort layers
         layers_rast = [l for l in self.layers if l["type"] == "rast"]
@@ -142,7 +142,7 @@ class AddDataTabWidget(QTabWidget, FORM_CLASS):
 
         tree = QTreeWidget()
         tree.setObjectName("wmts_tree")
-        tree.setHeaderLabels(["WMTS"])
+        tree.setHeaderHidden(True)
 
         yaml_path = Path(__file__).parents[2] / "config" / "wmts.yaml"
         wmts_cfg = yaml.safe_load(yaml_path.read_text(encoding="utf-8")) or {}
@@ -183,7 +183,7 @@ class AddDataTabWidget(QTabWidget, FORM_CLASS):
 
         tree = QTreeWidget()
         tree.setObjectName("tms_tree")
-        tree.setHeaderLabels(["TMS"])
+        tree.setHeaderHidden(True)
 
         categories = {}
         for key, tms in get_tms_config().items():

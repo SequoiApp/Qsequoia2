@@ -179,16 +179,16 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
     def _init_tabs(self):
 
         def add_tab(widget, icon_name, tooltip):
-            icon = QIcon(str(ICONS_DIR / icon_name))
+            icon = QgsApplication.getThemeIcon(f"/{icon_name}")
             self.tabWidget.addTab(widget, icon, "")
             self.tabWidget.setTabToolTip(self.tabWidget.count() - 1, tooltip)
             return widget 
 
-        forest_tab = add_tab(ForestDataTabs(iface=self.iface, parent=self), "forest_data.svg", "Métadonnées")
-        table_check_tab = add_tab(table_check(self.iface,parent=self), "table_check.svg", "Vérification des données")
-        add_data_tab = add_tab(AddDataTabWidget(iface=self.iface, parent=self), "add_data.svg", "Ajout de données")
-        layout_tab = add_tab(LayoutDesignerWidget(iface=self.iface, parent=self), "layout.svg", "Conception de mise en page")
-        tools_tab = add_tab(ToolsDialog(iface=self.iface, parent=self), "tools.svg",  "Outils")
+        forest_tab = add_tab(ForestDataTabs(iface=self.iface, parent=self), "mActionCalculateField.svg", "Métadonnées")
+        table_check_tab = add_tab(table_check(self.iface,parent=self), "mActionZoomToSelected.svg", "Vérification des données")
+        add_data_tab = add_tab(AddDataTabWidget(iface=self.iface, parent=self), "mActionAddLayer.svg", "Ajout de données")
+        layout_tab = add_tab(LayoutDesignerWidget(iface=self.iface, parent=self), "mActionNewLayout.svg", "Conception de mise en page")
+        tools_tab = add_tab(ToolsDialog(iface=self.iface, parent=self), "processingAlgorithm.svg",  "Outils")
 
         self.projectChanged.connect(add_data_tab.on_project_changed)
         self.projectChanged.connect(forest_tab.on_project_loaded)

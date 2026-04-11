@@ -114,6 +114,8 @@ class ForestDataTabs(QWidget, FORM_CLASS):
 
         if not forest_name :
             self.seq_id_le.setText(str(seq_id))
+            if not seq_id:
+                self.seq_id_le.setText("Séléctionnez un Type de propriété")
             return
         
         self.seq_id_le.setText(str(forest_name))

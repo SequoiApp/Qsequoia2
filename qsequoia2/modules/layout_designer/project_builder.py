@@ -80,17 +80,12 @@ class ProjectBuilder:
 
         for key in keys:
             try:
-                meta = seq_layer(key)
-                family = (meta.get("family") or "autres").upper()
-
                 layer = seq_read(
                     key,
                     seq_dir=seq_dir,
                     add_to_project=True,
-                    style_folder=style_folder,
-                    group = family
+                    style_folder=style_folder
                 )
-
                 if layer:
                     loaded[key] = layer
 

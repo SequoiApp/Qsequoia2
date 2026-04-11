@@ -78,7 +78,7 @@
    <item>
     <widget class="QPushButton" name="btn_run">
      <property name="text">
-      <string>Mise en page</string>
+      <string>Ouvrir le projet</string>
      </property>
     </widget>
    </item>

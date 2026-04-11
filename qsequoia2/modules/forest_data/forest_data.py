@@ -110,12 +110,9 @@ class ForestDataTabs(QWidget, FORM_CLASS):
     def display_forest_name(self):
 
         forest_name = get_project_variable("QS2_forest_name")
-        seq_id = get_project_variable("QS2_seq_id")
 
         if not forest_name :
-            self.seq_id_le.setText(str(seq_id))
-            if not seq_id:
-                self.seq_id_le.setText("Séléctionnez un Type de propriété")
+            self.seq_id_le.setText("Séléctionnez un Type de propriété")
             return
         
         self.seq_id_le.setText(str(forest_name))

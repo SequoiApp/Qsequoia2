@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>799</width>
-    <height>451</height>
+    <width>795</width>
+    <height>442</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -24,7 +24,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="seq_id_edit">
+      <widget class="QLineEdit" name="seq_id_le">
        <property name="enabled">
         <bool>true</bool>
        </property>
@@ -152,7 +152,7 @@ font: 9pt &quot;Garamond&quot;;</string>
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="city_le">
+      <widget class="QLineEdit" name="com_name_le">
        <property name="enabled">
         <bool>true</bool>
        </property>

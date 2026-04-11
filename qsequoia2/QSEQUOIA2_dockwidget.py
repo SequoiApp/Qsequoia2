@@ -191,8 +191,8 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         tools_tab = add_tab(ToolsDialog(iface=self.iface, parent=self), "tools.svg",  "Outils")
 
         self.projectChanged.connect(add_data_tab.on_project_changed)
-        # self.projectChanged.connect(forest_tab.actu_metadata)
-        # self.projectChanged.connect(table_check.actu_Tabledata)
+        self.projectChanged.connect(forest_tab.on_project_loaded)
+        self.projectChanged.connect(table_check_tab.on_project_loaded)
 
     def refresh(self):
         self._update_project_visibility()

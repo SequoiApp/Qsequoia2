@@ -20,31 +20,20 @@ class getForestdata:
 
     def build(self, ua_layer, parca_layer) -> dict :
         """Construit toutes les metadata et retourne un dict"""
-        metadata = {}
-        city_list = self.aggregate_parca_by_field(parca_layer, "com_name")
-        self._inject_series(metadata, "city", city_list)
-
-        owner_list = self.aggregate_parca_by_field(parca_layer, "owner")
-        self._inject_series(metadata, "owner", owner_list)
-
-        num_dep_list = self.aggregate_parca_by_field(parca_layer, "dep_code")
-        self._inject_series(metadata, "dep_code", num_dep_list)
-
-        dep_list = self.aggregate_parca_by_field(parca_layer, "dep_name")
-        self._inject_series(metadata, "dep_name", dep_list)
-
-        reg_name_list = self.aggregate_parca_by_field(parca_layer, "reg_name")
-        self._inject_series(metadata, "reg_name", reg_name_list)
+        metadata = {
+            "com_name": self.aggregate_parca_by_field(parca_layer, "com_name"),
+            "owner": self.aggregate_parca_by_field(parca_layer, "owner"),
+            "dep_code": self.aggregate_parca_by_field(parca_layer, "dep_code"),
+            "dep_name": self.aggregate_parca_by_field(parca_layer, "dep_name"),
+            "reg_name": self.aggregate_parca_by_field(parca_layer, "reg_name"),
+            }
 
         wooded, no_wooded, total = self._set_surface(ua_layer, parca_layer)
+
         metadata.update({"wooded_surface": wooded,"no_wooded_surface": no_wooded,"total_surface": total})
 
         return metadata
     
-    def _inject_series(self, metadata, prefix, data_list):
-        for i, item in enumerate(data_list, start=1):
-            metadata[f"{prefix}_{i}_name"] = item["name"]
-            metadata[f"{prefix}_{i}_surface"] = item["surface"]
 
     def aggregate_parca_by_field(self, parca_layer, field_key_name) -> list:
         """Lit les données d'un champ et les agrège par surface"""

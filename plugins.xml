@@ -1,16 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <plugins>
     <plugin name="qsequoia2"
-            version="1.0.0"
+            version="2026.03.23"
             qgis_minimum_version="3.40">
-    <description>QSequoia2 est un plugin QGIS conçu
-    pour simplifier et structurer les données forestières. 
-    Il fournit un ensemble d’outils pour l’import, la visualisation, 
-    la mise en forme et l’analyse des couches vecteur et raster, 
-    ainsi que l’accès à des services web géospatiaux (WMTS/WMS).
-    Le plugin est pensé pour répondre aux besoins des forestiers professionnels, 
-    des bureaux d’études, et des gestionnaires de territoires, 
-    en combinant automatisation, flexibilité et respect des standards SIG.</description>
+    <description>Plugin QGIS pour la gestion et l'analyse de données forestières.</description>
     <download_url>https://github.com/SequoiApp/Qsequoia2/releases/download/v2026.03.23/QSEQUOIA2-2026.03.23.zip</download_url>
     <repository_url>https://github.com/SequoiApp/Qsequoia2</repository_url>
     <author>Organisation SEQUOIAPP : Alexandre Le Bars, Paul Carteron, Matthieu Chevereau</author>

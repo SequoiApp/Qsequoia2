@@ -32,7 +32,7 @@ Copiez-y le dossier **qsequoia2**, relancez QGIS et activez le plugin dans la pa
 
 Règles de contribution
 
-Tous les commits doivent être faits sur la branche DEV uniquement.
+Tous les commits doivent être faits sur une branche local.
 La branche MAIN est réservée aux versions stables et aux releases automatiques.
 
 Build automatique (GitHub Actions)

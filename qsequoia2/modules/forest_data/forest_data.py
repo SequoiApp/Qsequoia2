@@ -1,9 +1,10 @@
 
 from pathlib import Path
+from enum import Enum
 
 # Qgis
 from PyQt5 import uic
-from qgis.PyQt.QtWidgets import QWidget
+from qgis.PyQt.QtWidgets import QWidget, QButtonGroup
 from PyQt5.QtCore import QTimer
 
 # Qsequoia2 
@@ -17,6 +18,12 @@ from .update_forest_name import update_forest_name
 UI_PATH = Path(__file__).parent / 'forest_data.ui'
 FORM_CLASS, _ = uic.loadUiType(str(UI_PATH))
 
+class ForestType(Enum):
+    DOMAINE = "Domaine"
+    MASSIF = "Massif"
+    FORET = "Forêt"
+    BOIS = "Bois"
+
 class ForestDataWidget(QWidget, FORM_CLASS):
     """Classe principale du module Forestdata de Qsequoia2"""
     def __init__(self, iface, parent=None):
@@ -26,16 +33,20 @@ class ForestDataWidget(QWidget, FORM_CLASS):
         self.parent = parent
         self.setupUi(self)
 
+        # --- Radio buttons mapping ---
         self.type = {
-            self.rb_domaine: "Domaine",
-            self.rb_massif: "Massif",
-            self.rb_foret: "Forêt",
-            self.rb_bois: "Bois"
+            self.rb_domaine: ForestType.DOMAINE,
+            self.rb_massif: ForestType.MASSIF,
+            self.rb_foret: ForestType.FORET,
+            self.rb_bois: ForestType.BOIS,
         }
 
+        self.group = QButtonGroup(self)
+        self.group.setExclusive(True)
+        self.group.buttonToggled.connect(self.on_checkbox_toggled)
         for rb in self.type:
             rb.setEnabled(False)
-            rb.toggled.connect(self.on_checkbox_toggled)
+            self.group.addButton(rb)
 
         # nom de la foret changé manuellement
         self.le_forest_name.returnPressed.connect(self._on_forest_name_entered)
@@ -130,46 +141,34 @@ class ForestDataWidget(QWidget, FORM_CLASS):
         self.le_surface_unwooded.setText(str(m.get("surface_unwooded", "")))
 
     def display_forest_name(self):
-
         forest_name = get_project_variable("QS2_forest_name")
-  
-        if not forest_name :
+
+        if not forest_name:
             self.le_forest_name.setText("Séléctionnez un Type de propriété")
             return
-        
-        self.le_forest_name.clear()
+
         self.le_forest_name.setText(str(forest_name))
         prefix = forest_name.split(" ")[0]
-        for cb, label in self.type.items():
-            cb.setChecked(label == prefix)
 
-    def on_checkbox_toggled(self, checked):
+        for rb, ftype in self.type.items():
+            rb.blockSignals(True)
+            rb.setChecked(ftype.value == prefix)
+            rb.blockSignals(False)
+
+    def on_checkbox_toggled(self, button, checked):
+        if not checked:
+            return
 
         seq_dir = get_project_variable("QS2_seq_dir")
         seq_id = get_project_variable("QS2_seq_id")
 
-        if not checked:
+        if not seq_dir or not seq_id:
+            button.setChecked(False)
             return
 
-        if not seq_dir or not seq_id :
-            for rb in self.type:
-                if rb.isChecked():
-                    rb.blockSignals(True)
-                    rb.setChecked(False)
-                    rb.blockSignals(False)
-            return
-        
-        seq_dir = Path(seq_dir)
+        forest_type = self.type.get(button)
+        prefix = forest_type.value if forest_type else ""
 
-        if checked:
-            sender_rb = self.sender()
-            for rb in self.type:
-                if rb != sender_rb and rb.isChecked():
-                    rb.blockSignals(True)
-                    rb.setChecked(False)
-                    rb.blockSignals(False)
-
-        prefix = next((label for rb, label in self.type.items() if rb.isChecked()), "")
         forest_name = update_forest_name(prefix, seq_id)
         self.save_forest_name(forest_name)
 

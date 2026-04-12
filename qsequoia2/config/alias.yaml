@@ -1,0 +1,182 @@
+# region RASTER
+r.alt.mnt: "(MNT) Modèle Numérique de Terrain"
+r.alt.mns: "(MNS)  Modèle Numérique de Surface"
+r.alt.mnh: "(MNH) : Modèle Numérique de Hauteur"
+r.alt.pente: "Pentes"
+r.alt.expo: "Exposition"
+r.ortho.irc: "Orthophoto IRC"
+r.ortho.rgb: "Orthophoto RGB"
+r.scan.25: "Scan 25"
+r.scan.100: "Scan 100"
+r.scan.oaci: "Scan OACI"
+r.sol.geol: "Fond géologique"
+# endregion
+
+# region SEQUOIA
+v.seq.parca.poly: "Parcelles cadastrales"
+v.seq.forest.point: "Propriété (centroïdes)"
+v.seq.forest.line: "Propriété (limites)"
+v.seq.forest.poly: "Propriété"
+v.seq.owner.point: "Propriétaires (centroïdes)"
+v.seq.owner.line: "Propriétaires (limites)"
+v.seq.owner.poly: "Propriétaires"
+v.seq.ua.poly: "Unités d'analyse"
+v.seq.pf.point: "Parcelles forestières (centroïdes)"
+v.seq.pf.line: "Parcelles forestières (limites)"
+v.seq.pf.poly: "Parcelles forestières"
+v.seq.sspf.point: "Sous-parcelles forestières (centroïdes)"
+v.seq.sspf.line: "Sous-parcelles forestières (limites)"
+v.seq.sspf.poly: "Sous-parcelles forestières"
+v.seq.ame.poly: "Aménagements"
+# endregion
+
+# region COMMUNES
+v.com.topo.poly: "Communes (centroïdes)"
+v.com.topo.line: "Communes (limites)"
+v.com.topo.point: "Communes"
+v.com.graphic.point: Communes x Foret (centroïdes)
+v.com.graphic.line: Communes x Foret (limites)
+# endregion
+
+# region SOL
+v.sol.bdcharm50.poly: "Carte géologique (BDCharm50)"
+v.sol.carhab.poly: "Cartographie nationale des habitats (CarHab)"
+v.sol.pedo.poly: "Carte pédologique"
+# endregion
+
+# region PATRIMOINE
+v.pat.imdn.poly: "Domaines nationaux"
+v.pat.padn.poly: "Domaines nationaux (périmètre de protection)"
+v.pat.immh.poly: "Immeubles classés ou inscrits"
+v.pat.pamh.poly: "Immeubles classés ou inscrits (périmètre de protection)"
+v.pat.imun.poly: "Patrimoine Mondial UNESCO"
+v.pat.paun.poly: "Patrimoine Mondial UNESCO (périmètre de protection)"
+v.pat.sici.poly: "Sites classés ou inscrits"
+v.pat.sipr.poly: "Sites patrimoniaux remarquables"
+v.pat.lacr.poly: "Architecture contemporaine remarquable"
+v.pat.zppa.poly: "Zones de présomption de prescriptions archeologiques"
+# endregion
+
+# region GPU
+v.gpu.municipality.poly: "Informations communes"
+v.gpu.document.poly: "Documents d'urbanisme"
+v.gpu.zone.poly: "Documents d'urbanisme (zonage)"
+v.gpu.prescription.point: "Prescriptions ponctuelles"
+v.gpu.prescription.line: "Prescriptions linéaires"
+v.gpu.prescription.poly: "Prescriptions surfaciques"
+v.gpu.supa.poly: "Servitudes d’utilité publique (SUP)"
+v.gpu.supg.point: "Générateur ponctuels (SUP)"
+v.gpu.supg.line: "Générateur linéaires (SUP)"
+v.gpu.supg.poly: "Générateur surfaciques (SUP)"
+# endregion
+
+# --- ARS ---
+v.ars.perimetre.poly: "Périmètres de protection (ARS)"
+v.ars.captage.point: "Points de captage (ARS)"
+# endregion
+
+# region Infrastructures
+v.infra.point: "Infrastructures ponctuelles"
+v.infra.line: "Infrastructures linéaires"
+v.infra.poly: "Bâtiments et zones urbanisées"
+# endregion
+
+# region VEGETATION
+v.vege.point: "Végétation (ponctuelle)"
+v.vege.line: "Végétation (Haies, alignement)"
+v.vege.poly: "Végétation (Forêt voisine)"
+# endregion
+
+# region HYDROGRAPHIE
+v.hydro.point: "Hydrographie (ponctuelle)"
+v.hydro.line: "Hydrographie (linéaire)"
+v.hydro.poly: "Hydrographie (surfacique)"
+# endregion
+
+# region MNHN 
+v.mnhn.apb.poly: "Arrêtés de protection de biotope"
+v.mnhn.apg.poly: "Arrêtés de protection de géotope"
+v.mnhn.aphn.poly: "Arrêtés de protection d'habitats naturels"
+v.mnhn.aplg.poly: "Arrêtés listant les sites d'intérêt géologique"
+v.mnhn.bios.poly: "Réserves de biosphère"
+v.mnhn.unesco.poly: "Patrimoine mondial UNESCO"
+v.mnhn.cdl.poly: "Conservatoire du littoral"
+v.mnhn.cen.poly: "Conservatoires d'espaces naturels"
+v.mnhn.geoparc.poly: "Géoparcs mondiaux UNESCO"
+v.mnhn.gsf.poly: "Grands Sites de France"
+v.mnhn.inpg.poly: "Inventaire national du patrimoine géologique"
+v.mnhn.ospar.poly: "Zones OSPAR"
+v.mnhn.pgsf.poly: "Projets Grand Site de France"
+v.mnhn.pn.poly: "Parcs nationaux (cœur)"
+v.mnhn.pn2.poly: "Parcs nationaux (aire d'adhésion)"
+v.mnhn.pnm.poly: "Parcs naturels marins"
+v.mnhn.pnr.poly: "Parcs naturels régionaux"
+v.mnhn.pprnn.poly: "Périmètres de protection des réserves naturelles nationales"
+v.mnhn.ramsar.poly: "Sites Ramsar"
+v.mnhn.rb.poly: "Réserves biologiques"
+v.mnhn.ripn.poly: "Réserves intégrales de parc national"
+v.mnhn.rnc.poly: "Réserves naturelles de Corse"
+v.mnhn.rncfs.poly: "Réserves nationales de chasse et de faune sauvage"
+v.mnhn.rnn.poly: "Réserves naturelles nationales"
+v.mnhn.rnr.poly: "Réserves naturelles régionales"
+v.mnhn.sc.poly: "Sites classés"
+v.mnhn.sic.poly: "Sites d'intérêt communautaire"
+v.mnhn.znieff1.poly: "ZNIEFF de type 1"
+v.mnhn.znieffmer1.poly: "ZNIEFF mer de type 1"
+v.mnhn.znieff2.poly: "ZNIEFF de type 2"
+v.mnhn.znieffmer2.poly: "ZNIEFF mer de type 2"
+v.mnhn.zpr.poly: "Zones de protection renforcée"
+v.mnhn.zps.poly: "Zones de protection spéciale"
+# endregion
+
+# region Toponymie
+v.toponyme.point: "Toponymes"
+# endregion
+
+# region RELIEF
+v.curves.line: "Courbes de niveau"
+# endregion
+
+# region ACCES
+v.access.entry.point: "Points d'accès"
+v.access.porteur.poly: "Zones accessibles porteur"
+v.access.skidder.poly: "Zones accessibles skidder"
+# endregion
+
+# region ROUTES
+v.road.line: Dessertes (linéaire)
+v.roadway.line: Chaussées (bordures)
+v.roadway.poly: Chaussées
+# endregion
+
+# region IFN
+v.ifn.ser.poly: "Sylvo-écorégions"
+v.ifn.ser_ar.poly: "Sylvo-écorégions alluviales"
+v.ifn.rfn.poly: "Régions forestières nationales"
+v.ifn.rfd.poly: "Régions forestières départementales"
+v.ifn.zp.poly: "Zones phytogéographiques"
+# endregion
+
+# region SECURITE
+v.secu.prsf.point: "Points de rencontre des secours en forêt"
+v.secu.old.poly: "Obligations légales de débrousaillement"
+# endregion
+
+# region CADASTRE
+v.cad.vides.poly: Vides cadastraux
+v.cad.batiment.poly: Bâtiments cadastrés
+v.cad.borne.point: Bornes cadastrales
+v.cad.commune.poly: Communes cadastrées
+v.cad.lieudit.point: Lieu-dits
+v.cad.numvoie.point: Numéro de voie au cadastre
+v.cad.parcelle.poly: Parcelles cadastrales
+v.cad.section.poly: Sections cadastrales
+v.cad.subdfisc.poly: Subdivisions cadastrales
+v.cad.symblim.point:
+v.cad.tline.line: Détails des plans cadastraux (linéaire)
+v.cad.tpoint.point: Détails des plans cadastraux (ponctuels)
+v.cad.tronfluv.poly: Tronçons fluviaux au cadastre (surfacique)
+v.cad.tronroute.poly: Chaussées publiques au cadastre (emprises)
+v.cad.tsurf.point: Détails des plans cadastraux (surfacique)
+v.cad.zoncommuni.line: Desserte au cadastre(linéaire)
+# endregion

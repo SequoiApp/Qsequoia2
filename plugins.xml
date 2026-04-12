@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugins>
+    <plugin name="qsequoia2"
+            version="2026.03.23"
+            qgis_minimum_version="3.40">
+    <description>Plugin QGIS pour la gestion et l'analyse de données forestières.</description>
+    <download_url>https://github.com/SequoiApp/Qsequoia2/releases/download/v2026.03.23/QSEQUOIA2-2026.03.23.zip</download_url>
+    <repository_url>https://github.com/SequoiApp/Qsequoia2</repository_url>
+    <author>Organisation SEQUOIAPP : Alexandre Le Bars, Paul Carteron, Matthieu Chevereau</author>
+    </plugin>
+</plugins>
+
+

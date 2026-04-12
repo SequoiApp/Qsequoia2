@@ -55,7 +55,7 @@ class AddDataTabWidget(QTabWidget, FORM_CLASS):
 
         tree = QTreeWidget()
         tree.setObjectName("vtree")
-        tree.setHeaderLabels(["Vecteurs"])
+        tree.setHeaderHidden(True)
 
         # Filter + sort layers
         layers_vect = [l for l in self.layers if l["type"] == "vect"]
@@ -99,7 +99,7 @@ class AddDataTabWidget(QTabWidget, FORM_CLASS):
 
         tree = QTreeWidget()
         tree.setObjectName("rtree")
-        tree.setHeaderLabels(["Raster"])
+        tree.setHeaderHidden(True)
 
         # Filter + sort layers
         layers_rast = [l for l in self.layers if l["type"] == "rast"]
@@ -142,7 +142,7 @@ class AddDataTabWidget(QTabWidget, FORM_CLASS):
 
         tree = QTreeWidget()
         tree.setObjectName("wmts_tree")
-        tree.setHeaderLabels(["WMTS"])
+        tree.setHeaderHidden(True)
 
         categories = {}
         for key, layer in get_wmts_config().items():
@@ -167,10 +167,10 @@ class AddDataTabWidget(QTabWidget, FORM_CLASS):
 
         tree = QTreeWidget()
         tree.setObjectName("tms_tree")
-        tree.setHeaderLabels(["TMS"])
+        tree.setHeaderHidden(True)
 
         categories = {}
-        for key, layer in get_wmts_config().items():
+        for key, layer in get_tms_config().items():
             family = (layer.get("family") or "autres").capitalize()
 
             if family not in categories:
@@ -230,11 +230,10 @@ class AddDataTabWidget(QTabWidget, FORM_CLASS):
 
     def on_wmts_clicked(self, item, column):
 
-        data = item.data(0, Qt.UserRole)
-        if not data:
+        key = item.data(0, Qt.UserRole)
+        if not key:
             return
-
-        key = data[0]
+        
         try:
             wmts_read(key=key)
         except Exception as e:
@@ -242,11 +241,10 @@ class AddDataTabWidget(QTabWidget, FORM_CLASS):
     
     def on_tms_clicked(self, item, column):
 
-        data = item.data(0, Qt.UserRole)
-        if not data:
+        key = item.data(0, Qt.UserRole)
+        if not key:
             return
-
-        key = data[0]
+        
         try:
             tms_read(key=key)
         except Exception as e:

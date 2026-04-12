@@ -1,34 +1,17 @@
-
-# ==========================================================================
-# import
-# ==========================================================================
-
-# python 
-
 from pathlib import Path
 
-# Qgis
 from PyQt5 import uic
-from qgis.PyQt.QtWidgets import QDialog
+from qgis.PyQt.QtWidgets import QWidget
 from qgis.core import *
 from PyQt5.QtWidgets import QTableWidgetItem, QHeaderView
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QTimer
 
-# Qsequoia2 
-from ..utils.Qmessage import *
-from .data_table import *
-from ..utils.variable import *
-from ..utils.seq_config import *
+from ..utils.seq_config import seq_layer
 
 UI_PATH = Path(__file__).parent / 'table_check.ui'
 FORM_CLASS, _ = uic.loadUiType(str(UI_PATH))
 
-# ==========================================================================
-# region initalisation
-# ==========================================================================
-
-
-class table_check(QDialog, FORM_CLASS):
+class table_check(QWidget, FORM_CLASS):
 
     def __init__(self, iface, parent=None):
         super().__init__(parent)
@@ -38,172 +21,132 @@ class table_check(QDialog, FORM_CLASS):
         self.project = QgsProject.instance()
         self.setupUi(self)
 
+        self.forestTable.setVisible(False)
 
-        self.forestTable.setHidden(True)
-
-
-        # réaction au changement de type de données à afficher
-        # self.cb_dataType.currentTextChanged.connect(self.actu_Tabledata)
-        # réaction au changement de parcelle sélectionnée
-        self.cb_parcelle.currentTextChanged.connect(self.on_cb_parcelle_changed)
-        self.cb_sspf.currentTextChanged.connect(self.on_cb_parcelle_changed)
-
-    # endregion
-    # ================================================
-    # region tableaux
-    # ================================================
+        self.btn_refresh.setIcon(QgsApplication.getThemeIcon("/mActionRefresh.svg"))
+        self.btn_refresh.clicked.connect(self.on_ua_layer_loaded)
 
 
-    def actu_Tabledata(self, value, seq_dir=None, seq_dirname=None, seq_identifier= None):
-        seq_dir = get_project_variable("QS2_seq_dir") or seq_dir
-        if not seq_dir:
+        # réaction au changement de parcelle sélectionnée, lambda pour éviter de devoir passer la valeur à la fonction
+        self.cb_parcelle.currentTextChanged.connect(lambda value: self._on_cb_parcelle_changed(value))
+        self.cb_sspf.currentTextChanged.connect(lambda value: self._on_cb_parcelle_changed(value))
+        QgsProject.instance().layersRemoved.connect(self._on_layers_removed)
+
+    def on_project_loaded(self):
+        # attendre que QGIS ait fini de charger les couches et le projet
+        QTimer.singleShot(300, self.on_ua_layer_loaded)
+
+    def on_ua_layer_loaded(self):
+        layer_name = seq_layer("ua")["name"]
+
+        layer = None
+        for l in QgsProject.instance().mapLayers().values():
+            if l.name() == layer_name:
+                layer = l
+                break
+
+        if not layer:
+            self._ua_status(state=False)
+            self._setup_ui_verif(state = False)
             return
-        
-        # self.cb_dataType.setEnabled(True)
-        self.parca_layer = seq_read("parca", seq_dir)
-        self.ua_layer = seq_read("ua", seq_dir)
 
-        if value == "Vérificateur de données":
-            self.check_data(seq_dir)
-            self.current_layer = self.ua_layer
-            self.current_layer = self.get_or_load_layer("ua", seq_dir, 
-                                                        group="SEQUOIA", style_folder=get_project_variable("QS2_styles_directory"))
+        self.ua_layer = layer
+        self._ua_status(state=True)
+        self._setup_ui_verif(state = True)
+        self._check_data()
+        self.populate_cb_from_field("cb_parcelle", layer, "N_PARFOR")
+        self.populate_cb_from_field("cb_sspf", layer, "N_SSPARFOR")
 
-            self.ua_layer = self.current_layer
-            self._setup_ui_verif()
-            self.populate_cb_from_field(cb_name = "cb_parcelle", Layer = self.ua_layer, field_name = "N_PARFOR")
-            self.populate_cb_from_field(cb_name = "cb_sspf", Layer = self.ua_layer, field_name = "N_SSPARFOR")
+    def _ua_status(self, state):
+        if state:
+            self.lbl_ua_status.setText("Couche UA chargée")
+            self.lbl_ua_status.setStyleSheet("color: green;")
+        else:
+            self.lbl_ua_status.setText("Couche UA non chargée")
+            self.lbl_ua_status.setStyleSheet("color: red;")
 
-        elif value == "Synthèse":
-            try:
-                synthese = seq_read("summary", seq_dir)
-                self.final_layer = self.setFinaldata(seq_dir, synthese)
-                self.current_layer = self.final_layer
-
-                self.populate_cb_from_field(cb_name = "cb_parcelle", Layer = self.final_layer, field_name = "N_PARFOR")
-                self._setup_ui_synthese()
-                self.fill_table(self.final_layer, list(self.final_layer.getFeatures()))
-            except Exception as e:
-                messageLog(f"Erreur lors de la mise à jour de la table : {e}", "w")
-                
-        
-        elif value == "Sélectionner une table":
-            self.setup_ui_selection()
-
-    # ================================================
-    # création de la synthèse
-    # ================================================
-
-    def setFinaldata(self, seq_dir, synthese):
-        """"""
-        source = synthese.dataProvider().dataSourceUri()
-        synthese = source.split("|")[0]
-
-        final_data = getFinaldata(synthese)
-
-        return final_data
-
-    # ================================================
-    # tableaux : Vérification
-    # ================================================
-
-    def check_data(self, seq_dir):
+    def _check_data(self, ids=None):
 
         self.forestTable.clearContents()
         self.forestTable.setRowCount(0)
 
-        self.fill_table(self.ua_layer, list(self.ua_layer.getFeatures()))
+        if ids is not None:
+            ua_feats = [f for f in self.ua_layer.getFeatures() if f.id() in ids]
+        else:
+            ua_feats = list(self.ua_layer.getFeatures())
+            self.ua_layer.removeSelection()
+            surf = self.sspf_surface_calculation(self.ua_layer)
+            self.le_surf.setText(surf)
 
+        self.fill_table(self.ua_layer, ua_feats)
 
-    # endregion
-    # ================================================
-    # region utilitaires tableaux
-    # ================================================ 
-    
     # Utilitaire pour UI 
-    def _setup_ui_verif(self):
-        self.forestTable.setHidden(False)
-        self.cb_parcelle.setEnabled(True)
-        self.cb_sspf.setEnabled(True)
-        self.cb_sspf.setHidden(False)
-        self.lbl_sspf.setHidden(False)
-        self.lbl_surf.setHidden(False)
-        self.le_surf.setHidden(False)
+    def _setup_ui_verif(self, state):
+        self.forestTable.setVisible(state)
 
-    def _setup_ui_synthese(self):
-        self.forestTable.setHidden(False)
-        self.cb_parcelle.setEnabled(True)
-        self.cb_sspf.setHidden(True)
-        self.lbl_sspf.setHidden(True)
-        self.lbl_surf.setHidden(True)
-        self.le_surf.setHidden(True)
+        self.forestTable.clearContents()
+        self.forestTable.setRowCount(0)
 
-    def setup_ui_selection(self):
-        self.cb_parcelle.setEnabled(False)
-        self.cb_sspf.setEnabled(False)
-        self.forestTable.setHidden(True)
-        self.lbl_surf.setHidden(True)
-        self.le_surf.setHidden(True)
+        self.cb_parcelle.setEnabled(state)
+        self.cb_sspf.setEnabled(state)
+        self.cb_sspf.setEnabled(state)
+        self.lbl_sspf.setEnabled(state)
+        self.lbl_surf.setEnabled(state)
+        self.le_surf.setEnabled(state)
+    
+
+    def _on_layers_removed(self, layer_ids):
+        QTimer.singleShot(0,self.on_ua_layer_loaded)
 
     # Utilitaire pour remplir les comboBox de sélection
-    def populate_cb_from_field(self, cb_name, Layer, field_name):
+
+    def populate_cb_from_field(self, cb_name, layer, field_name):
 
         cb = getattr(self, cb_name)
-        values = sorted({str(f[field_name]) for f in Layer.getFeatures()})
+        values = sorted({str(f[field_name]) for f in layer.getFeatures()})
         cb.clear()
         cb.addItem("Toutes")      # valeur par défaut
         cb.addItems(values)
         cb.setCurrentIndex(0)
 
 
-    def on_cb_parcelle_changed(self, value):
+    def _on_cb_parcelle_changed(self, value):
 
-        layer = self.current_layer
-
-        expr = self.buildExpression(layer, value)
+        expr = self.build_sspf_expression(self.ua_layer, value)
 
         if expr:
-            ids = self.selectFeaturesByExpression(layer, expr)
+            ids = self.selectFeaturesByExpression(self.ua_layer, expr)
 
             if ids is not None:
-                self.update_table_with_selection(layer, ids)
-                surf = sspf_surface_calculation(self.ua_layer)
+                self._check_data(ids=ids)
+                surf = self.sspf_surface_calculation(self.ua_layer)
                 if surf:
                     self.le_surf.setText(surf)
 
         else:
-            self.update_table_with_all(layer)
+            self._check_data()
 
 
-    def update_table_with_all(self, layer):
-        feats = list(layer.getFeatures())
-        self.fill_table(layer, feats)
-
-    def update_table_with_selection(self, layer, ids):
-        feats = [f for f in layer.getFeatures() if f.id() in ids]
-        self.fill_table(layer, feats)
-    
-
-    def fill_table(self, layer, features):
+    def fill_table(self, ua_layer, ua_feats):
         """Remplit la table avec les features données"""
 
-        fields = layer.fields()
+        fields = ua_layer.fields()
 
         self.forestTable.setColumnCount(len(fields))
         self.forestTable.setHorizontalHeaderLabels([f.name() for f in fields])
-        self.forestTable.setRowCount(len(features))
+        self.forestTable.setRowCount(len(ua_feats))
 
         # met en forme la table
-        self.TableFormat()
+        self.Table_format()
 
-        for row, feat in enumerate(features):
+        for row, feat in enumerate(ua_feats):
             for col, field in enumerate(fields):
                 val = feat[field.name()]
                 item = QTableWidgetItem(str(val))
                 item.setFlags(item.flags() ^ Qt.ItemIsEditable)
                 self.forestTable.setItem(row, col, item)
 
-    def TableFormat(self):
+    def Table_format(self):
         """Met en forme la table"""
         header = self.forestTable.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
@@ -213,8 +156,7 @@ class table_check(QDialog, FORM_CLASS):
         self.forestTable.setAlternatingRowColors(True)
 
 
-
-    def buildExpression(self, layer, value):
+    def build_sspf_expression(self, layer,value):
 
         # Construction dynamique des filtres
         filters = []
@@ -255,27 +197,14 @@ class table_check(QDialog, FORM_CLASS):
         self.iface.mapCanvas().refresh()
 
         return ids
-    
-    # utile pour éviter de charger plusieurs fois les couches dans le projet + 
-    # permet la selection d'entités dans la couche UA importé  de ADD_DATA
-    def get_or_load_layer(self, key, seq_dir, group="SEQUOIA", style_folder=None):
+        
+    def sspf_surface_calculation(self,ua_layer) -> str:
 
-        meta = seq_layer(key)
-        layer_name = meta["name"]
-
-        project = QgsProject.instance()
-
-        for lyr in project.mapLayers().values():
-            if lyr.name() == layer_name:
-                return lyr
-
-        layer = seq_read(
-            key,
-            seq_dir,
-            add_to_project=True,
-            group_name=group,
-            style_folder=style_folder
-        )
-
-        return layer
-
+        feats = list(ua_layer.getSelectedFeatures())
+        if not feats: 
+            surf = sum(f.geometry().area() for f in ua_layer.getFeatures()) / 10000
+            return f"{round(surf,4)} ha"
+        tmp = QgsVectorLayer("Polygon?crs=" + ua_layer.crs().authid(), "tmp", "memory")
+        tmp.dataProvider().addFeatures(feats)
+        surf = sum(f.geometry().area() for f in tmp.getFeatures()) / 10000
+        return f"{round(surf,4)} ha"

@@ -1,207 +1,193 @@
 
-# ==========================================================================
-# import
-# ==========================================================================
-
-# python 
-
 from pathlib import Path
-import json
+from enum import Enum
 
 # Qgis
 from PyQt5 import uic
-from qgis.PyQt.QtWidgets import QWidget
-from qgis.core import *
-from PyQt5.QtWidgets import QTableWidgetItem, QHeaderView, QButtonGroup
-from PyQt5.QtCore import Qt
+from qgis.PyQt.QtWidgets import QWidget, QButtonGroup
+from PyQt5.QtCore import QTimer
+from qgis.core import QgsProject
 
 # Qsequoia2 
-from .update_forest_name import *
-from ..utils.Qmessage import *
-from .forest_get_data import *
-from ..table_check.data_table import *
-from ..utils.variable import *
-from ..utils.seq_config import *
+from ..utils.variable import set_project_variable, get_project_variable
+from ..utils.seq_config import seq_read
+from ..utils.Qmessage import messageBar, messageLog
+from .forest_metadata_builder import ForestMetadataBuilder
+from .update_forest_name import update_forest_name
+
 
 UI_PATH = Path(__file__).parent / 'forest_data.ui'
 FORM_CLASS, _ = uic.loadUiType(str(UI_PATH))
 
-PROJECT = QgsProject.instance()
+class ForestType(Enum):
+    DOMAINE = "Domaine"
+    MASSIF = "Massif"
+    FORET = "Forêt"
+    BOIS = "Bois"
 
-# ==========================================================================
-# region initalisation
-# ==========================================================================
-
-class ForestDataTabs(QWidget, FORM_CLASS):
+class ForestDataWidget(QWidget, FORM_CLASS):
     """Classe principale du module Forestdata de Qsequoia2"""
     def __init__(self, iface, parent=None):
         super().__init__(parent)
 
         self.iface = iface
         self.parent = parent
-        self.project = QgsProject.instance()
         self.setupUi(self)
 
-        # checkboxes de type de forêt
-        self.forestType_rb = {
-            self.rb_domaine: "Domaine",
-            self.rb_massif: "Massif",
-            self.rb_foret: "Forêt",
-            self.rb_bois: "Bois"
+        # --- Radio buttons mapping ---
+        self.type = {
+            self.rb_domaine: ForestType.DOMAINE,
+            self.rb_massif: ForestType.MASSIF,
+            self.rb_foret: ForestType.FORET,
+            self.rb_bois: ForestType.BOIS,
         }
 
-        for rb in self.forestType_rb:
+        self.group = QButtonGroup(self)
+        self.group.setExclusive(True)
+        self.group.buttonClicked.connect(self._on_rb_clicked)
+        for rb in self.type:
             rb.setEnabled(False)
-            self.lbl_type.setEnabled(False)
-            rb.toggled.connect(self.on_checkbox_toggled)
+            self.group.addButton(rb)
 
-    # endregion
-    # ================================================
-    # region Metadonnées
-    # ================================================
+        # nom de la foret changé manuellement
+        self.le_forest_name.editingFinished.connect(self._on_forest_name_entered)
+        QgsProject.instance().readProject.connect(self._on_project_ready)
 
+    def _on_project_ready(self):
+        # Laisser Qgis respirer
+        QTimer.singleShot(0, self._on_project_ready_safe)
 
-    def actu_metadata(self, seq_dir, seq_dirname=None, seq_identifier= None):
-        """relance les fonctions de chargement des data pour actualiser l'affichage"""  
+    def _on_project_ready_safe(self):
+        """Called when QGIS project is fully loaded"""
+        seq_dir = get_project_variable("QS2_seq_dir")
+        if not seq_dir:
+            return # ignore projects that are not Sequoia
 
-        # métadata build
+        self._refresh_metadata(seq_dir)
+
+    def _refresh_metadata(self, seq_dir):
+        """Reload data and refresh metadata display"""
 
         seq_dir = Path(seq_dir)
-        self.parca_layer = seq_read("parca", seq_dir)
-        self.ua_layer = seq_read("ua", seq_dir)
 
-        for rb in self.forestType_rb:
+        # --- PARCA (required) ---
+        try:
+            parca_layer = seq_read("parca", seq_dir, add_to_project=False)
+        except Exception as e:
+            self.messageLog(f"[PARCA] Load failed: {e}", level="c")
+            messageBar(self.iface, "PARCA layer is required.", level="c")
+            return
+
+        # --- UA (optional) ---
+        try:
+            ua_layer = seq_read("ua", seq_dir, add_to_project=False)
+            self._ua_status(True)
+        except Exception as e:
+            self.messageLog(f"[UA] Load failed: {e}", level="w")
+            self._ua_status(False)
+            ua_layer = None  # fallback → run without UA
+
+        # --- Enable UI ---
+        for rb in self.type:
             rb.setEnabled(True)
-            self.lbl_type.setEnabled(True)
 
-        # création des métadata 
-        seq_metadata = self.run_calculation(seq_dir)
+        # --- Compute metadata ---
+        seq_metadata = self.run_calculation(parca_layer, ua_layer)
+        if not seq_metadata:
+            return
+
         self.export_to_project_variables(seq_metadata, seq_dir)
-        PROJECT.write() # sauvegarde du projet pour que les variables soient prises en compte dans les expressions QGIS
-
-        # lecture des metadata
         self.display_base_metadata(seq_metadata)
 
+        self._init_forest_name()
+    
+    def _init_forest_name(self):
+        """Initialize forest name when project changes"""
 
-    def run_calculation(self, seq_dir):
-        try : 
-            get_metadata = getForestdata(self.iface, seq_dir)
-            seq_matadata = get_metadata.build(self.ua_layer, self.parca_layer)
-            return seq_matadata
+        messageLog("[FOREST DATA] start _init_forest_name()")
+        forest_name = get_project_variable("QS2_forest_name")
 
-        except Exception as e :
-            messageBar(self.iface, f"Erreur lors de la construction des metadata : {e}","w",10)
-            return {"vide"}
-        
+        messageLog(f"[FOREST DATA] forest_name: {forest_name}")
+        if not forest_name:
+            seq_id = get_project_variable("QS2_seq_id")
+            prefix = ForestType.FORET.value  # default
+            forest_name = update_forest_name(prefix, seq_id)
+
+        self._set_forest_name(forest_name)
+
+    def _set_forest_name(self, forest_name):
+        """Single source of truth"""
+
+        messageLog("[FOREST DATA] start _set_forest_name()")
+        forest_name = (forest_name or "").strip()
+        if not forest_name:
+            return
+
+        set_project_variable("QS2_forest_name", forest_name)
+
+        self.le_forest_name.setText(forest_name)
+
+    def _ua_status(self, state):
+        if state:
+            self.lbl_ua_status.setVisible(False)
+        else:
+            self.lbl_ua_status.setText("Couche UA non présente ou invalide")
+            self.lbl_ua_status.setStyleSheet("color: red;")
+
+    def run_calculation(self, parca_layer, ua_layer):
+        if parca_layer is None:
+            raise ValueError("PARCA layer is required to compute metadata")
+
+        try:
+            get_metadata = ForestMetadataBuilder(parca_layer, ua_layer)
+            return get_metadata.build()
+
+        except Exception as e:
+            messageBar(self.iface, f"Erreur lors de la construction des metadata : {e}","w")
+            return None
         
     def export_to_project_variables(self, seq_metadata, seq_dir):
         """ajoute les données dans les varaibles projets"""
 
         for key, value in seq_metadata.items():
-            print("Export metadata : ", f"QS2_{key} : {value}")
-            set_project_variable(f"QS2_{key}", str(value))
+            if isinstance(value, list):
+                for i, item in enumerate(value, start=1):
+                    set_project_variable(f"QS2_{key}_{i}", item["name"])
+                    set_project_variable(f"QS2_{key}_{i}_surface", item["surface"])
+            else:
+                set_project_variable(f"QS2_{key}", str(value))
 
         messageLog(f"-- metadata build pour {seq_dir} --!","i")
 
+    def _format_group(self, data):
+        return ", ".join(item.get("name", "") for item in data) 
 
-    # ================================================
-    # Metadata Lecture et affichage
-    # ================================================
-
-    # TODO : Revoir ca ne fonctionne pas les varaibles sont néanmoins dispo via @..  
-
-    def _extract_group(self, seq_metadata, prefix):
-        items = []
-
-        i = 1
-        while True:
-            name_key = f"QS2_{prefix}_{i}_name"
-            surf_key = f"QS2_{prefix}_{i}_surface"
-
-            if name_key not in seq_metadata:
-                break
-
-            items.append({
-                "name": seq_metadata.get(name_key, ""),
-                "surface": seq_metadata.get(surf_key, 0)
-            })
-
-            i += 1
-
-        return items
-    
     def display_base_metadata(self, m):
 
+        self.le_com.setText(self._format_group(m.get("com_name", [])))
+        self.le_owner.setText(self._format_group(m.get("owner", [])))
+        self.le_dep.setText(self._format_group(m.get("dep_code", [])))
+        self.le_reg.setText(self._format_group(m.get("reg_name", [])))
 
-        for prefix, widget in {
-            "city": self.city_le,
-            "owner": self.owner_le,
-            "dep_name": self.dep_code_le,
-            "reg_name": self.reg_name_le,
-        }.items():
+        self.le_surface_total.setText(str(m.get("surface_total", "")))
+        self.le_surface_wooded.setText(str(m.get("surface_wooded", "")))
+        self.le_surface_unwooded.setText(str(m.get("surface_unwooded", "")))
 
-            group = self._extract_group(m, prefix)
-            widget.setText(", ".join(g["name"] for g in group))
-
-        for key, widget in {
-            "total_surface": self.total_surface_le,
-            "wooded_surface": self.wooded_surface_le,
-            "no_wooded_surface": self.no_wooded_surface_le,
-        }.items():
-
-            widget.setText(str(m.get(key, "")))
-
-        # if self.forest_name :
-        #     self.seq_id_edit.setText(str(self.forest_name))
-        #     prefix = self.forest_name.split(" ")[0]
-        #     for cb, label in self.forestType_rb.items():
-        #         cb.setChecked(label == prefix)
-
-    # endregion
-    # ================================================
-    # region Forest type and name
-    # ================================================
-
-    def on_checkbox_toggled(self, checked):
-        """
-        Gère la sélection des checkboxes de type de propriété.
-
-        - Si aucun projet n'est sélectionné, toutes les checkboxes sont invisibles.
-        - Les checkboxes sont rendues mutuellement exclusives.
-        - Met à jour le nom de la forêt en fonction de la sélection.
-
-        """
-        seq_dir = get_project_variable("QS2_seq_dir")
+    def _on_rb_clicked(self, button):
         seq_id = get_project_variable("QS2_seq_id")
-
-        if not checked:
+        if not seq_id:
             return
 
-        if not seq_dir or not seq_id :
-            # Aucun projet => décocher toutes
-            for rb in self.forestType_rb:
-                if rb.isChecked():
-                    rb.blockSignals(True)
-                    rb.setChecked(False)
-                    rb.blockSignals(False)
+        forest_type = self.type.get(button)
+        if not forest_type:
             return
-        
-        seq_dir = Path(seq_dir)
 
-        if checked:
-            # Une checkbox a été cochée, décocher toutes les autres
-            sender_rb = self.sender()
-            for rb in self.forestType_rb:
-                if rb != sender_rb and rb.isChecked():
-                    rb.blockSignals(True)
-                    rb.setChecked(False)
-                    rb.blockSignals(False)
+        forest_name = update_forest_name(forest_type.value, seq_id)
+        self._set_forest_name(forest_name)
 
-        prefix = next((label for rb, label in self.forestType_rb.items() if rb.isChecked()), "")
-        forest_name = update_forest_name(prefix, seq_id)
+    def _on_forest_name_entered(self):
+        forest_name = self.le_forest_name.text().strip()
+        if not forest_name:
+            return
 
-        set_project_variable("QS2_forest_name", forest_name)
-
-        self.seq_id_edit.setText(str(forest_name))
-
-    # endregion
+        self._set_forest_name(forest_name)

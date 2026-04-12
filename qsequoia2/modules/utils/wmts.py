@@ -4,10 +4,10 @@ import yaml
 from qgis.core import QgsRasterLayer, QgsProject
 from .Qmessage import  messageLog
 from .layer_tree import get_group
-from .seq_config import _CONFIG_CACHE
+from .plugin_vars import PLUGIN_DIR, CONFIG_CACHE
 
 def get_wmts_config_path() -> Path:
-    path = Path(__file__).parents[2] / "inst" / "wmts.yaml"
+    path = Path(PLUGIN_DIR) / "config" / "wmts.yaml"
 
     if path.exists():
         return path
@@ -15,8 +15,8 @@ def get_wmts_config_path() -> Path:
     raise RuntimeError("WMTS config not found")
 
 def get_wmts_config() -> dict:
-    if "wmts" in _CONFIG_CACHE:
-        return _CONFIG_CACHE["wmts"]
+    if "wmts" in CONFIG_CACHE:
+        return CONFIG_CACHE["wmts"]
 
     path = get_wmts_config_path()
     data = yaml.safe_load(path.read_text(encoding="utf-8"))
@@ -24,7 +24,7 @@ def get_wmts_config() -> dict:
     if data is None:
         raise ValueError("Empty config: wmts")
 
-    _CONFIG_CACHE["wmts"] = data
+    CONFIG_CACHE["wmts"] = data
     return data
 
 def wmts_layer(key):

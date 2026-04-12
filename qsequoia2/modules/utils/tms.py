@@ -4,10 +4,10 @@ import yaml
 from qgis.core import QgsVectorTileLayer, QgsProject
 from .Qmessage import messageLog
 from .layer_tree import get_group
-from .seq_config import _CONFIG_CACHE
+from .plugin_vars import PLUGIN_DIR, CONFIG_CACHE
 
 def get_tms_config_path() -> Path:
-    path = Path(__file__).parents[2] / "inst" / "tms.yaml"
+    path = PLUGIN_DIR / "config" / "tms.yaml"
 
     if path.exists():
         return path
@@ -15,8 +15,8 @@ def get_tms_config_path() -> Path:
     raise RuntimeError("TMS config not found")
 
 def get_tms_config() -> dict:
-    if "tms" in _CONFIG_CACHE:
-        return _CONFIG_CACHE["tms"]
+    if "tms" in CONFIG_CACHE:
+        return CONFIG_CACHE["tms"]
 
     path = get_tms_config_path()
     data = yaml.safe_load(path.read_text(encoding="utf-8"))
@@ -24,7 +24,7 @@ def get_tms_config() -> dict:
     if data is None:
         raise ValueError("Empty config: tms")
 
-    _CONFIG_CACHE["tms"] = data
+    CONFIG_CACHE["tms"] = data
     return data
 
 def tms_layer(key: str) -> dict:

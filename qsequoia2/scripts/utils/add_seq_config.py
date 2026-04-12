@@ -1,11 +1,14 @@
-# La fonction add seq_config permet de télécharger depuis le repo gitlab à chaque démarrage du plugin 
-# Une version des yaml de configuration à jour pour les couches RSequoia2
-# Elle remplace les fichiers locaux s'ils sont différents de ceux en ligne
+"""
+Module `seq_config` : gestion du téléchargement et de la mise à jour
+des fichiers de configuration YAML pour RSequoia2 depuis le dépôt distant.
 
+Auteur : Alexandre Le Bars - Comité des Forêts
+Email : alexlb329@gmail.com
 
-# Auteur : Alexandre Le bars - Comité des Forêts 
-
-# alexlb329@gmail.com
+Fonctionnalités :
+- Téléchargement automatique des fichiers YAML de configuration à chaque démarrage du plugin
+- Remplacement des fichiers locaux si différents de la version distante
+"""
 
 
 #---------------------------------------------------------------------------------
@@ -15,11 +18,27 @@ import urllib.request
 import yaml
 from qgis.PyQt.QtWidgets import QMessageBox
 
+from ..utils.messageBar import *
+
 #---------------------------------------------------------------------------------
 
 
 def add_seq_config():
-    """Télécharge et met à jour les fichiers de configuration RSequoia2 depuis le dépôt distant."""
+    """
+    Télécharge et met à jour les fichiers de configuration RSequoia2 depuis le dépôt distant.
+
+    Processus :
+    1. Récupère le dossier local 'inst' du plugin.
+    2. Lit le fichier `URLs.yaml` contenant les URLs des fichiers YAML à mettre à jour.
+    3. Télécharge chaque fichier YAML depuis le dépôt distant.
+    4. Écrit le fichier localement, remplaçant la version existante si nécessaire.
+    5. Affiche des messages d'erreur via QMessageBox en cas de problème réseau ou d'écriture.
+    
+    Notes :
+        - Le téléchargement est fait via urllib.request.
+        - Les fichiers YAML sont stockés dans le dossier `inst` du plugin.
+        - Les erreurs critiques affichent un message utilisateur et continuent le traitement des autres fichiers.
+    """
     
     # Récupération du dossier de configuration de QSequoia2
 
@@ -40,14 +59,13 @@ def add_seq_config():
         # Récupération de l’URL dans le sous-dictionnaire
         url = entry.get("url")
         if not url:
-            print(f"[WARN] Pas d'URL pour {key}, ignoré.")
             continue
 
         try:
             response = urllib.request.urlopen(url)
             remote_yaml_content = response.read().decode('utf-8')
         except Exception as e:
-            QMessageBox.critical(None, "Erreur de téléchargement",
+            QMessageBox.critical(None, "Erreur réseau",
                                 f"Impossible de télécharger {key}.yaml.\nErreur : {e}")
             continue
 
@@ -63,6 +81,6 @@ def add_seq_config():
         
         # Message de confirmation dans les logs de QGIS
 
-    print("Les fichiers de configuration RSequoia2 ont été mis à jour avec succès.")
+    messageLog("Les fichiers de configuration RSequoia2 ont été mis à jour avec succès.","i")
 
 

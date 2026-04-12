@@ -1,32 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>AddDataDialog</class>
+
  <widget class="QDialog" name="AddDataDialog">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>484</width>
-    <height>430</height>
-   </rect>
-  </property>
   <property name="windowTitle">
    <string>Ajout de couches</string>
   </property>
-  <widget class="QTabWidget" name="tabWidget">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>571</width>
-     <height>431</height>
-    </rect>
-   </property>
-   <property name="currentIndex">
-    <number>-1</number>
-   </property>
-  </widget>
+
+  <layout class="QVBoxLayout" name="rootLayout">
+
+   <item>
+    <widget class="QTabWidget" name="tabWidget">
+     <property name="currentIndex">
+      <number>-1</number>
+     </property>
+    </widget>
+   </item>
+
+  </layout>
  </widget>
+
  <resources/>
  <connections/>
 </ui>

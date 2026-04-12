@@ -1,84 +1,100 @@
+# ==================================================================================
+# Import
+# ==================================================================================
+
+# Python
 from pathlib import Path
-from qgis.core import (
-    QgsProject,
-    QgsRasterLayer,
-    QgsVectorLayer,
-    QgsMessageLog,
-    Qgis,
-    QgsRelation,
-    QgsEditorWidgetSetup,
-)
+
+# QGIS
+from qgis.core import (QgsProject,QgsMessageLog,Qgis)
 from osgeo import ogr
 
-from .config import get_wmts, get_display_name
+# QSEQUOIA2
+
+from .config import get_path
+
+# ==================================================================================
+# resolve layer
+# ==================================================================================
+
+def resolve_layer(layer_key: str,project=None,project_name=None,project_folder=None,style_folder=None,parent=None):
+    """
+    Résout et retourne une couche QGIS à partir d'une clé logique.
+
+    Cette fonction utilise la clé de couche pour retrouver son chemin via
+    la fonction ``get_path`` puis recherche la couche correspondante déjà
+    chargée dans le projet QGIS.
+    """
+
+    if project is None:
+        project = QgsProject.instance()
+
+    # get_path retourne un dict {layer_key: path}
+    layer_paths_dict = get_path(layer_key,project_name=project_name,
+                                project_folder=project_folder,style_folder=style_folder,parent=parent)
+
+    if not layer_paths_dict:
+        QgsMessageLog.logMessage(f"Couche '{layer_key}' introuvable", level=Qgis.Warning)
+        return None
+
+    # Extraire le chemin réel depuis le dict
+    path = next(iter(layer_paths_dict.values()))
+    if not path:
+        QgsMessageLog.logMessage(f"Couche '{layer_key}' introuvable", level=Qgis.Warning)
+        return None
+
+    filename = Path(path).stem
+    layers = project.mapLayersByName(filename)
+    return layers[0] if layers else None
 
 
-
-def resolve_layer_name(key: str) -> str:
-    # Try alias lookup
-    try:
-        name = get_display_name(key)   # vector/alias
-        if name:
-            return name
-    except KeyError:
-        pass
-
-    # Try WMTS lookup
-    try:
-        layer_name, _ = get_wmts(key)   # WMTS fallback
-        if layer_name:
-            return layer_name
-    except KeyError:
-        pass
-
-    # Final fallback: assume it's already a layer name
-    return key
-   
-
-def set_layers_readonly(*keys):
-    for key in keys:
-        name = get_display_name(key)
-        layer = QgsProject.instance().mapLayersByName(name)
-        if layer:
-            vector_layer = layer[0]
-            if isinstance(vector_layer, QgsVectorLayer):
-                vector_layer.setReadOnly(True)
+# ==================================================================================
+# configure_snapping
+# ==================================================================================
 
 def configure_snapping():
+    """
+    Configure les paramètres globaux d'accrochage (snapping) du projet QGIS.
+
+    La configuration appliquée inclut :
+    - activation globale du snapping,
+    - accrochage sur toutes les couches du projet,
+    - accrochage sur sommets, segments, milieux et extrémités,
+    - tolérance de 15 pixels,
+    - détection des intersections,
+    - activation de l'édition topologique.
+
+    Cette configuration est appliquée directement au projet courant.
+
+    :return: None
+    """
+
     project = QgsProject.instance()
     cfg = project.snappingConfig()       # référence vers la config actuelle
 
-    # 1. Activation globale
+    # Activation globale
     cfg.setEnabled(True)
 
-    # 2. Accrochage sur toutes les couches
+    # Accrochage sur toutes les couches
     cfg.setMode(Qgis.SnappingMode.AllLayers)
 
-    # 3. Types d’accrochage
-    cfg.setTypeFlag(
-        Qgis.SnappingTypes(
-            Qgis.SnappingType.Vertex |
-            Qgis.SnappingType.Segment |
-            Qgis.SnappingType.MiddleOfSegment |
-            Qgis.SnappingType.LineEndpoint
-        )
-    )
+    # Types d’accrochage
+    cfg.setTypeFlag(Qgis.SnappingTypes(Qgis.SnappingType.Vertex | Qgis.SnappingType.Segment |
+                           Qgis.SnappingType.MiddleOfSegment |Qgis.SnappingType.LineEndpoint))
 
-    # 4. Tolérance & unités
+    # Tolérance & unités
     cfg.setTolerance(15)                         # 15 px
     cfg.setUnits(Qgis.MapToolUnit.Pixels)
 
-    # 5. Snapping divers
+    # Snapping divers
     cfg.setIntersectionSnapping(True)            # attraper les intersections
     cfg.setSelfSnapping(False)                   # pas de self-snapping (≥ 3.14)
 
-    # 6. Options de topologie & chevauchement
+    # Options de topologie & chevauchement
     project.setTopologicalEditing(True)
-    project.setAvoidIntersectionsMode(
-        Qgis.AvoidIntersectionsMode.AllowIntersections
-    )
+    project.setAvoidIntersectionsMode(Qgis.AvoidIntersectionsMode.AllowIntersections)
 
-    # 7. On pousse la config et on rafraîchit éventuellement le canevas
+    # On pousse la config et on rafraîchit éventuellement le canevas
     project.setSnappingConfig(cfg)                                  
 
     return None

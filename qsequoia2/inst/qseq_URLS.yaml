@@ -53,5 +53,45 @@ wmts:
   wmts_lidar_mnh:
     display_name: "LIDAR MNH"
     url: contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&featureCount=10&format=image/png&layers=IGNF_LIDAR-HD_MNH_ELEVATION.ELEVATIONGRIDCOVERAGE.SHADOW&styles=normal&tileMatrixSet=PM_0_18&tilePixelRatio=0&url=https://data.geopf.fr/wmts?SERVICE%3DWMTS%26VERSION%3D1.0.0%26REQUEST%3DGetCapabilities
+  wmts_ocs_2017-2020:
+    display_name: "OCS_COSIA_2017-2020"
+    url: contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&featureCount=10&format=image/png&layers=IGNF_COSIA_2024-2026&styles=normal&tileMatrixSet=PM_6_18&tilePixelRatio=0&url=https://data.geopf.fr/wmts?SERVICE%3DWMTS%26VERSION%3D1.0.0%26REQUEST%3DGetCapabilities
+  wmts_ocs_2021-2023:
+    display_name: "OCS_COSIA_2021-2023"
+    url: contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&featureCount=10&format=image/png&layers=IGNF_COSIA_2021-2023&styles=normal&tileMatrixSet=PM_6_18&tilePixelRatio=0&url=https://data.geopf.fr/wmts?SERVICE%3DWMTS%26VERSION%3D1.0.0%26REQUEST%3DGetCapabilities
+  wmts_ocs_2024-2025:
+    display_name: "OCS_COSIA_2024-2025"
+    url: contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&featureCount=10&format=image/png&layers=IGNF_COSIA_2024-2026&styles=normal&tileMatrixSet=PM_6_18&tilePixelRatio=0&url=https://data.geopf.fr/wmts?SERVICE%3DWMTS%26VERSION%3D1.0.0%26REQUEST%3DGetCapabilities
+  wmts_IGNF_forêts-anciennes:
+    display_name: "IGNF_forêt-anciennes"
+    url: contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&featureCount=10&format=image/png&layers=IGNF_FORETS-ANCIENNES&styles=normal&tileMatrixSet=PM_6_16&tilePixelRatio=0&url=https://data.geopf.fr/wmts?SERVICE%3DWMTS%26VERSION%3D1.0.0%26REQUEST%3DGetCapabilities
 
+Outils web principaux:
 
+  Carto-Futaie:
+    display_name: "Carto-Futaie"
+    url: https://app.comitedesforets.com/login
+
+  SequoiAPP:
+    display_name: "SequoiAPP"
+    url: "https://app.SequoiAPP.com"
+  
+  Télédetection des essences par IA:
+    display_name: "Télédetection des essences par IA"
+    url: "https://drive.google.com/drive/folders/10tVmIe5IkF5Xtr_j3O8QRit144bU1coW"
+  
+  Github-SequoiAPP:
+    display_name: "github-SequoiAPP"
+    url: "https://github.com/SequoiApp"
+  
+  Github du plugin:
+    display_name: "github - qsequoia2"
+    url: "https://github.com/SequoiApp/Qsequoia2"
+  
+  Signaler un bug:
+    display_name: "github-issue"
+    url: "https://github.com/SequoiApp/Qsequoia2/issues"
+  
+  Documentation:
+    display_name: "github-documentation"
+    url: https://sequoiapp.github.io/Qsequoia2

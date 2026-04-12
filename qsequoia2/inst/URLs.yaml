@@ -14,20 +14,18 @@ seq_tables:
   url: "https://raw.githubusercontent.com/SequoiApp/Rsequoia2/main/inst/config/seq_tables.yaml"
 
 qseq_URLS:
-  url: "https://raw.githubusercontent.com/SequoiApp/Qsequoia2/qsequoia2/inst/qseq_URLS.yaml"
+  url: "https://raw.githubusercontent.com/SequoiApp/Qsequoia2/refs/heads/main/qsequoia2/inst/qseq_URLS.yaml"
 
 qseq_fields:
-  url: "https://raw.githubusercontent.com/SequoiApp/Qsequoia2/qsequoia2/inst/qseq_fields.yaml"
+  url: "https://raw.githubusercontent.com/SequoiApp/Qsequoia2/refs/heads/main/qsequoia2/inst/qseq_fields.yaml"
 
 qseq_layers:
-  url: "https://raw.githubusercontent.com/SequoiApp/Qsequoia2/qsequoia2/inst/qseq_layers.yaml"
+  url: "https://raw.githubusercontent.com/SequoiApp/Qsequoia2/refs/heads/main/qsequoia2/inst/qseq_layers.yaml"
 
 qseq_tables:
-  url: "https://raw.githubusercontent.com/SequoiApp/Qsequoia2/qsequoia2/inst/qseq_tables.yaml"
+  url: "https://raw.githubusercontent.com/SequoiApp/Qsequoia2/refs/heads/main/qsequoia2/inst/qseq_tables.yaml"
 
 qseq_path:
-  url: "https://raw.githubusercontent.com/SequoiApp/Qsequoia2/qsequoia2/inst/qseq_path.yaml"
-
-
+  url: "https://raw.githubusercontent.com/SequoiApp/Qsequoia2/refs/heads/main/qsequoia2/inst/qseq_path.yaml"
 
 

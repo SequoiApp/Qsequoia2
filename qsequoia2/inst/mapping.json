@@ -1,0 +1,39 @@
+{
+  "metadata": {
+
+    "project_name": {
+      "var": "forest_name",
+      "prefix": ""
+    },
+
+    "surf_cad": {
+      "var": "surface_formatted",
+      "prefix": ""
+    },
+
+    "prop": {
+      "var": "owner_str",
+      "prefix": "Propriétaire : "
+    },
+
+    "COMM": {
+      "var": "city_str",
+      "prefix": "Communes : "
+    }
+  },
+
+  "var": {
+    "project_key": {
+      "var": "project_alias",
+      "prefix": ""
+    },
+
+    "date": {
+      "var": "current_date",
+      "prefix": "État au "
+    },
+
+    "username": "username",
+    "orgAdress": "adresse"
+  }
+}

@@ -2,9 +2,8 @@ from pathlib import Path
 import platform
 import winreg
 
-
-
 def get_download_folder():
+    """recherche le dossier de telechargement de l'utilisateur pour watchdog"""
     system = platform.system()
 
     # Windows : lecture du registre (si l’utilisateur a déplacé le dossier)

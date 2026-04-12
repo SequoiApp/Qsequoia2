@@ -1,34 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Qsequoia2</class>
- <widget class="QgsDockWidget" name="Qsequoia2">
+ <class>QSEQUOIA2</class>
+ <widget class="QDockWidget" name="QSEQUOIA2">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>374</width>
-    <height>460</height>
+    <width>676</width>
+    <height>699</height>
    </rect>
   </property>
-  <property name="minimumSize">
-   <size>
-    <width>374</width>
-    <height>460</height>
-   </size>
-  </property>
-  <property name="windowIcon">
-   <iconset>
-    <normaloff>icons/Qsequoia.png</normaloff>icons/Qsequoia.png</iconset>
-  </property>
   <property name="windowTitle">
-   <string>Qsequoia2</string>
+   <string>QSEQUOIA-2</string>
   </property>
   <widget class="QWidget" name="dockWidgetContents">
-   <layout class="QVBoxLayout" name="main_layout">
+   <layout class="QVBoxLayout" name="rootLayout">
     <item>
      <widget class="QGroupBox" name="groupBox_3">
       <property name="title">
-       <string/>
+       <string>Projet actuel :</string>
       </property>
       <layout class="QHBoxLayout" name="projectLayout">
        <item>
@@ -116,36 +106,44 @@
      </widget>
     </item>
     <item>
-     <widget class="QTabWidget" name="tabWidget">
-      <property name="tabPosition">
-       <enum>QTabWidget::West</enum>
+     <widget class="QScrollArea" name="scrollArea">
+      <property name="widgetResizable">
+       <bool>true</bool>
       </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QToolButton" name="reload">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="text">
-       <string>♻️</string>
-      </property>
+      <widget class="QWidget" name="scrollAreaWidgetContents">
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>0</y>
+         <width>652</width>
+         <height>474</height>
+        </rect>
+       </property>
+       <layout class="QVBoxLayout" name="scrollLayout">
+        <item>
+         <widget class="QTabWidget" name="tabWidget">
+          <property name="tabPosition">
+           <enum>QTabWidget::West</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="reload">
+          <property name="toolTip">
+           <string>Rechargement du plugin</string>
+          </property>
+          <property name="text">
+           <string>♻️</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </item>
    </layout>
   </widget>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>QgsDockWidget</class>
-   <extends>QDockWidget</extends>
-   <header>qgsdockwidget.h</header>
-   <container>1</container>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
 </ui>

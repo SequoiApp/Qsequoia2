@@ -22,11 +22,11 @@ v.seq.owner.line: "Propriétaires (limites)"
 v.seq.owner.poly: "Propriétaires"
 v.seq.ua.poly: "Unités d'analyse"
 v.seq.pf.point: "Parcelles forestières (centroïdes)"
-v.seq.pf.line: "Parcelles forestières (limites)
+v.seq.pf.line: "Parcelles forestières (limites)"
 v.seq.pf.poly: "Parcelles forestières"
 v.seq.sspf.point: "Sous-parcelles forestières (centroïdes)"
-v.seq.sspf.poly: "Sous-parcelles forestières (limites)"
-v.seq.sspf.line: "Sous-parcelles forestières"
+v.seq.sspf.line: "Sous-parcelles forestières (limites)"
+v.seq.sspf.poly: "Sous-parcelles forestières"
 v.seq.ame.poly: "Aménagements"
 # endregion
 
@@ -34,8 +34,8 @@ v.seq.ame.poly: "Aménagements"
 v.com.topo.poly: "Communes (centroïdes)"
 v.com.topo.line: "Communes (limites)"
 v.com.topo.point: "Communes"
-v.com.graphic.line:
-v.com.graphic.point:
+v.com.graphic.point: Communes x Foret (centroïdes)
+v.com.graphic.line: Communes x Foret (limites)
 # endregion
 
 # region SOL
@@ -84,7 +84,7 @@ v.infra.poly: "Bâtiments et zones urbanisées"
 # region VEGETATION
 v.vege.point: "Végétation (ponctuelle)"
 v.vege.line: "Végétation (Haies, alignement)"
-v.vege.poly: "Végétation (Forêt voisine)
+v.vege.poly: "Végétation (Forêt voisine)"
 # endregion
 
 # region HYDROGRAPHIE
@@ -144,9 +144,9 @@ v.access.skidder.poly: "Zones accessibles skidder"
 # endregion
 
 # region ROUTES
-v.road.line:
-v.roadway.line:
-v.roadway.poly:
+v.road.line: Dessertes (linéaire)
+v.roadway.line: Chaussées (bordures)
+v.roadway.poly: Chaussées
 # endregion
 
 # region IFN
@@ -163,20 +163,20 @@ v.secu.old.poly: "Obligations légales de débrousaillement"
 # endregion
 
 # region CADASTRE
-v.cad.vides.poly:
-v.cad.batiment.poly:
-v.cad.borne.point:
-v.cad.commune.poly:
-v.cad.lieudit.point:
-v.cad.numvoie.point:
-v.cad.parcelle.poly:
-v.cad.section.poly:
-v.cad.subdfisc.poly:
+v.cad.vides.poly: Vides cadastraux
+v.cad.batiment.poly: Bâtiments cadastrés
+v.cad.borne.point: Bornes cadastrales
+v.cad.commune.poly: Communes cadastrées
+v.cad.lieudit.point: Lieu-dits
+v.cad.numvoie.point: Numéro de voie au cadastre
+v.cad.parcelle.poly: Parcelles cadastrales
+v.cad.section.poly: Sections cadastrales
+v.cad.subdfisc.poly: Subdivisions cadastrales
 v.cad.symblim.point:
-v.cad.tline.line:
-v.cad.tpoint.point:
-v.cad.tronfluv.poly:
-v.cad.tronroute.poly:
-v.cad.tsurf.point:
-v.cad.zoncommuni.line:
+v.cad.tline.line: Détails des plans cadastraux (linéaire)
+v.cad.tpoint.point: Détails des plans cadastraux (ponctuels)
+v.cad.tronfluv.poly: Tronçons fluviaux au cadastre (surfacique)
+v.cad.tronroute.poly: Chaussées publiques au cadastre (emprises)
+v.cad.tsurf.point: Détails des plans cadastraux (surfacique)
+v.cad.zoncommuni.line: Desserte au cadastre(linéaire)
 # endregion

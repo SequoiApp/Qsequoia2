@@ -127,7 +127,7 @@ def seq_layer(key):
     result = {
         "key": match_key,
         "name": layer["name"],
-        "alias": get_alias(key) or layer["name"],
+        "alias": get_alias(match_key) or layer["name"],
         "ext": layer["ext"],
         "filename": filename,
         "family": family,
@@ -247,7 +247,6 @@ def seq_read(key, seq_dir, add_to_project=False, group=None, style_folder=None):
         raise RuntimeError(f"Couche Sequoia inconnue: {key}")
 
     layer_type = meta["type"]
-    layer_name = meta["name"]
     filename = meta["filename"]
     alias = meta["alias"]
     family = (meta.get("family") or "autres").upper()

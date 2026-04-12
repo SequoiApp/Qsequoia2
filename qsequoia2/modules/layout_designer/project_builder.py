@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from PyQt5.QtCore import Qt
-from qgis.PyQt.QtCore import QTimer
+from qgis.PyQt.QtCore import QTimer, pyqtSignal
 from PyQt5.QtWidgets import QApplication
 from qgis.core import QgsMapLayer, QgsProject
 
@@ -20,12 +20,14 @@ class BuildContext:
     layers: dict[str, QgsMapLayer]
 
 class ProjectBuilder:
-    def __init__(self, iface, project: QgsProject, seq_id: str | None, seq_dir, canvas_cfg):
+
+    def __init__(self, iface, project: QgsProject, seq_id: str | None, seq_dir, canvas_cfg, on_project_loaded=None):
         self.iface = iface
         self.project = project
         self.seq_id = seq_id
         self.seq_dir = seq_dir
         self.canvas_cfg = canvas_cfg
+        self.on_project_loaded = on_project_loaded
 
     def build(self) -> BuildContext:
 
@@ -62,6 +64,10 @@ class ProjectBuilder:
             QTimer.singleShot(0, lambda: self._zoom_to_layer(zoom_layer))
 
         self._fold_all()
+
+        if self.on_project_loaded:
+            self.on_project_loaded()
+            messageLog(f"[PROJECT BUILDER] on_project_loaded emitted")
 
         return BuildContext(
             seq_id=self.seq_id,

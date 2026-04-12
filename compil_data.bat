@@ -1,6 +1,3 @@
-
-###For local test
-
 @echo off
 REM === Définir les chemins ===
 ### Note: Please adjust the paths below to match your project and QGIS plugin directory ###
@@ -26,5 +23,3 @@ pyrcc5 -o resources.py resources.qrc
 
 echo Compilation terminée
 pause
-
-###ALB

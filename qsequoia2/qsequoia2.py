@@ -135,6 +135,9 @@ class Qsequoia2:
         set_project_variable("QS2_seq_dir", seq_dir)
         set_project_variable("QS2_seq_id", seq_id)
 
+        if self.dockwidget:
+            self.dockwidget.projectLoaded.emit()
+
     def _open_global_settings(self):
         """Ouvre la fenêtre de configuration globale du plugin."""
         self.global_settings_dialog = GlobalSettingsDialog(iface=self.iface, plugin=self)

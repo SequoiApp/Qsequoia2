@@ -3,6 +3,7 @@ from pathlib import Path
 
 from PyQt5 import uic
 from PyQt5.QtWidgets import QWidget
+from PyQt5.QtCore import QTimer
 from qgis.core import QgsProject
 
 from ..utils.Qmessage import messageBar, messageLog
@@ -20,6 +21,7 @@ LAYOUT_CONFIG = PLUGIN_DIR / "config" / "layout.yaml"
 
 
 class LayoutDesignerWidget(QWidget, FORM_CLASS):
+
     def __init__(self, iface, parent=None):
         super().__init__(parent)
 
@@ -27,7 +29,8 @@ class LayoutDesignerWidget(QWidget, FORM_CLASS):
         self.parent = parent
         self.project = QgsProject.instance()
         self.cfg = ProjectConfigLoader(LAYOUT_CONFIG)
-
+        self._pending_layout = None
+        
         self.setupUi(self)
         self._init_ui()
 
@@ -54,21 +57,46 @@ class LayoutDesignerWidget(QWidget, FORM_CLASS):
             seq_dir = get_project_variable("QS2_seq_dir") or None
             canvas_cfg = self.cfg.get_canvas(project_key)
 
-            ctx = ProjectBuilder(iface=self.iface, project=self.project, seq_id=seq_id, seq_dir=seq_dir, canvas_cfg=canvas_cfg).build()
+            ctx = ProjectBuilder(
+                iface=self.iface,
+                project=self.project,
+                seq_id=seq_id,
+                seq_dir=seq_dir,
+                canvas_cfg=canvas_cfg,
+                on_project_loaded=self.parent.projectLoaded.emit if self.parent else None,
+            ).build()
+
             messageLog(f"[LAYOUT DESIGNER] context: {ctx}")
+            
+            open_composer = self.cb_composeur.isChecked()
+            is_sequoia_project = project_key == "sequoia"
+            if is_sequoia_project or not open_composer:
+                return
 
-            if self.cb_composeur.isChecked():
-                layout_cfg = self.cfg.get_layout(project_key)
-                coeff_cadre = self.dsb_occup.value() / 100
-                layout = LayoutBuilder(
-                    iface = self.iface, project=self.project, seq_id = seq_id, layout_cfg = layout_cfg, layers = ctx.layers, coeff_cadre = coeff_cadre
-                ).build()
+            QTimer.singleShot(0, lambda: self._build_layout(project_key, seq_id, ctx.layers))
 
-                if not layout:
-                    messageBar(self.iface, "Échec de création du layout", "critical", 10)
-                    return
-                
-                self.iface.openLayoutDesigner(layout)
+        except Exception as e:
+            messageBar(self.iface, str(e), "critical", 10)
+
+    def _build_layout(self, project_key, seq_id, layers):
+        try:
+            layout_cfg = self.cfg.get_layout(project_key)
+            coeff_cadre = self.dsb_occup.value() / 100
+
+            layout = LayoutBuilder(
+                iface=self.iface,
+                project=self.project,
+                seq_id=seq_id,
+                layout_cfg=layout_cfg,
+                layers=layers,
+                coeff_cadre=coeff_cadre,
+            ).build()
+
+            if not layout:
+                messageBar(self.iface, "Échec de création du layout", "critical", 10)
+                return
+
+            self.iface.openLayoutDesigner(layout)
 
         except Exception as e:
             messageBar(self.iface, str(e), "critical", 10)

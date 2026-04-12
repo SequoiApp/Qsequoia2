@@ -51,19 +51,13 @@ class ForestDataWidget(QWidget, FORM_CLASS):
 
         # nom de la foret changé manuellement
         self.le_forest_name.editingFinished.connect(self._on_forest_name_entered)
-        QgsProject.instance().readProject.connect(self._on_project_ready)
 
-    def _on_project_ready(self):
-        # Laisser Qgis respirer
-        QTimer.singleShot(0, self._on_project_ready_safe)
-
-    def _on_project_ready_safe(self):
-        """Called when QGIS project is fully loaded"""
+    def on_project_loaded(self):
         seq_dir = get_project_variable("QS2_seq_dir")
         if not seq_dir:
-            return # ignore projects that are not Sequoia
+            return
 
-        self._refresh_metadata(seq_dir)
+        QTimer.singleShot(0, lambda: self._refresh_metadata(seq_dir))
 
     def _refresh_metadata(self, seq_dir):
         """Reload data and refresh metadata display"""

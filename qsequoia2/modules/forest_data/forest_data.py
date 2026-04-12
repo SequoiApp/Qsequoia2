@@ -54,14 +54,14 @@ class ForestDataWidget(QWidget, FORM_CLASS):
         QgsProject.instance().readProject.connect(self._on_project_ready)
 
     def _on_project_ready(self):
+        # Laisser Qgis respirer
+        QTimer.singleShot(0, self._on_project_ready_safe)
+
+    def _on_project_ready_safe(self):
         """Called when QGIS project is fully loaded"""
-
-        messageLog("[FOREST DATA] Project fully loaded", "i")
-
         seq_dir = get_project_variable("QS2_seq_dir")
         if not seq_dir:
-            messageLog("[FOREST DATA] No QS2_seq_dir found", "w")
-            return
+            return # ignore projects that are not Sequoia
 
         self._refresh_metadata(seq_dir)
 

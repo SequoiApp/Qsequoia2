@@ -2,10 +2,12 @@ from pathlib import Path
 import urllib.request
 import yaml
 import os
-from .Qmessage import messageBar, messageLog
 
-from .plugin_vars import *
-from qgis.core import *
+from qgis.core import QgsApplication, QgsProject, QgsRasterLayer, QgsVectorLayer
+
+from .plugin_vars import CONFIG_CACHE
+from .Qmessage import messageLog
+from .alias import get_alias
 
 _BASE_URL = "https://raw.githubusercontent.com/SequoiApp/Rsequoia2/main/inst/config"
 
@@ -14,11 +16,7 @@ _SEQ_CONFIG_URLS = {
     for key in ["seq_fields", "seq_layers", "seq_path", "seq_tables"]
 }
 
-CACHE_DIR = Path(QgsApplication.qgisSettingsDirPath()) / "qsequoia2"
-
-_CONFIG_CACHE = {}
-
-# TODO plus propre dans une class
+_CACHE_DIR = Path(QgsApplication.qgisSettingsDirPath()) / "qsequoia2"
 
 def sync_seq_configs(timeout: int = 3) -> None:
     """
@@ -28,10 +26,10 @@ def sync_seq_configs(timeout: int = 3) -> None:
     - Safe to call at plugin startup
     """
 
-    CACHE_DIR.mkdir(exist_ok=True)
+    _CACHE_DIR.mkdir(exist_ok=True)
 
     for key, url in _SEQ_CONFIG_URLS.items():
-        path = CACHE_DIR / f"{key}.yaml"
+        path = _CACHE_DIR / f"{key}.yaml"
 
         try:
             response = urllib.request.urlopen(url, timeout=timeout)
@@ -52,7 +50,7 @@ def get_seq_config_path(name: str) -> Path:
         RuntimeError if config is missing (first run offline)
     """
 
-    path = CACHE_DIR / f"{name}.yaml"
+    path = _CACHE_DIR / f"{name}.yaml"
 
     if path.exists():
         return path
@@ -63,8 +61,8 @@ def get_seq_config_path(name: str) -> Path:
     )
 
 def get_seq_config(name: str) -> dict:
-    if name in _CONFIG_CACHE:
-        return _CONFIG_CACHE[name]
+    if name in CONFIG_CACHE:
+        return CONFIG_CACHE[name]
 
     path = get_seq_config_path(name)
     data = yaml.safe_load(path.read_text(encoding="utf-8"))
@@ -72,7 +70,7 @@ def get_seq_config(name: str) -> dict:
     if data is None:
         raise ValueError(f"Empty config: {name}")
 
-    _CONFIG_CACHE[name] = data
+    CONFIG_CACHE[name] = data
     return data
 
 def seq_key(key):
@@ -127,6 +125,7 @@ def seq_layer(key):
     result = {
         "key": match_key,
         "name": layer["name"],
+        "alias": get_alias(key) or layer["name"],
         "ext": layer["ext"],
         "filename": filename,
         "family": family,
@@ -201,6 +200,7 @@ def seq_read(key, seq_dir, add_to_project=False, group=None, style_folder=None):
     layer_type = meta["type"]
     layer_name = meta["name"]
     filename = meta["filename"]
+    alias = meta["alias"]
 
     seq_dir = Path(seq_dir)
 
@@ -226,11 +226,11 @@ def seq_read(key, seq_dir, add_to_project=False, group=None, style_folder=None):
                 return existing_layer
 
     if layer_type == "vect":
-        layer = QgsVectorLayer(path_str, layer_name, "ogr")
+        layer = QgsVectorLayer(path_str, alias, "ogr")
     elif layer_type == "rast":
-        layer = QgsRasterLayer(str(path), layer_name)
+        layer = QgsRasterLayer(str(path), alias)
     elif layer_type == "xlsx":
-        layer = QgsVectorLayer(str(path), layer_name, "ogr")
+        layer = QgsVectorLayer(str(path), alias, "ogr")
     else:
         raise ValueError(f"Unsupported layer type: {layer_type}")
 

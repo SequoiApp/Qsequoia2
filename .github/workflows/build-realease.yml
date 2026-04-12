@@ -18,32 +18,41 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      - name: Set version
+        id: version
+        run: |
+          VERSION="1.0.${{ github.run_number }}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
       - name: Install Qt tools (for pyrcc5)
         run: |
           sudo apt-get update
           sudo apt-get install -y pyqt5-dev-tools
-
-      - name: Generate version number (date)
-        id: version
-        run: |
-          VERSION=$(date +'%Y.%m.%d')
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Compile resources.qrc
         run: |
           cd qsequoia2
           pyrcc5 -o resources.py resources.qrc
 
+      - name: Update metadata.txt version
+        run: |
+          sed -i "s/version=.*/version=${{ steps.version.outputs.version }}/" qsequoia2/metadata.txt
+
+      - name: Update plugins.xml
+        run: |
+          sed -i "s|VERSION|${{ steps.version.outputs.version }}|g" plugins.xml
+
       - name: Create plugin ZIP (only qsequoia2/)
         run: |
-          zip -r QSEQUOIA2-${{ steps.version.outputs.version }}.zip qsequoia2
+          cd qsequoia2
+          zip -r qsequoia2.zip . -x "__pycache__/*"
 
       - name: Create GitHub beta Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ steps.version.outputs.version }}
-          name: "QSEQUOIA2 ${{ steps.version.outputs.version }}"
-          files: QSEQUOIA2-${{ steps.version.outputs.version }}.zip
-          prerelease: true
+          name: "qsequoia2-${{ steps.version.outputs.version }}"
+          files: qsequoia2.zip
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

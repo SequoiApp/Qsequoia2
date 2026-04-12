@@ -141,9 +141,9 @@ def is_ignored(file: Path, ignore_dirs: list) -> bool:
 # --------------------------------------------------------------------------
 # Exécution : génération du YAML
 # --------------------------------------------------------------------------
-registry = scan_package(ROOT, ignore_dirs=["inst/lib"]) #Dossier à ignorer
+registry = scan_package(ROOT, ignore_dirs=["config/lib"]) #Dossier à ignorer
 
-yaml_: Path = Path(__file__).parent /".."/ "qsequoia2"/"inst"/"QS2_functions_registry.yaml"
+yaml_: Path = Path(__file__).parent /".."/ "qsequoia2"/"config"/"QS2_functions_registry.yaml"
 
 with open(yaml_, "w", encoding="utf-8") as f:
     # Ajouter un commentaire d’avertissement en tête

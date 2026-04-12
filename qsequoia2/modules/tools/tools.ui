@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>tools</class>
+ <widget class="QDialog" name="tools">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>538</width>
+    <height>502</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>tools</string>
+  </property>
+  <layout class="QVBoxLayout" name="rootLayout">
+   <item>
+    <widget class="QTreeWidget" name="treeTOOLS">
+     <property name="styleSheet">
+      <string notr="true">QTreeWidget {
+    border: none;
+    background-color: transparent;
+    outline: none;
+}
+
+QTreeWidget::item {
+    padding: 4px 6px;
+    margin: 0px;
+}
+
+QTreeWidget::item:hover {
+    background-color: rgb(209, 209, 209);
+}
+
+QTreeWidget::item:selected {
+    background-color: #818181;
+    color: white;
+}
+
+QTreeWidget:focus {
+    outline: none;
+}
+
+QTreeWidget::item:focus {
+    outline: none;
+}
+
+QHeaderView::section {
+    background-color: transparent;
+    border: none;
+}</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

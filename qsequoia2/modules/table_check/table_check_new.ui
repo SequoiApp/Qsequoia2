@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>704</width>
+    <width>637</width>
     <height>593</height>
    </rect>
   </property>
@@ -31,13 +31,6 @@
       </widget>
      </item>
      <item>
-      <widget class="QLabel" name="lbl_ua_status">
-       <property name="text">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-       </property>
-      </widget>
-     </item>
-     <item>
       <spacer name="horizontalSpacer">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
@@ -50,14 +43,28 @@
        </property>
       </spacer>
      </item>
+     <item>
+      <widget class="QLabel" name="lbl_ua_status">
+       <property name="text">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+      </widget>
+     </item>
     </layout>
+   </item>
+   <item>
+    <widget class="Line" name="line">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_3">
      <item>
       <widget class="QLabel" name="lbl_pf">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
        <property name="text">
         <string>Parcelles : </string>
@@ -74,10 +81,10 @@
      <item>
       <widget class="QLabel" name="lbl_sspf">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
        <property name="text">
-        <string>Sous parcelles</string>
+        <string>Sous-parcelles</string>
        </property>
       </widget>
      </item>
@@ -91,7 +98,7 @@
      <item>
       <widget class="QLabel" name="lbl_surf">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
        <property name="text">
         <string>Surface SIG</string>
@@ -100,6 +107,9 @@
      </item>
      <item>
       <widget class="QLineEdit" name="le_surf">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="readOnly">
         <bool>true</bool>
        </property>
@@ -119,6 +129,13 @@
       </spacer>
      </item>
     </layout>
+   </item>
+   <item>
+    <widget class="Line" name="line_2">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
    </item>
    <item>
     <widget class="QTableWidget" name="forestTable"/>

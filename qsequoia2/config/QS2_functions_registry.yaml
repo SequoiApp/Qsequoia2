@@ -64,10 +64,10 @@ test:
   - self
   - iface
   - args
-ForestDataTabs:
+ForestDataWidget:
   type: class
   path: qsequoia2.modules.forest_data.forest_data
-  name: ForestDataTabs
+  name: ForestDataWidget
 getForestdata:
   type: class
   path: qsequoia2.modules.forest_data.forest_get_data

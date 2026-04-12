@@ -2,11 +2,12 @@ from pathlib import Path
 
 from PyQt5 import uic
 from qgis.PyQt.QtWidgets import QWidget
-from qgis.core import *
+from qgis.core import QgsProject, QgsApplication, QgsExpression, QgsExpressionContext, QgsExpressionContextUtils, QgsFeatureRequest, QgsVectorLayer
 from PyQt5.QtWidgets import QTableWidgetItem, QHeaderView
 from PyQt5.QtCore import Qt, QTimer
 
 from ..utils.seq_config import seq_layer
+from ..utils.Qmessage import messageLog
 
 UI_PATH = Path(__file__).parent / 'table_check.ui'
 FORM_CLASS, _ = uic.loadUiType(str(UI_PATH))
@@ -37,8 +38,7 @@ class table_check(QWidget, FORM_CLASS):
         QTimer.singleShot(300, self.on_ua_layer_loaded)
 
     def on_ua_layer_loaded(self):
-        layer_name = seq_layer("ua")["name"]
-
+        layer_name = seq_layer("ua")["alias"]
         layer = None
         for l in QgsProject.instance().mapLayers().values():
             if l.name() == layer_name:

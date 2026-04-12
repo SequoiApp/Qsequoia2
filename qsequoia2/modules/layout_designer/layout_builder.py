@@ -12,7 +12,6 @@ from qgis.core import (
     QgsWkbTypes,
 )
 
-from qgis.PyQt.QtCore import QTimer
 from qgis.PyQt.QtWidgets import QMessageBox
 
 from ..utils.Qmessage import messageBar, messageLog
@@ -57,8 +56,7 @@ class LayoutBuilder:
         layout = self._create_layout(layout_name, qpt)
 
         self._set_visibility()
-        # Wait for Qt even loop to finish; otherwise map scale may be incorrect
-        QTimer.singleShot(0, lambda: self._configure_maps(layout, bbox))
+        self._configure_maps(layout, bbox)
         self._configure_legends(layout)
         self._add_parcels_table(layout)
 

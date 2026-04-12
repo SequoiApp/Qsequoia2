@@ -1,3 +1,19 @@
+sequoia:
+  alias : "SEQUOIA (projet de travail)"
+  canvas:
+    zoom_on: v.seq.parca.poly
+    readonly: [v.seq.parca.poly]
+    layers:
+      sequoia:
+        - v.seq.parca.poly
+        - v.seq.ua.poly
+      wmts:
+        - wmts_irc
+        - wmts_rgb
+        - wmts_lidar_mnt
+        - wmts_spot_2025
+        - wmts_pci
+          
 assemblage:
   alias : "Assemblage cadastral"
   canvas:
@@ -86,7 +102,6 @@ situation:
         - v.seq.forest.point
         - v.seq.forest.line
         - v.seq.forest.poly
-        - v.seq.ua.poly
       tms: &situation_tms
         - tms.plan_ign.standard
         - tms.plan_ign.classique
@@ -109,7 +124,7 @@ situation:
           - v.seq.forest.line
           - v.seq.forest.poly
           - v.seq.ua.poly
-          - tms.plan_ign.epure
+          - tms.plan_ign.standard
       - id: map2
         main_map: false
         scale: 800000
@@ -153,7 +168,6 @@ peuplement:
         - v.seq.sspf.point
         - v.seq.sspf.line
         - v.seq.sspf.poly
-        - v.seq.ua.poly
       tms: &peuplement_tms
         - tms.plan_ign.standard
         - tms.plan_ign.classique

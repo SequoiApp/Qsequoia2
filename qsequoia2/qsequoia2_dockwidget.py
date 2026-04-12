@@ -32,6 +32,7 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
     closingPlugin = pyqtSignal()
     projectChanged = pyqtSignal(str, str) #seq_dir, seq_id
+    projectLoaded = pyqtSignal()
 
     def __init__(self, iface, parent=None):
         super().__init__(parent)
@@ -192,6 +193,8 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         self.projectChanged.connect(table_check_tab.on_project_loaded)
         self.projectChanged.connect(add_data_tab.on_project_changed)
+        
+        self.projectLoaded.connect(forest_tab.on_project_loaded)
 
     def refresh(self):
         self._update_project_visibility()

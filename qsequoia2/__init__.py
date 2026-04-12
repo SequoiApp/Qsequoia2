@@ -26,11 +26,11 @@
 
 # noinspection PyPep8Naming
 def classFactory(iface):  # pylint: disable=invalid-name
-    """Load QSEQUOIA2 class from file QSEQUOIA2.
+    """Load Qsequoia2 class from file qsequoia2.
 
     :param iface: A QGIS interface instance.
     :type iface: QgsInterface
     """
     #
-    from .QSEQUOIA2 import QSEQUOIA2
-    return QSEQUOIA2(iface)
+    from .qsequoia2 import Qsequoia2
+    return Qsequoia2(iface)

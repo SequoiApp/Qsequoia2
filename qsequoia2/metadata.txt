@@ -3,14 +3,14 @@
 # This file should be included when you package your plugin.# Mandatory items:
 
 [general]
-name=QSEQUOIA-2
-qgisMinimumVersion=3.0
+name=qsequoia2
+qgisMinimumVersion=3.36
 description=simplifions le qutodien des forestiers
-version=0.1
-author=Alexandre Le Bars - SequoiAPP
+version=VERSION
+author=Organisation SEQUOIAPP : Alexandre Le Bars, Paul Carteron, Matthieu Chevereau
 email=alexlb329@gmail.com
 
-about=Provide a brief description of the plugin and its purpose.
+about=Plugin QGIS pour la gestion et la mise en forme de données issue de Rsequoia2.
 
 tracker=https://github.com/SequoiApp/Qsequoia2/issues
 repository=https://github.com/SequoiApp/Qsequoia2
@@ -30,7 +30,7 @@ homepage=https://SequoiAPP.github.io/Qsequoia2
 category=Plugins
 icon=icon.png
 # experimental flag
-experimental=False
+experimental=True
 
 # deprecated flag (applies to the whole plugin, not just a single version)
 deprecated=False
@@ -41,7 +41,7 @@ deprecated=False
 # plugin_dependencies=
 
 Category of the plugin: Raster, Vector, Database or Web
-# category=
+# category=Vector
 
 # If the plugin can run on QGIS Server.
 server=False

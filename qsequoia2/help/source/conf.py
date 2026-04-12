@@ -40,7 +40,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'QSEQUOIA2'
+project = u'Qsequoia2'
 copyright = u'2013, Alexandre Le Bars - SequoiAPP'
 
 # The version info for the project you're documenting, acts as replacement for

@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/plugins/QSEQUOIA2" >
+    <qresource prefix="/plugins/QSEQUOIA2">
         <file>icon.png</file>
     </qresource>
 </RCC>

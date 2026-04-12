@@ -1,0 +1,33 @@
+Gestion de projet:
+  "fonction 1":
+    module:
+    function:
+    skip_check: False
+
+Utilitaire:
+  
+  "Centroïde d'une couche vecteur":
+    module:
+    function:
+    skip_check: False
+
+  "remplacer le nom des champs...":
+    module:
+    function:
+    skip_check: False
+
+  "Reprojection vecteur":
+    module:
+    function:
+    skip_check: False
+
+  "Reprojection raster":
+    module:
+    function:
+    skip_check: False
+
+
+  "Création d'une carte de station":
+    module:
+    function:
+    skip_check: False

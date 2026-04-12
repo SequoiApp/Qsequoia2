@@ -1,6 +1,6 @@
 <?xml version = '1.0' encoding = 'UTF-8'?>
 <plugins>
-     <pyqgis_plugin version="1.0.3" name="qsequoia2" >
+     <pyqgis_plugin version="1.0.4" name="qsequoia2" >
          <description>Plugin QGIS pour la gestion et la mise en forme de données issue de Rsequoia2.</description>
          <homepage>https://sequoiapp.github.io/Qsequoia2/</homepage>
          <file_name>qsequoia2.zip</file_name>

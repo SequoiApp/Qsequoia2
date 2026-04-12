@@ -3,8 +3,10 @@ import urllib.request
 import yaml
 import os
 
-from qgis.core import QgsApplication, QgsProject, QgsRasterLayer, QgsVectorLayer
+from qgis.core import QgsApplication, QgsProject, QgsVectorLayer, QgsRasterLayer, QgsProviderRegistry
 
+from .Qmessage import messageLog
+from .layer_tree import get_group
 from .plugin_vars import CONFIG_CACHE
 from .Qmessage import messageLog
 from .alias import get_alias
@@ -194,49 +196,96 @@ def get_style(layer_key, style_folder):
 
     return None
 
-def seq_read(key, seq_dir, add_to_project=False, group=None, style_folder=None):
+def _norm_project_path(raw_path, project=None):
+    project = project or QgsProject.instance()
+    if not raw_path:
+        return None
 
+    raw_path = project.readPath(str(raw_path))
+    return os.path.normcase(os.path.normpath(str(Path(raw_path).resolve())))
+
+
+def _vector_file_path(layer, project=None):
+    project = project or QgsProject.instance()
+    parts = QgsProviderRegistry.instance().decodeUri(
+        layer.providerType(),
+        layer.source(),
+    )
+    return _norm_project_path(parts.get("path"), project)
+
+
+def _raster_file_path(layer, project=None):
+    project = project or QgsProject.instance()
+    raw = layer.dataProvider().dataSourceUri() or layer.source()
+    return _norm_project_path(raw, project)
+
+
+def _find_existing_seq_layer(path, layer_type, group=None):
+    project = QgsProject.instance()
+    target = _norm_project_path(path, project)
+
+    layers = (
+        [node.layer() for node in group.findLayers()]
+        if group
+        else project.mapLayers().values()
+    )
+
+    for layer in layers:
+        if layer_type in {"vect", "xlsx"} and isinstance(layer, QgsVectorLayer):
+            if _vector_file_path(layer, project) == target:
+                return layer
+
+        elif layer_type == "rast" and isinstance(layer, QgsRasterLayer):
+            if _raster_file_path(layer, project) == target:
+                return layer
+
+    return None
+
+def seq_read(key, seq_dir, add_to_project=False, group=None, style_folder=None):
     meta = seq_layer(key)
+    if not meta:
+        raise RuntimeError(f"Couche Sequoia inconnue: {key}")
+
     layer_type = meta["type"]
     layer_name = meta["name"]
     filename = meta["filename"]
     alias = meta["alias"]
+    family = (meta.get("family") or "autres").upper()
 
     seq_dir = Path(seq_dir)
-
     matches = list(seq_dir.rglob(f"*{filename}"))
+
     if not matches:
         raise FileNotFoundError(f"Layer '{filename}' not found in '{seq_dir}'")
 
     if len(matches) > 1:
-        paths_str = "\n".join(str(p) for p in matches)
         raise RuntimeError(
-            f"Multiple layers found for '{filename}':\n{paths_str}"
+            f"Multiple layers found for '{filename}':\n" +
+            "\n".join(map(str, matches))
         )
 
     path = matches[0]
     path_str = str(path)
 
-    # Check if layer already exists in the group
-    if group:
-        for node in group.findLayers():
-            existing_layer = node.layer()
-            if existing_layer and existing_layer.source().startswith(path_str):
-                messageLog(f"Layer already in group: '{existing_layer.name()}' ({existing_layer.source()})")
-                return existing_layer
+    project = QgsProject.instance()
 
-    if layer_type == "vect":
+    if add_to_project:
+        group = group or get_group(family, project=project)
+
+        existing = _find_existing_seq_layer(path, layer_type, group)
+        if existing:
+            messageLog(f"[SEQ] Déjà chargé : {existing.name()} dans '{group.name()}'")
+            return existing
+
+    if layer_type in {"vect", "xlsx"}:
         layer = QgsVectorLayer(path_str, alias, "ogr")
     elif layer_type == "rast":
-        layer = QgsRasterLayer(str(path), alias)
-    elif layer_type == "xlsx":
-        layer = QgsVectorLayer(str(path), alias, "ogr")
+        layer = QgsRasterLayer(path_str, alias)
     else:
         raise ValueError(f"Unsupported layer type: {layer_type}")
 
     if not layer.isValid():
         raise RuntimeError(f"Invalid layer: {path}")
-
 
     if style_folder:
         style_path = get_style(key, style_folder)
@@ -245,11 +294,8 @@ def seq_read(key, seq_dir, add_to_project=False, group=None, style_folder=None):
             layer.triggerRepaint()
 
     if add_to_project:
-        project = QgsProject.instance()
-        project.addMapLayer(layer, not bool(group))
-
-        if group:
-            group.addLayer(layer)
+        project.addMapLayer(layer, False)
+        group.addLayer(layer)
 
     return layer
 

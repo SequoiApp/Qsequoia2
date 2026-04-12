@@ -1,9 +1,8 @@
 import re
-from dataclasses import dataclass
 from pathlib import Path
 
 from PyQt5 import uic
-from PyQt5.QtWidgets import QButtonGroup, QWidget
+from PyQt5.QtWidgets import QWidget
 from qgis.core import QgsProject
 
 from ..utils.Qmessage import messageBar, messageLog
@@ -52,9 +51,11 @@ class LayoutDesignerWidget(QWidget, FORM_CLASS):
                 raise RuntimeError("Aucun projet sélectionné")
 
             seq_id = get_project_variable("QS2_seq_id") or None
+            seq_dir = get_project_variable("QS2_seq_dir") or None
             canvas_cfg = self.cfg.get_canvas(project_key)
 
-            ctx = ProjectBuilder(iface=self.iface, project=self.project, seq_id=seq_id, canvas_cfg=canvas_cfg).build()
+            ctx = ProjectBuilder(iface=self.iface, project=self.project, seq_id=seq_id, seq_dir=seq_dir, canvas_cfg=canvas_cfg).build()
+            messageLog(f"[LAYOUT DESIGNER] context: {ctx}")
 
             if self.cb_composeur.isChecked():
                 layout_cfg = self.cfg.get_layout(project_key)
@@ -71,52 +72,3 @@ class LayoutDesignerWidget(QWidget, FORM_CLASS):
 
         except Exception as e:
             messageBar(self.iface, str(e), "critical", 10)
-
-    def _on_type_changed(self, button):
-        try:
-            prefix = button.text()
-            base = get_project_variable("QS2_seq_id") or ""
-            forest_name = self.format_forest_name(base, prefix)
-            self.le_propriete.setText(forest_name)
-        except Exception as e:
-            messageBar(self.iface, f"Erreur type_changed : {e}", "w", 10)
-
-    def format_forest_name(self, base: str, prefix: str = "") -> str:
-        if not base:
-            return ""
-
-        base = re.sub(r"^(ST|STE|SAINT)(\w+)", r"\1 \2", base, flags=re.IGNORECASE)
-
-        words = (
-            base.lower()
-            .replace("_", " ")
-            .replace(".", " ")
-            .replace("-", " ")
-            .split()
-        )
-
-        co = {"de", "la", "d", "le"}
-        st = {"st", "ste", "saint"}
-
-        formatted = []
-        for w in words:
-            if w in st:
-                formatted.append(w.upper())
-            elif w in co:
-                formatted.append(w.lower())
-            else:
-                formatted.append(w.capitalize())
-
-        base = " ".join(formatted)
-
-        if prefix and base:
-            if base.lower().endswith("s"):
-                connector = " des "
-            elif base[0].lower() in "aeiouh":
-                connector = " d'"
-            else:
-                connector = " de "
-
-            return f"{prefix}{connector}{base}"
-
-        return base

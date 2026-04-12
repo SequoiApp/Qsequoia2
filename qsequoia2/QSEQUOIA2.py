@@ -120,7 +120,10 @@ class Qsequoia2:
             self.iface,
             seq_id,
             seq_dir,
-            suffix = "SEQUOIA"
+            suffix = "SEQUOIA",
+            ask_create=True,
+            ask_unsaved=True,
+            preserve_qs2_variables=False
         )
 
         if not path:

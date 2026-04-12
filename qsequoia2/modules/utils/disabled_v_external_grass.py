@@ -16,7 +16,7 @@ def disabled_v_external_grass(iface):
         ProcessingConfig.setSettingValue("GRASS_USE_VEXTERNAL", False)
         ProcessingConfig.setSettingValue("GRASS_USE_REXTERNAL", False)
 
-        messageLog("L'option v&r.external_grass a été désactivée pour éviter les problèmes de topologie avec Rsequoia2.","i")
+        messageBar(iface, "L'option v&r.external_grass a été désactivée pour éviter les problèmes de topologie avec Rsequoia2.","i", 10)
 
     else:
         messageBar(iface, "QSEQUOIA2: Le provider GRASS n'est pas actif. veuillez l'activer dans les extensions pour continuer.","c",10)

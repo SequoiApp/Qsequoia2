@@ -16,7 +16,7 @@ UI_PATH = Path(__file__).parent / "layout_designer.ui"
 FORM_CLASS, _ = uic.loadUiType(str(UI_PATH))
 
 PLUGIN_DIR = Path(__file__).parents[2]
-LAYOUT_CONFIG = PLUGIN_DIR / "inst" / "layout.yaml"
+LAYOUT_CONFIG = PLUGIN_DIR / "config" / "layout.yaml"
 
 
 class LayoutDesignerWidget(QWidget, FORM_CLASS):

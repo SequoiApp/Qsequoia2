@@ -45,10 +45,35 @@ AddDataTabWidget:
   type: class
   path: qsequoia2.modules.add_data.add_data
   name: AddDataTabWidget
-addonCreator:
-  type: class
+on_new_addon_clicked:
+  type: function
   path: qsequoia2.modules.add_on.addon_creator
-  name: addonCreator
+  name: on_new_addon_clicked
+  args:
+  - iface
+  - addons_dir
+  - plugin
+copy_addon_template:
+  type: function
+  path: qsequoia2.modules.add_on.addon_creator
+  name: copy_addon_template
+  args:
+  - addon_name
+  - addons_dir
+create_addon_class:
+  type: function
+  path: qsequoia2.modules.add_on.addon_creator
+  name: create_addon_class
+  args:
+  - addon_name
+process_addon:
+  type: function
+  path: qsequoia2.modules.add_on.addon_creator
+  name: process_addon
+  args:
+  - addon_dir
+  - addon_name
+  - addon_class
 load_addons:
   type: function
   path: qsequoia2.modules.add_on.addon_loader
@@ -64,14 +89,18 @@ test:
   - self
   - iface
   - args
+ForestType:
+  type: class
+  path: qsequoia2.modules.forest_data.forest_data
+  name: ForestType
 ForestDataWidget:
   type: class
   path: qsequoia2.modules.forest_data.forest_data
   name: ForestDataWidget
-getForestdata:
+ForestMetadataBuilder:
   type: class
-  path: qsequoia2.modules.forest_data.forest_get_data
-  name: getForestdata
+  path: qsequoia2.modules.forest_data.forest_metadata_builder
+  name: ForestMetadataBuilder
 update_forest_name:
   type: function
   path: qsequoia2.modules.forest_data.update_forest_name
@@ -160,24 +189,22 @@ ToolsDialog:
   type: class
   path: qsequoia2.modules.tools.tools
   name: ToolsDialog
-sync_seq_configs:
+get_alias_config_path:
   type: function
-  path: qsequoia2.modules.utils.seq_config
-  name: sync_seq_configs
-  args:
-  - timeout
-get_seq_config_path:
+  path: qsequoia2.modules.utils.alias
+  name: get_alias_config_path
+  args: []
+get_alias_config:
   type: function
-  path: qsequoia2.modules.utils.seq_config
-  name: get_seq_config_path
-  args:
-  - name
-get_seq_config:
+  path: qsequoia2.modules.utils.alias
+  name: get_alias_config
+  args: []
+get_alias:
   type: function
-  path: qsequoia2.modules.utils.seq_config
-  name: get_seq_config
+  path: qsequoia2.modules.utils.alias
+  name: get_alias
   args:
-  - name
+  - key
 configure_snapping:
   type: function
   path: qsequoia2.modules.utils.configure_snapping
@@ -189,38 +216,72 @@ disabled_v_external_grass:
   name: disabled_v_external_grass
   args:
   - iface
-get_download_folder:
+get_group:
   type: function
-  path: qsequoia2.modules.utils.get_download_folder
-  name: get_download_folder
-  args: []
-find_qgis_project:
+  path: qsequoia2.modules.utils.layer_tree
+  name: get_group
+  args:
+  - name
+  - project
+open_seq_dir:
+  type: function
+  path: qsequoia2.modules.utils.open_seq_dir
+  name: open_seq_dir
+  args:
+  - project_folder
+restore_qs2_project_variables:
   type: function
   path: qsequoia2.modules.utils.qgz_project
-  name: find_qgis_project
+  name: restore_qs2_project_variables
   args:
-  - seq_dir
-  - seq_dirname
-load_qgis_project:
+  - variables
+load_project:
   type: function
   path: qsequoia2.modules.utils.qgz_project
-  name: load_qgis_project
+  name: load_project
   args:
-  - seq_dir
-  - seq_dirname
-create_qgis_project:
+  - project
+  - path
+  - variables
+find_seq_project:
   type: function
   path: qsequoia2.modules.utils.qgz_project
-  name: create_qgis_project
+  name: find_seq_project
   args:
+  - seq_id
   - seq_dir
-  - seq_dirname
+  - suffix
+confirm_project_close:
+  type: function
+  path: qsequoia2.modules.utils.qgz_project
+  name: confirm_project_close
+  args:
+  - project
+  - iface
+new_seq_project:
+  type: function
+  path: qsequoia2.modules.utils.qgz_project
+  name: new_seq_project
+  args:
+  - project
+  - iface
+  - path
   - datum
-close_qgis_project:
+  - ask
+  - variables
+open_seq_project:
   type: function
   path: qsequoia2.modules.utils.qgz_project
-  name: close_qgis_project
-  args: []
+  name: open_seq_project
+  args:
+  - project
+  - iface
+  - seq_id
+  - seq_dir
+  - suffix
+  - ask_unsaved
+  - ask_create
+  - preserve_qs2_variables
 messageBar:
   type: function
   path: qsequoia2.modules.utils.Qmessage
@@ -244,6 +305,24 @@ reloadQS2:
   args:
   - plugin
   - plug
+sync_seq_configs:
+  type: function
+  path: qsequoia2.modules.utils.seq_config
+  name: sync_seq_configs
+  args:
+  - timeout
+get_seq_config_path:
+  type: function
+  path: qsequoia2.modules.utils.seq_config
+  name: get_seq_config_path
+  args:
+  - name
+get_seq_config:
+  type: function
+  path: qsequoia2.modules.utils.seq_config
+  name: get_seq_config
+  args:
+  - name
 seq_key:
   type: function
   path: qsequoia2.modules.utils.seq_config
@@ -256,6 +335,14 @@ seq_layer:
   name: seq_layer
   args:
   - key
+resolve_seq_layer:
+  type: function
+  path: qsequoia2.modules.utils.seq_config
+  name: resolve_seq_layer
+  args:
+  - key
+  - project
+  - seq_id
 seq_field:
   type: function
   path: qsequoia2.modules.utils.seq_config
@@ -269,6 +356,35 @@ get_style:
   args:
   - layer_key
   - style_folder
+_norm_project_path:
+  type: function
+  path: qsequoia2.modules.utils.seq_config
+  name: _norm_project_path
+  args:
+  - raw_path
+  - project
+_vector_file_path:
+  type: function
+  path: qsequoia2.modules.utils.seq_config
+  name: _vector_file_path
+  args:
+  - layer
+  - project
+_raster_file_path:
+  type: function
+  path: qsequoia2.modules.utils.seq_config
+  name: _raster_file_path
+  args:
+  - layer
+  - project
+_find_existing_seq_layer:
+  type: function
+  path: qsequoia2.modules.utils.seq_config
+  name: _find_existing_seq_layer
+  args:
+  - path
+  - layer_type
+  - group
 seq_read:
   type: function
   path: qsequoia2.modules.utils.seq_config
@@ -277,7 +393,7 @@ seq_read:
   - key
   - seq_dir
   - add_to_project
-  - group_name
+  - group
   - style_folder
 find_all_seq_dir:
   type: function
@@ -286,12 +402,50 @@ find_all_seq_dir:
   args:
   - root_dir
   - max_dirs
-find_seq_identifier:
+find_seq_id:
   type: function
   path: qsequoia2.modules.utils.seq_config
-  name: find_seq_identifier
+  name: find_seq_id
   args:
   - seq_dir
+get_tms_config_path:
+  type: function
+  path: qsequoia2.modules.utils.tms
+  name: get_tms_config_path
+  args: []
+get_tms_config:
+  type: function
+  path: qsequoia2.modules.utils.tms
+  name: get_tms_config
+  args: []
+tms_layer:
+  type: function
+  path: qsequoia2.modules.utils.tms
+  name: tms_layer
+  args:
+  - key
+_build_uri:
+  type: function
+  path: qsequoia2.modules.utils.tms
+  name: _build_uri
+  args:
+  - url
+  - style
+_find_existing_tms:
+  type: function
+  path: qsequoia2.modules.utils.tms
+  name: _find_existing_tms
+  args:
+  - source
+  - group
+tms_read:
+  type: function
+  path: qsequoia2.modules.utils.tms
+  name: tms_read
+  args:
+  - key
+  - group
+  - load_style
 get_global_variable:
   type: function
   path: qsequoia2.modules.utils.variable
@@ -318,6 +472,12 @@ set_project_variable:
   args:
   - name
   - value
+get_qs2_project_variables:
+  type: function
+  path: qsequoia2.modules.utils.variable
+  name: get_qs2_project_variables
+  args:
+  - project
 _safe_set:
   type: function
   path: qsequoia2.modules.utils.variable
@@ -326,23 +486,36 @@ _safe_set:
   - setter
   - name
   - value
-yaml_loader:
+get_wmts_config_path:
   type: function
-  path: qsequoia2.modules.utils.yaml_helper
-  name: yaml_loader
-  args:
-  - name
-  - level
-  - dir
-yaml_creator:
+  path: qsequoia2.modules.utils.wmts
+  name: get_wmts_config_path
+  args: []
+get_wmts_config:
   type: function
-  path: qsequoia2.modules.utils.yaml_helper
-  name: yaml_creator
+  path: qsequoia2.modules.utils.wmts
+  name: get_wmts_config
+  args: []
+wmts_layer:
+  type: function
+  path: qsequoia2.modules.utils.wmts
+  name: wmts_layer
   args:
-  - name
-  - data_to_save
-  - dir
-
+  - key
+_find_existing_wmts:
+  type: function
+  path: qsequoia2.modules.utils.wmts
+  name: _find_existing_wmts
+  args:
+  - source
+  - group
+wmts_read:
+  type: function
+  path: qsequoia2.modules.utils.wmts
+  name: wmts_read
+  args:
+  - key
+  - group
 PluginExemple:
   type: function
   path: qsequoia2.modules.add_on.templates.basic_addon.python.exemple

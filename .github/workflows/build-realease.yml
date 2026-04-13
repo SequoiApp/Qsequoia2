@@ -52,7 +52,8 @@ jobs:
 
       - name: Update plugins.xml
         run: |
-          sed -i "s|VERSION|${{ steps.version.outputs.version }}|g" plugins.xml
+          sed -i "s/version=\"[^\"]*\"/version=\"${{ steps.version.outputs.version }}\"/" plugins.xml
+          sed -i "s|v[0-9]\+\.[0-9]\+\.[0-9]\+|v${{ steps.version.outputs.version }}|g" plugins.xml
 
       - name: Commit version changes
         run: |

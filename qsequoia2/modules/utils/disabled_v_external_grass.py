@@ -2,9 +2,10 @@ from qgis.core import *
 import processing
 from processing.core.ProcessingConfig import ProcessingConfig
 
+
 from ..utils.Qmessage import *
 
-def disabled_v_external_grass(iface):
+def disabled_v_external_grass(iface) -> bool:
     """désactive l'option v.external_grass dans QGIS pour Clean_topology de Rsequoia2"""
     # Récupère le registry des providers
     registry = QgsApplication.processingRegistry()
@@ -15,8 +16,13 @@ def disabled_v_external_grass(iface):
     if grass_active:
         ProcessingConfig.setSettingValue("GRASS_USE_VEXTERNAL", False)
         ProcessingConfig.setSettingValue("GRASS_USE_REXTERNAL", False)
-
         messageBar(iface, "L'option v&r.external_grass a été désactivée pour éviter les problèmes de topologie avec Rsequoia2.","i", 10)
+
+        return True
 
     else:
         messageBar(iface, "QSEQUOIA2: Le provider GRASS n'est pas actif. veuillez l'activer dans les extensions pour continuer.","c",10)
+
+        return False
+
+

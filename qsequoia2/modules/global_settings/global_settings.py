@@ -8,7 +8,6 @@ from qgis.core import QgsProject, QgsApplication
 # Utils
 from ..utils.variable import get_global_variable, set_global_variable
 from ..utils.Qmessage import messageLog
-from ..add_on.addon_creator import *
 from .go_to_maps import *
 
 FORM_CLASS, _ = uic.loadUiType(
@@ -45,13 +44,6 @@ class GlobalSettingsDialog(QDialog, FORM_CLASS):
         self.cb_suggest_enabled.toggled.connect(self.btn_add_project_suggestion.setEnabled)
         self.cb_suggest_enabled.toggled.connect(self.btn_rm_project_suggestion.setEnabled)
 
-        try:
-            self.addon.clicked.disconnect()
-        except Exception:
-            pass
-
-        self.addon.clicked.connect(self.open_addonCreator)
-        self.find_addon_folder.clicked.connect(self.select_addon_folder)
 
     def load_settings(self):
         styles_dir = get_global_variable("QS2_styles_directory") or ""
@@ -76,22 +68,18 @@ class GlobalSettingsDialog(QDialog, FORM_CLASS):
         for folder in suggestions:
             self._add_suggestion(folder)
 
-        addon_folder = get_global_variable("QS2_addon_folder") or ""
-        self.addon_folder.setText(addon_folder)
-        self.addon.setEnabled(bool(addon_folder))
-
     def save_settings(self):
         set_global_variable("QS2_styles_directory", self.stylesInput.text())
         set_global_variable("QS2_models_directory", self.modelsInput.text())
         set_global_variable("QS2_user_full_name", self.userInput.text())
         set_global_variable("QS2_adress_organisation", self.adress.text())
         set_global_variable("QS2_organisation", self.orga.text())
-        set_global_variable("QS2_addon_folder", self.addon_folder.text())
+
 
         suggest_enabled = bool(self.cb_suggest_enabled.isChecked())
         messageLog(f"suggest_enabled before save: {suggest_enabled}")
         set_global_variable("QS2_project_suggestions_enabled", suggest_enabled)
-        messageLog(f"suggest_enabled after save: {get_global_variable("QS2_project_suggestions_enabled")}")
+        messageLog(f"suggest_enabled after save: {get_global_variable('QS2_project_suggestions_enabled')}")
 
         suggestion = self.list_seq_suggestions
         folders = [str(Path(suggestion.item(i).text()).resolve()) for i in range(suggestion.count())]
@@ -158,34 +146,6 @@ class GlobalSettingsDialog(QDialog, FORM_CLASS):
         for item in self.list_seq_suggestions.selectedItems():
             row = self.list_seq_suggestions.row(item)
             self.list_seq_suggestions.takeItem(row)
-
-    def generate_addon(self):
-        """affiche la fenetre de création des addons"""
-
-        self.addon_folder_path = get_global_variable("QS2_addon_folder")
-
-        if not self.addon_folder_path:
-            self.addon_folder_path = None
-
-        self.addon.clicked.connect(self.open_addonCreator)
-    
-    def select_addon_folder(self):
-        """selectionne les dossiers de rangement des addons"""
-        addon_path = QgsProject.instance().homePath() or str(Path.home())
-        addon_dir = QFileDialog.getExistingDirectory(self, "Sélectionner le répertoire des addon", str(addon_path))
-        if addon_dir:
-            self.addon_folder.setText(addon_dir)
-            self.addon_folder_path = addon_dir
-
-    def open_addonCreator(self):
-        addon_folder = self.addon_folder.text().strip()
-        if not addon_folder:
-            QMessageBox.warning(self, "Dossier manquant", "Veuillez sélectionner un dossier d'addons.")
-            return
-
-        dialog = on_new_addon_clicked(self.iface, addon_folder, self.plugin)
-        dialog.on_new_addon_clicked()
-
 
     
 

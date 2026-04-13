@@ -48,13 +48,18 @@ class LayoutDesignerWidget(QWidget, FORM_CLASS):
         self.btn_run.clicked.connect(self._accept)
 
     def _accept(self):
+        seq_id = get_project_variable("QS2_seq_id") or None
+        seq_dir = get_project_variable("QS2_seq_dir") or None
+            
+        if not seq_dir:
+            messageBar(self.iface, "Aucun répertoire sélectionné", "w")
+            return
+    
         try:
             project_key = self.combo_project.currentData()
             if not project_key:
                 raise RuntimeError("Aucun projet sélectionné")
 
-            seq_id = get_project_variable("QS2_seq_id") or None
-            seq_dir = get_project_variable("QS2_seq_dir") or None
             canvas_cfg = self.cfg.get_canvas(project_key)
 
             ctx = ProjectBuilder(

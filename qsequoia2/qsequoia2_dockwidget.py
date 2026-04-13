@@ -11,7 +11,6 @@ from qsequoia2.modules.add_data.add_data import AddDataTabWidget
 from qsequoia2.modules.layout_designer.layout_designer import LayoutDesignerWidget
 from qsequoia2.modules.forest_data.forest_data import ForestDataWidget
 from qsequoia2.modules.tools.tools import ToolsDialog
-from qsequoia2.modules.add_on.addon_loader import *
 from qsequoia2.modules.utils.variable import get_global_variable
 from qsequoia2.modules.utils.seq_config import *
 from qsequoia2.modules.utils.Qmessage import *
@@ -191,7 +190,6 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         layout_tab = add_tab(LayoutDesignerWidget(iface=self.iface, parent=self), "mActionNewLayout.svg", "Conception de mise en page")
         tools_tab = add_tab(ToolsDialog(iface=self.iface, parent=self), "processingAlgorithm.svg",  "Outils")
 
-        addons_tabs = load_addons(self, self.iface)
 
         self.projectChanged.connect(table_check_tab.on_project_loaded)
         self.projectChanged.connect(add_data_tab.on_project_changed)

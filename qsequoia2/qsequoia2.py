@@ -66,8 +66,7 @@ class Qsequoia2:
 
         # Fetch Rsequoia2 config
         sync_seq_configs()
-        disabled_v_external_grass(self.iface)
-        configure_snapping()
+
 
     def run(self):
 
@@ -88,6 +87,13 @@ class Qsequoia2:
         self._connect_dockwidget()
 
         self.iface.addDockWidget(Qt.RightDockWidgetArea, self.dockwidget)
+
+        # descativation de v.external_grass pour éviter les problèmes de topologie avec Rsequoia2
+        disabled_v_external_grass(self.iface)
+
+        # activation du snapping
+        configure_snapping()
+
 
     def _connect_dockwidget(self):
 

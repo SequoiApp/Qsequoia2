@@ -5,6 +5,8 @@ QSEQUOIA2 addon creator
                              -------------------
 
 SequoiAPP(Qsequoia2)
+
+/***************************************************************************
 """
 
 # -*- coding: utf-8 -*-
@@ -26,19 +28,24 @@ from ..utils.plugin_vars import *
 # ==========================================================================
 # addonCreator
 # ==========================================================================
-TEXT_EXT = {".py", ".ui", ".json", ".txt", ".md"}
+TEXT_EXT = {".py", ".ui", ".json", ".txt", ".md", ".yaml", ".yml"}
 
 TEMPLATE_DIR = PLUGIN_DIR /"modules"/"add_on"/ "templates"/ "basic_addon" 
 
 def on_new_addon_clicked(iface, addons_dir, plugin):
 
     try:
-        addons_dir = Path(addons_dir)/ "QSEQUOIA2" / "ADDON"
-        text, ok = QInputDialog.getText(iface, "Création d'un Add-on", "Entrez un nom :")
+        addons_dir = Path(addons_dir)
+        text, ok = QInputDialog.getText(
+            iface.mainWindow(),
+            "Création d'un Add-on",
+            "Entrez un nom :"
+        )
+
         if not ok or not text.strip():
-            addon_name = "My_QS2_Add-on"
+            addon_name = "my_qs2_addon"
         else:
-            addon_name = text.capitalize()
+            addon_name = text.strip().lower()
 
         addon_dir = copy_addon_template(addon_name, addons_dir)
 
@@ -93,7 +100,7 @@ def process_addon(addon_dir: Path, addon_name: str, addon_class: str):
                 path.rename(path.with_name(new_name))
 
             # Supprimer certains fichiers
-            if path.name in {"addons.ui", "addon.py", "addon.ui"}:
+            if path.name in {"addons.ui", "addon.py", "addon.ui", "_functions.yaml"}:
                 path.unlink()
 
     return addon_dir

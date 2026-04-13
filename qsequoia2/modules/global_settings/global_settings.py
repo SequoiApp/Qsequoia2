@@ -91,7 +91,7 @@ class GlobalSettingsDialog(QDialog, FORM_CLASS):
         suggest_enabled = bool(self.cb_suggest_enabled.isChecked())
         messageLog(f"suggest_enabled before save: {suggest_enabled}")
         set_global_variable("QS2_project_suggestions_enabled", suggest_enabled)
-        messageLog(f"suggest_enabled after save: {get_global_variable("QS2_project_suggestions_enabled")}")
+        messageLog(f"suggest_enabled after save: {get_global_variable('QS2_project_suggestions_enabled')}")
 
         suggestion = self.list_seq_suggestions
         folders = [str(Path(suggestion.item(i).text()).resolve()) for i in range(suggestion.count())]
@@ -183,8 +183,7 @@ class GlobalSettingsDialog(QDialog, FORM_CLASS):
             QMessageBox.warning(self, "Dossier manquant", "Veuillez sélectionner un dossier d'addons.")
             return
 
-        dialog = on_new_addon_clicked(self.iface, addon_folder, self.plugin)
-        dialog.on_new_addon_clicked()
+        on_new_addon_clicked(self.iface, addon_folder, self.plugin)
 
 
     

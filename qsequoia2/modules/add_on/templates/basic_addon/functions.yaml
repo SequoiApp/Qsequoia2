@@ -1,0 +1,16 @@
+PluginExemple:
+  path: {{ADDON_NAME}}.python.exemple
+  name: PluginExemple
+  args:
+  - qs2
+  - iface
+  - args
+
+AddonExemple:
+  type: function
+  path: {{ADDON_NAME}}.python.exemple
+  name: AddonExemple
+  args:
+  - self
+  - iface
+  - args

@@ -4,13 +4,10 @@ import os
 
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt, QUrl
 from qgis.PyQt.QtGui import QIcon, QDesktopServices
-from qgis.PyQt.QtWidgets import QAction, QApplication
+from qgis.PyQt.QtWidgets import QAction
 from qgis.core import *
 
 from qsequoia2.modules.global_settings.global_settings import GlobalSettingsDialog
-from qsequoia2.modules.forest_data.forest_data import ForestDataWidget
-from qsequoia2.modules.table_check.table_check import table_check
-from qsequoia2.modules.add_data.add_data import AddDataTabWidget
 from qsequoia2.modules.utils.disabled_v_external_grass import disabled_v_external_grass
 from qsequoia2.modules.utils.seq_config import *
 from qsequoia2.modules.utils.Qmessage import *

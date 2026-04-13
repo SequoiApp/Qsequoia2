@@ -70,6 +70,10 @@ class Qsequoia2:
 
     def run(self):
 
+        if not disabled_v_external_grass(self.iface):
+            self._on_closed_plugin()
+            return
+
         # Handle DockWidget
         ## If already created
         if self.dockwidget:
@@ -88,13 +92,10 @@ class Qsequoia2:
 
         self.iface.addDockWidget(Qt.RightDockWidgetArea, self.dockwidget)
 
-        # descativation de v.external_grass pour éviter les problèmes de topologie avec Rsequoia2
-        disabled_v_external_grass(self.iface)
-
         # activation du snapping
         configure_snapping()
-
-
+    
+    
     def _connect_dockwidget(self):
 
         dw = self.dockwidget

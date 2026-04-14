@@ -143,6 +143,7 @@ peuplement:
     zoom_on: "v.seq.forest.line"
     layers:
       sequoia: &peuplement_seq
+        - v.seq.forest.line
         - v.access.entry.point
         - v.com.graphic.line
         - v.com.graphic.point
@@ -161,7 +162,6 @@ peuplement:
         - v.roadway.line
         - v.roadway.poly
         # Order is important here, we want parca to be at the back so vectoriel layers are visible on top of it
-        - v.seq.forest.line
         - v.seq.pf.point
         - v.seq.pf.line
         - v.seq.pf.poly

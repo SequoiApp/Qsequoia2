@@ -61,7 +61,6 @@ class LayoutDesignerWidget(QWidget, FORM_CLASS):
                 raise RuntimeError("Aucun projet sélectionné")
 
             canvas_cfg = self.cfg.get_canvas(project_key)
-
             ctx = ProjectBuilder(
                 iface=self.iface,
                 project=self.project,
@@ -70,6 +69,9 @@ class LayoutDesignerWidget(QWidget, FORM_CLASS):
                 canvas_cfg=canvas_cfg,
                 on_project_loaded=self.parent.projectLoaded.emit if self.parent else None,
             ).build()
+            
+            if ctx is None or ctx.layers is None:
+                return None
 
             messageLog(f"[LAYOUT DESIGNER] context: {ctx}")
             
@@ -87,6 +89,11 @@ class LayoutDesignerWidget(QWidget, FORM_CLASS):
         try:
             layout_cfg = self.cfg.get_layout(project_key)
             coeff_cadre = self.dsb_occup.value() / 100
+            messageLog(f"[DEBUG] keys layers = {list(layers.keys())}")
+
+            for key, layer in layers.items():
+                if layer is None:
+                    messageLog(f"[LAYOUT ERROR] layer None -> {key}")
 
             layout = LayoutBuilder(
                 iface=self.iface,

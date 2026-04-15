@@ -83,7 +83,7 @@ def reloadQS2(plugin, plug = "qsequoia2"):
 
     if pluginStarted:
         duration = int(round((endTime - startTime) * 1000))
-        messageBox(iface, "IMPORTANT !", f'{plug}\n rechargé en {duration} ms, veuillez fermer puis ouvrir de nouveau l interface du plugin')
+        messageBox(iface, "IMPORTANT !", f'{plug}\n rechargé en {duration} ms, veuillez fermer puis ouvrir de nouveau l interface du plugin', "i")
 
     
 

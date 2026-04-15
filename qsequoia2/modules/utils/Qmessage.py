@@ -49,5 +49,12 @@ def messageLog(text, level="info"):
 
     QgsMessageLog.logMessage(text, "QSEQUOIA2", level=qlevel)
 
-def messageBox(iface, title, text):
-    QMessageBox.information(iface.mainWindow(), title, text)
+def messageBox(iface, title, text, level):
+    levels = {
+        "i": QMessageBox.information,
+        "w": QMessageBox.warning,
+        "c": QMessageBox.critical,
+        "q": QMessageBox.question
+    }
+    
+    levels[level](iface.mainWindow(), title, text)

@@ -8,7 +8,7 @@ from qsequoia2.modules.utils.variable import (
     get_qs2_project_variables,
     set_project_variable,
 )
-from .Qmessage import messageBar
+from .Qmessage import messageBar, messageLog
 
 def restore_qs2_project_variables(variables: Optional[dict]) -> None:
     """Restore QS2 project variables into the current QGIS project."""
@@ -21,8 +21,12 @@ def restore_qs2_project_variables(variables: Optional[dict]) -> None:
 def load_project(project, path: Path, variables: Optional[dict] = None) -> None:
     """Load an existing QGIS project and optionally restore QS2 variables."""
     path = Path(path)
+    try:
+        ok = project.read(str(path))
+    except Exception as e:
+        messageLog(f"[load_project] Project read crashed {str(e)}", "w")
 
-    if not project.read(str(path)):
+    if not ok:
         raise RuntimeError(f"Failed to load project: {path}")
 
     restore_qs2_project_variables(variables)
@@ -80,9 +84,9 @@ def new_seq_project(
         iface.mainWindow(),
         "Projet SEQUOIA",
         f"Aucun projet {path.name} trouvé.\nCréer un nouveau projet ?",
-        QMessageBox.Yes | QMessageBox.No,
-        QMessageBox.No,
-    ) == QMessageBox.No:
+        QMessageBox.Yes | QMessageBox.Cancel,
+        QMessageBox.Cancel,
+    ) == QMessageBox.Cancel:
         return None
 
     path.parent.mkdir(parents=True, exist_ok=True)

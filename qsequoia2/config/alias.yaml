@@ -1,7 +1,7 @@
 # region RASTER
-r.alt.mnt: "(MNT) Modèle Numérique de Terrain"
-r.alt.mns: "(MNS)  Modèle Numérique de Surface"
-r.alt.mnh: "(MNH) : Modèle Numérique de Hauteur"
+r.alt.mnt: "Modèle Numérique de Terrain (MNT)"
+r.alt.mns: "Modèle Numérique de Surface (MNS)"
+r.alt.mnh: "Modèle Numérique de Hauteur (MNH)"
 r.alt.pente: "Pentes"
 r.alt.expo: "Exposition"
 r.ortho.irc: "Orthophoto IRC"
@@ -10,6 +10,7 @@ r.scan.25: "Scan 25"
 r.scan.100: "Scan 100"
 r.scan.oaci: "Scan OACI"
 r.sol.geol: "Fond géologique"
+r.seq.plt: "Carte des peuplements"
 # endregion
 
 # region SEQUOIA

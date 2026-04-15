@@ -7,7 +7,7 @@ from PyQt5.QtCore import QTimer
 from qgis.core import QgsProject
 
 from ..utils.Qmessage import messageBar, messageLog
-from ..utils.variable import get_project_variable
+from ..utils.variable import get_project_variable, set_project_variable
 from .layout_builder import LayoutBuilder
 from .project_builder import ProjectBuilder
 from .project_config_loader import ProjectConfigLoader
@@ -48,15 +48,19 @@ class LayoutDesignerWidget(QWidget, FORM_CLASS):
         self.btn_run.clicked.connect(self._accept)
 
     def _accept(self):
+        seq_id = get_project_variable("QS2_seq_id") or None
+        seq_dir = get_project_variable("QS2_seq_dir") or None
+            
+        if not seq_dir:
+            messageBar(self.iface, "Aucun répertoire sélectionné", "w")
+            return
+    
         try:
             project_key = self.combo_project.currentData()
             if not project_key:
                 raise RuntimeError("Aucun projet sélectionné")
 
-            seq_id = get_project_variable("QS2_seq_id") or None
-            seq_dir = get_project_variable("QS2_seq_dir") or None
             canvas_cfg = self.cfg.get_canvas(project_key)
-
             ctx = ProjectBuilder(
                 iface=self.iface,
                 project=self.project,
@@ -65,8 +69,14 @@ class LayoutDesignerWidget(QWidget, FORM_CLASS):
                 canvas_cfg=canvas_cfg,
                 on_project_loaded=self.parent.projectLoaded.emit if self.parent else None,
             ).build()
+            
+            if ctx is None or ctx.layers is None:
+                return None
 
             messageLog(f"[LAYOUT DESIGNER] context: {ctx}")
+            messageLog(f"[PROJECT] setting project variable: {canvas_cfg.key} - {canvas_cfg.alias}")
+            set_project_variable("QS2_project_id", canvas_cfg.key)
+            set_project_variable("QS2_project_alias", canvas_cfg.alias)
             
             open_composer = self.cb_composeur.isChecked()
             is_sequoia_project = project_key == "sequoia"
@@ -82,6 +92,11 @@ class LayoutDesignerWidget(QWidget, FORM_CLASS):
         try:
             layout_cfg = self.cfg.get_layout(project_key)
             coeff_cadre = self.dsb_occup.value() / 100
+            messageLog(f"[DEBUG] keys layers = {list(layers.keys())}")
+
+            for key, layer in layers.items():
+                if layer is None:
+                    messageLog(f"[LAYOUT ERROR] layer None -> {key}")
 
             layout = LayoutBuilder(
                 iface=self.iface,
@@ -100,3 +115,4 @@ class LayoutDesignerWidget(QWidget, FORM_CLASS):
 
         except Exception as e:
             messageBar(self.iface, str(e), "critical", 10)
+

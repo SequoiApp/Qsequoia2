@@ -702,7 +702,7 @@
    <custom-order enabled="0"/>
   </layer-tree-group>
  </LayoutItem>
- <LayoutItem htmlState="0" position="7.75,67.7872,mm" labelText="[%'Surface aménageable ' ||&#xa;concat(&#xa;    floor(@QS2_wooded_surface), ' ha ',&#xa;    lpad(floor((@QS2_wooded_surface - floor(@QS2_total_surface)) * 100), 2, '0'), ' a ',&#xa;    lpad(round((( @QS2_wooded_surface * 100 ) % 1) * 100), 2, '0'), ' ca'&#xa;)%]" positionOnPage="7.75,67.7872,mm" opacity="1" marginY="0" itemRotation="0" visibility="1" uuid="{53e2d001-1c78-4f50-a67d-01813552da13}" halign="4" frameJoinStyle="miter" referencePoint="0" zValue="23" type="65641" size="83.7735,8.07774,mm" positionLock="false" groupUuid="" templateUuid="{53e2d001-1c78-4f50-a67d-01813552da13}" id="surf_cad" background="false" frame="false" outlineWidthM="0.3,mm" excludeFromExports="0" blendMode="0" valign="32" marginX="0">
+ <LayoutItem htmlState="0" position="7.75,67.7872,mm" labelText="[%'Surface aménageable ' ||&#xa;concat(&#xa;    floor(@QS2_surface_wooded), ' ha ',&#xa;    lpad(floor((@QS2_surface_wooded - floor(@QS2_surface_wooded)) * 100), 2, '0'), ' a ',&#xa;    lpad(round((( @QS2_surface_wooded * 100 ) % 1) * 100), 2, '0'), ' ca'&#xa;)%]" positionOnPage="7.75,67.7872,mm" opacity="1" marginY="0" itemRotation="0" visibility="1" uuid="{53e2d001-1c78-4f50-a67d-01813552da13}" halign="4" frameJoinStyle="miter" referencePoint="0" zValue="23" type="65641" size="83.7735,8.07774,mm" positionLock="false" groupUuid="" templateUuid="{53e2d001-1c78-4f50-a67d-01813552da13}" id="surf_cad" background="false" frame="false" outlineWidthM="0.3,mm" excludeFromExports="0" blendMode="0" valign="32" marginX="0">
   <FrameColor alpha="255" red="0" blue="0" green="0"/>
   <BackgroundColor alpha="255" red="255" blue="255" green="255"/>
   <LayoutObject>
@@ -2206,7 +2206,7 @@
    </dd_properties>
   </text-style>
  </LayoutItem>
- <LayoutItem htmlState="0" position="8,58.3761,mm" labelText="[%'Surface cadastrale ' ||&#xa;concat(&#xa;    floor(@QS2_total_surface), ' ha ',&#xa;    lpad(floor((@QS2_total_surface - floor(@QS2_total_surface)) * 100), 2, '0'), ' a ',&#xa;    lpad(round((( @QS2_total_surface * 100 ) % 1) * 100), 2, '0'), ' ca'&#xa;)%]" positionOnPage="8,58.3761,mm" opacity="1" marginY="0" itemRotation="0" visibility="1" uuid="{6e21165c-b650-46e5-8163-6b1ce909a9d2}" halign="4" frameJoinStyle="miter" referencePoint="0" zValue="7" type="65641" size="83,8.07774,mm" positionLock="false" groupUuid="" templateUuid="{6e21165c-b650-46e5-8163-6b1ce909a9d2}" id="surf_cad" background="false" frame="false" outlineWidthM="0.3,mm" excludeFromExports="0" blendMode="0" valign="32" marginX="0">
+ <LayoutItem htmlState="0" position="8,58.3761,mm" labelText="[%'Surface cadastrale ' ||&#xa;concat(&#xa;    floor(@QS2_surface_total), ' ha ',&#xa;    lpad(floor((@QS2_surface_total - floor(@QS2_surface_total)) * 100), 2, '0'), ' a ',&#xa;    lpad(round((( @QS2_surface_total * 100 ) % 1) * 100), 2, '0'), ' ca'&#xa;)%]" positionOnPage="8,58.3761,mm" opacity="1" marginY="0" itemRotation="0" visibility="1" uuid="{6e21165c-b650-46e5-8163-6b1ce909a9d2}" halign="4" frameJoinStyle="miter" referencePoint="0" zValue="7" type="65641" size="83,8.07774,mm" positionLock="false" groupUuid="" templateUuid="{6e21165c-b650-46e5-8163-6b1ce909a9d2}" id="surf_cad" background="false" frame="false" outlineWidthM="0.3,mm" excludeFromExports="0" blendMode="0" valign="32" marginX="0">
   <FrameColor alpha="255" red="0" blue="0" green="0"/>
   <BackgroundColor alpha="255" red="255" blue="255" green="255"/>
   <LayoutObject>

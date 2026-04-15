@@ -80,9 +80,9 @@ def new_seq_project(
         iface.mainWindow(),
         "Projet SEQUOIA",
         f"Aucun projet {path.name} trouvé.\nCréer un nouveau projet ?",
-        QMessageBox.Yes | QMessageBox.No,
-        QMessageBox.No,
-    ) == QMessageBox.No:
+        QMessageBox.Yes | QMessageBox.Cancel,
+        QMessageBox.Cancel,
+    ) == QMessageBox.Cancel:
         return None
 
     path.parent.mkdir(parents=True, exist_ok=True)

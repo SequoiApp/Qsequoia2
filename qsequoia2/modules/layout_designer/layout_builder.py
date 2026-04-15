@@ -46,6 +46,7 @@ class LayoutBuilder:
         if not parca:
             raise RuntimeError("[LAYOUT] Couche 'parca' absente du contexte")
 
+
         fmt, orient, bbox = self._compute_layout_info(parca)
         layout_name, qpt = self._create_layout_name(fmt, orient)
 
@@ -209,10 +210,12 @@ class LayoutBuilder:
         messageLog(f"[LAYOUT] Recherche de l'item '{map_id}'")
 
         if not item:
-            raise messageLog(f"[Layout] Carte '{map_id}' introuvable")
+            messageLog(f"[Layout] Carte '{map_id}' introuvable")
+            raise RuntimeError(f"Carte '{map_id}' introuvable")
 
         if not isinstance(item, QgsLayoutItemMap):
-            raise messageLog(f"[Layout] L'item '{map_id}' n'est pas une carte")
+            messageLog(f"Carte '{map_id}' introuvable")
+            raise RuntimeError(f"Carte '{map_id}' introuvable")
 
         return item
 

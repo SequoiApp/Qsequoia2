@@ -77,7 +77,7 @@ class ForestDataWidget(QWidget, FORM_CLASS):
             ua_layer = seq_read("ua", seq_dir, add_to_project=False)
             self._ua_status(True)
         except Exception as e:
-            self.messageLog(f"[UA] Load failed: {e}", level="w")
+            messageLog(f"[UA] Load failed: {e}", "w")
             self._ua_status(False)
             ua_layer = None  # fallback → run without UA
 

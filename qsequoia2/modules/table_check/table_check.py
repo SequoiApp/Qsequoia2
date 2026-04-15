@@ -37,13 +37,10 @@ class table_check(QWidget, FORM_CLASS):
         # attendre que QGIS ait fini de charger les couches et le projet
         QTimer.singleShot(300, self.on_ua_layer_loaded)
 
-    def on_ua_layer_loaded(self):
-        layer_name = seq_layer("ua")["alias"]
-        layer = None
-        for l in QgsProject.instance().mapLayers().values():
-            if l.name() == layer_name:
-                layer = l
-                break
+
+    def on_ua_layer_loaded(self): 
+
+        layer = self._ua_loader()
 
         if not layer:
             self._ua_status(state=False)
@@ -57,6 +54,24 @@ class table_check(QWidget, FORM_CLASS):
         self.populate_cb_from_field("cb_parcelle", layer, "N_PARFOR")
         self.populate_cb_from_field("cb_sspf", layer, "N_SSPARFOR")
 
+
+    def _ua_loader(self):
+
+        project = QgsProject.instance()
+        meta = seq_layer("ua")
+
+        for layer in project.mapLayers().values():
+            source = layer.source()
+            if not source or "://" in source:
+                continue
+                
+            path = Path(source)
+            if meta["filename"] in path.name :
+                return layer
+            
+        return None
+                  
+
     def _ua_status(self, state):
         if state:
             self.lbl_ua_status.setText("Couche UA chargée")
@@ -66,7 +81,6 @@ class table_check(QWidget, FORM_CLASS):
             self.lbl_ua_status.setStyleSheet("color: red;")
 
     def _check_data(self, ids=None):
-
         self.forestTable.clearContents()
         self.forestTable.setRowCount(0)
 

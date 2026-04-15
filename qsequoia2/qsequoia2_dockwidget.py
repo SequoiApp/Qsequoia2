@@ -188,7 +188,7 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         table_check_tab = add_tab(table_check(self.iface,parent=self), "mActionZoomToSelected.svg", "Vérification des données")
         add_data_tab = add_tab(AddDataTabWidget(iface=self.iface, parent=self), "mActionAddLayer.svg", "Ajout de données")
         layout_tab = add_tab(LayoutDesignerWidget(iface=self.iface, parent=self), "mActionNewLayout.svg", "Conception de mise en page")
-        tools_tab = add_tab(ToolsDialog(iface=self.iface, parent=self), "processingAlgorithm.svg",  "Outils")
+        # tools_tab = add_tab(ToolsDialog(iface=self.iface, parent=self), "processingAlgorithm.svg",  "Outils")
 
 
         self.projectChanged.connect(table_check_tab.on_project_loaded)

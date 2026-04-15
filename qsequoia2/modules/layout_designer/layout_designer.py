@@ -7,7 +7,7 @@ from PyQt5.QtCore import QTimer
 from qgis.core import QgsProject
 
 from ..utils.Qmessage import messageBar, messageLog
-from ..utils.variable import get_project_variable
+from ..utils.variable import get_project_variable, set_project_variable
 from .layout_builder import LayoutBuilder
 from .project_builder import ProjectBuilder
 from .project_config_loader import ProjectConfigLoader
@@ -72,6 +72,9 @@ class LayoutDesignerWidget(QWidget, FORM_CLASS):
             ).build()
 
             messageLog(f"[LAYOUT DESIGNER] context: {ctx}")
+            messageLog(f"[PROJECT] setting project variable: {canvas_cfg.key} - {canvas_cfg.alias}")
+            set_project_variable("QS2_project_id", canvas_cfg.key)
+            set_project_variable("QS2_project_alias", canvas_cfg.alias)
             
             open_composer = self.cb_composeur.isChecked()
             is_sequoia_project = project_key == "sequoia"
@@ -105,3 +108,4 @@ class LayoutDesignerWidget(QWidget, FORM_CLASS):
 
         except Exception as e:
             messageBar(self.iface, str(e), "critical", 10)
+

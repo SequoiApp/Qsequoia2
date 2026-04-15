@@ -1,4 +1,5 @@
 from qgis.core import *
+from qgis.PyQt.QtWidgets import (QMessageBox)
 
 # ==========================================================
 # LOGGING / MESSAGE
@@ -47,3 +48,6 @@ def messageLog(text, level="info"):
     qlevel = levels.get(level, Qgis.Info)
 
     QgsMessageLog.logMessage(text, "QSEQUOIA2", level=qlevel)
+
+def messageBox(iface, title, text):
+    QMessageBox.information(iface.mainWindow(), title, text)

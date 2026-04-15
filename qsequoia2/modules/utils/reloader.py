@@ -12,6 +12,7 @@ from time import time
 # QGIS
 from qgis.PyQt.QtCore import QObject
 from qgis.core import Qgis, QgsMessageLog, QgsProject
+from .Qmessage import messageBar, messageLog, messageBox
 import qgis.utils
 from .plugin_vars import *
 
@@ -19,6 +20,7 @@ from .plugin_vars import *
 #==================================
 # region reload
 #==================================
+PROJECT = QgsProject.instance()
 
 def reloadQS2(plugin, plug = "qsequoia2"):
     """
@@ -81,15 +83,8 @@ def reloadQS2(plugin, plug = "qsequoia2"):
 
     if pluginStarted:
         duration = int(round((endTime - startTime) * 1000))
-        msg = plugin.tr('<b>{}</b> recharger en {} ms, veuillez fermer puis ouvrir de nouveau le plugin').format(plug,duration)
-        iface.messageBar().pushMessage(msg, Qgis.Success)
-        # Actual name of the "Plugins" tab in the message log panel
-        # is localized, so we need to find it in QGIS' translations.
-        # Don't pass the string value directly to QObject().tr()
-        # to prevent local pylupdate from catching it.
-        pluginsLogTabSourceName = "Plugins"
-        pluginsLogTabName = QObject().tr(pluginsLogTabSourceName)
-        QgsMessageLog.logMessage(msg, pluginsLogTabName, level=Qgis.Info)
+        messageBox(iface, "IMPORTANT !", f'{plug}\n rechargé en {duration} ms, veuillez fermer puis ouvrir de nouveau l interface du plugin')
+
     
 
     

@@ -6,7 +6,7 @@
 name=qsequoia2
 qgisMinimumVersion=3.36
 description=simplifions le qutodien des forestiers
-version=1.0.6
+version=1.0.7
 author=Organisation SEQUOIAPP : Alexandre Le Bars, Paul Carteron, Matthieu Chevereau
 email=alexlb329@gmail.com
 

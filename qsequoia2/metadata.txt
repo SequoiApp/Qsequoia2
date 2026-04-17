@@ -5,8 +5,8 @@
 [general]
 name=qsequoia2
 qgisMinimumVersion=3.36
-description=simplifions le qutodien des forestiers
-version=1.0.5
+description=simplifions le quotidien des forestiers
+version=VERSION
 author=Organisation SEQUOIAPP : Alexandre Le Bars, Paul Carteron, Matthieu Chevereau
 email=alexlb329@gmail.com
 
@@ -26,7 +26,7 @@ hasProcessingProvider=no
 # Tags are comma separated with spaces allowed
 tags=python
 
-homepage=https://SequoiAPP.github.io/Qsequoia2
+homepage=https://github.com/SequoiApp/Qsequoia2
 category=Plugins
 icon=icon.png
 # experimental flag

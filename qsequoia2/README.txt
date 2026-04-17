@@ -1,32 +1,69 @@
-Plugin Builder Results
+# QSequoia2 - QGIS Plugin
 
-Your plugin QSEQUOIA2 was created in:
-    C:/Users/alexl/Desktop/sylviculture et GF/3.cartographie-SIG/Devellopement/QSEQUOIA2\qsequoia2
+## FR
 
-Your QGIS plugin directory is located at:
-    C:/Users/alexl/AppData/Roaming/QGIS/QGIS3/profiles/default/python/plugins
+QSequoia2 est un plugin QGIS dédié à la gestion et à la structuration des données forestières.
 
-What's Next:
+Développé par des forestiers pour des forestiers, il permet d’automatiser :
 
-  * Copy the entire directory containing your new plugin to the QGIS plugin
-    directory
+* l’import des données issues de RSequoia2
+* l’organisation des couches SIG
+* l’application de styles et de mises en page
+* la création de projets QGIS structurés
 
-  * Compile the resources file using pyrcc5
 
-  * Run the tests (``make test``)
+Installation :
 
-  * Test the plugin by enabling it in the QGIS plugin manager
+* Via dépôt QGIS (recommandé)
+* Ou installation manuelle dans le dossier plugins
 
-  * Customize it by editing the implementation file: ``QSEQUOIA2.py``
+Dépôt QGIS :
+https://raw.githubusercontent.com/SequoiApp/Qsequoia2/main/plugins.xml
 
-  * Create your own custom icon, replacing the default icon.png
+Compatibilité :
 
-  * Modify your user interface by opening QSEQUOIA2_dockwidget.ui in Qt Designer
+* QGIS 3.44 ou supérieur
 
-  * You can use the Makefile to compile your Ui and resource files when
-    you make changes. This requires GNU make (gmake)
+---
 
-For more information, see the PyQGIS Developer Cookbook at:
-http://www.qgis.org/pyqgis-cookbook/index.html
+## EN
 
-(C) 2011-2018 GeoApt LLC - geoapt.com
+QSequoia2 is a QGIS plugin designed for managing and structuring forest data.
+
+Developed by foresters for foresters, it automates:
+
+* import of RSequoia2 data
+* GIS layer organization
+* styling and layout application
+* structured QGIS project creation
+
+
+Installation:
+
+* Via QGIS repository (recommended)
+* Or manual installation in the plugins folder
+
+QGIS repository:
+https://raw.githubusercontent.com/SequoiApp/Qsequoia2/main/plugins.xml
+
+Requirements:
+
+* QGIS 3.44 or higher
+
+---
+
+## Authors
+
+Alexandre Le Bars
+Paul Carteron
+Matthieu Chevereau
+
+---
+
+## Repository
+
+https://github.com/SequoiApp/Qsequoia2
+
+## Issues
+
+https://github.com/SequoiApp/Qsequoia2/issues

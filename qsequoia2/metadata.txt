@@ -1,16 +1,18 @@
-# This file contains metadata for your plugin.
-
-# This file should be included when you package your plugin.# Mandatory items:
-
 [general]
 name=qsequoia2
-qgisMinimumVersion=3.36
-description=simplifions le qutodien des forestiers
-version=1.0.6
-author=Organisation SEQUOIAPP : Alexandre Le Bars, Paul Carteron, Matthieu Chevereau
+qgisMinimumVersion=3.44
+
+
+description=QSequoia2 simplifies daily french forest management tasks in QGIS by providing tools for importing, structuring, visualizing, and styling forestry data from RSequoia2.
+
+
+version=1.0.7
+
+author=Alexandre Le Bars; Paul Carteron; Matthieu Chevereau
+
 email=alexlb329@gmail.com
 
-about=Plugin QGIS pour la gestion et la mise en forme de données issue de Rsequoia2.
+about=QGIS plugin for managing, structuring, and styling forestry data from RSequoia2.
 
 tracker=https://github.com/SequoiApp/Qsequoia2/issues
 repository=https://github.com/SequoiApp/Qsequoia2
@@ -24,7 +26,7 @@ hasProcessingProvider=no
 # changelog=
 
 # Tags are comma separated with spaces allowed
-tags=python
+tags=forest, forestry, GIS, QGIS, RSequoia2, WMTS, WMS
 
 homepage=https://github.com/SequoiApp/Qsequoia2
 category=Plugins

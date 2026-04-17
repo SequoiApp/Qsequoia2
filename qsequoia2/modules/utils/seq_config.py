@@ -1,4 +1,5 @@
 from pathlib import Path
+from urllib.parse import urlparse
 import urllib.request
 import yaml
 import os
@@ -20,6 +21,16 @@ _SEQ_CONFIG_URLS = {
 
 _CACHE_DIR = Path(QgsApplication.qgisSettingsDirPath()) / "qsequoia2"
 
+
+def _safe_urlopen(url, timeout=10):
+    parsed = urlparse(url)
+
+    if parsed.scheme not in ["http", "https"]:
+        raise ValueError(f"Blocked unsafe URL scheme: {parsed.scheme}")
+
+    return urllib.request.urlopen(url, timeout=timeout)
+
+
 def sync_seq_configs(timeout: int = 3) -> None:
     """
     Download latest configs to cache.
@@ -34,7 +45,7 @@ def sync_seq_configs(timeout: int = 3) -> None:
         path = _CACHE_DIR / f"{key}.yaml"
 
         try:
-            response = urllib.request.urlopen(url, timeout=timeout)
+            response = _safe_urlopen(url, timeout=timeout)
             content = response.read().decode("utf-8")
             path.write_text(content, encoding="utf-8")
 

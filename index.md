@@ -1,6 +1,6 @@
 # QSequoia2
 
-<link rel="icon" type="image/png" href="./assets/img/Qsequoia2.png">
+<link rel="icon" type="image/png" href="assets/img/favicon.ico">
 
 ## Bienvenue dans QSequoia2
 

@@ -1,6 +1,6 @@
 # QSequoia2
 
-<img src="qsequoia2/icons/Qsequoia.png" align="right" height="120"/>
+<img src="qsequoia2/icons/Qsequoia2.png" align="right" height="120"/>
 
 ## 🇫🇷 Présentation
 

@@ -4,7 +4,7 @@
 
 ## 🇫🇷 Présentation
 
-**QSequoia2** est un plugin QGIS dédié à la gestion, la structuration et la visualisation des données forestières.
+**QSequoia2** est un plugin QGIS dédié à la gestion, la structuration et la visualisation des données forestières **francaises**.
 
 Développé par des forestiers pour des forestiers, il permet d’automatiser l’import, l’organisation et la mise en forme des données issues de **RSequoia2**.
 

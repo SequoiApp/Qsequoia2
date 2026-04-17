@@ -26,7 +26,7 @@ hasProcessingProvider=no
 # Tags are comma separated with spaces allowed
 tags=python
 
-homepage=https://SequoiAPP.github.io/Qsequoia2
+homepage=https://github.com/SequoiApp/Qsequoia2
 category=Plugins
 icon=icon.png
 # experimental flag

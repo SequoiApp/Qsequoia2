@@ -8,6 +8,7 @@ from PyQt5.QtCore import Qt, QTimer
 
 from ..utils.seq_config import seq_layer
 from ..utils.Qmessage import messageLog
+from .data_table import *
 
 UI_PATH = Path(__file__).parent / 'table_check.ui'
 FORM_CLASS, _ = uic.loadUiType(str(UI_PATH))
@@ -21,8 +22,6 @@ class table_check(QWidget, FORM_CLASS):
         self.parent = parent
         self.project = QgsProject.instance()
         self.setupUi(self)
-
-        self.forestTable.setVisible(False)
 
         self.btn_refresh.setIcon(QgsApplication.getThemeIcon("/mActionRefresh.svg"))
         self.btn_refresh.clicked.connect(self.on_ua_layer_loaded)
@@ -81,25 +80,29 @@ class table_check(QWidget, FORM_CLASS):
             self.lbl_ua_status.setStyleSheet("color: red;")
 
     def _check_data(self, ids=None):
-        self.forestTable.clearContents()
-        self.forestTable.setRowCount(0)
 
         if ids is not None:
             ua_feats = [f for f in self.ua_layer.getFeatures() if f.id() in ids]
         else:
             ua_feats = list(self.ua_layer.getFeatures())
             self.ua_layer.removeSelection()
-            surf = self.sspf_surface_calculation(self.ua_layer)
-            self.le_surf.setText(surf)
 
-        self.fill_table(self.ua_layer, ua_feats)
+            for_ui = {
+            "pf_list" : get_pf_list(self.ua_layer),
+            "sspf_list" : get_sspf_list(self.ua_layer),
+            "surf" : sspf_surface_calculation(self.ua_layer)
+            }
+
+            self.add_in_ui(for_ui)
+
+    def add_in_ui(self, ui):
+        self.le_surf.setText(ui["surf"])
+        self.le_nb_pf.setText(str(len(ui["pf_list"])))
+        self.le_nb_sspf.setText(str(len(ui["sspf_list"])))
+
 
     # Utilitaire pour UI 
     def _setup_ui_verif(self, state):
-        self.forestTable.setVisible(state)
-
-        self.forestTable.clearContents()
-        self.forestTable.setRowCount(0)
 
         self.cb_parcelle.setEnabled(state)
         self.cb_sspf.setEnabled(state)
@@ -119,7 +122,7 @@ class table_check(QWidget, FORM_CLASS):
         cb = getattr(self, cb_name)
         values = sorted({str(f[field_name]) for f in layer.getFeatures()})
         cb.clear()
-        cb.addItem("Toutes")      # valeur par défaut
+        # cb.addItem("Toutes")      # valeur par défaut
         cb.addItems(values)
         cb.setCurrentIndex(0)
 
@@ -133,41 +136,12 @@ class table_check(QWidget, FORM_CLASS):
 
             if ids is not None:
                 self._check_data(ids=ids)
-                surf = self.sspf_surface_calculation(self.ua_layer)
+                surf = sspf_surface_calculation(self.ua_layer)
                 if surf:
                     self.le_surf.setText(surf)
 
         else:
             self._check_data()
-
-
-    def fill_table(self, ua_layer, ua_feats):
-        """Remplit la table avec les features données"""
-
-        fields = ua_layer.fields()
-
-        self.forestTable.setColumnCount(len(fields))
-        self.forestTable.setHorizontalHeaderLabels([f.name() for f in fields])
-        self.forestTable.setRowCount(len(ua_feats))
-
-        # met en forme la table
-        self.Table_format()
-
-        for row, feat in enumerate(ua_feats):
-            for col, field in enumerate(fields):
-                val = feat[field.name()]
-                item = QTableWidgetItem(str(val))
-                item.setFlags(item.flags() ^ Qt.ItemIsEditable)
-                self.forestTable.setItem(row, col, item)
-
-    def Table_format(self):
-        """Met en forme la table"""
-        header = self.forestTable.horizontalHeader()
-        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(1, QHeaderView.Stretch)
-        header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
-
-        self.forestTable.setAlternatingRowColors(True)
 
 
     def build_sspf_expression(self, layer,value):
@@ -212,13 +186,3 @@ class table_check(QWidget, FORM_CLASS):
 
         return ids
         
-    def sspf_surface_calculation(self,ua_layer) -> str:
-
-        feats = list(ua_layer.getSelectedFeatures())
-        if not feats: 
-            surf = sum(f.geometry().area() for f in ua_layer.getFeatures()) / 10000
-            return f"{round(surf,4)} ha"
-        tmp = QgsVectorLayer("Polygon?crs=" + ua_layer.crs().authid(), "tmp", "memory")
-        tmp.dataProvider().addFeatures(feats)
-        surf = sum(f.geometry().area() for f in tmp.getFeatures()) / 10000
-        return f"{round(surf,4)} ha"

@@ -6,39 +6,77 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>704</width>
-    <height>593</height>
+    <width>488</width>
+    <height>506</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_main">
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout">
+  <layout class="QFormLayout" name="formLayout">
+   <item row="1" column="0">
+    <widget class="QLabel" name="lbl_refresh">
+     <property name="text">
+      <string>Actualiser la couche UA :</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1">
+    <widget class="QPushButton" name="btn_refresh">
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0">
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Nombre parcelles</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1">
+    <widget class="QLineEdit" name="le_nb_pf">
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="QLabel" name="label_2">
+     <property name="text">
+      <string>Nombre sous-parcelles</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1">
+    <widget class="QLineEdit" name="le_nb_sspf">
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="1">
+    <layout class="QHBoxLayout" name="horizontalLayout_6">
      <item>
-      <widget class="QLabel" name="lbl_refresh">
+      <widget class="QLabel" name="lbl_surf">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="text">
-        <string>Actualiser la couche UA :</string>
+        <string>Surface SIG</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="btn_refresh">
-       <property name="text">
-        <string/>
+      <widget class="QLineEdit" name="le_surf">
+       <property name="readOnly">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QLabel" name="lbl_ua_status">
-       <property name="text">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer name="horizontalSpacer">
+      <spacer name="horizontalSpacer_4">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
@@ -52,7 +90,7 @@
      </item>
     </layout>
    </item>
-   <item>
+   <item row="4" column="1">
     <layout class="QHBoxLayout" name="horizontalLayout_3">
      <item>
       <widget class="QLabel" name="lbl_pf">
@@ -88,53 +126,24 @@
        </property>
       </widget>
      </item>
-     <item>
-      <widget class="QLabel" name="lbl_surf">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="text">
-        <string>Surface SIG</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLineEdit" name="le_surf">
-       <property name="readOnly">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer name="spacer_filters">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>0</width>
-         <height>0</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
     </layout>
    </item>
-   <item>
-    <widget class="QTableWidget" name="forestTable"/>
+   <item row="6" column="0">
+    <widget class="QLabel" name="lb_champ">
+     <property name="text">
+      <string>champ</string>
+     </property>
+    </widget>
    </item>
-   <item>
-    <spacer name="verticalSpacer">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
+   <item row="6" column="1">
+    <widget class="QLineEdit" name="le_data"/>
+   </item>
+   <item row="0" column="1">
+    <widget class="QLabel" name="lbl_ua_status">
+     <property name="text">
+      <string/>
      </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>40</height>
-      </size>
-     </property>
-    </spacer>
+    </widget>
    </item>
   </layout>
  </widget>

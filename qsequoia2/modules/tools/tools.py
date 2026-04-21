@@ -1,13 +1,20 @@
-import importlib
-import yaml
+from datetime import datetime
 from pathlib import Path
 
-from PyQt5.QtWidgets import QMessageBox
-from PyQt5.QtCore import Qt
-from qgis.PyQt.QtWidgets import QWidget, QTreeWidget, QVBoxLayout, QTreeWidgetItem
+from qgis import processing
+from qgis.core import (
+    QgsProject,
+    QgsVectorFileWriter,
+    QgsProviderRegistry,
+)
+
 from PyQt5 import uic
-from ..utils.Qmessage import *
-from qsequoia2.modules.utils.variable import get_global_variable, get_project_variable
+from PyQt5.QtWidgets import QWidget, QTreeWidgetItem, QApplication
+from PyQt5.QtCore import Qt
+
+from qsequoia2.modules.utils.variable import get_project_variable, get_global_variable
+from qsequoia2.modules.utils.seq_config import seq_read, seq_layer
+from qsequoia2.modules.utils.Qmessage import messageBar, messageLog
 
 UI_PATH = Path(__file__).parent / "tools.ui"
 FORM_CLASS, _ = uic.loadUiType(str(UI_PATH))
@@ -26,77 +33,141 @@ class ToolsDialog(QWidget, FORM_CLASS):
         
     def _init_tree(self):
 
-        self.treeTOOLS.clear()
-        self.treeTOOLS.setHeaderHidden(True)
+        self.tw_tools.clear()
+        self.tw_tools.setHeaderLabels(["UA Tools"])
 
-        yaml_path = Path(__file__).resolve().parents[2] / "config" / "qs2_tools.yaml"
-        data = yaml.safe_load(yaml_path.read_text(encoding="utf-8")) or {}
+        clean_item = QTreeWidgetItem(["Nettoyer UA"])
+        clean_item.setData(0, Qt.UserRole, self._run_clean_ua)
 
-        for category_name, tools in data.items():
+        self.tw_tools.addTopLevelItem(clean_item)
 
-            category_item = QTreeWidgetItem([category_name])
-            category_item.setExpanded(True)
-            self.treeTOOLS.addTopLevelItem(category_item)
+        self.tw_tools.itemDoubleClicked.connect(self._run)
 
-            for tool_name, tool_data in tools.items():
+    def _run(self, item):
+        func = item.data(0, Qt.UserRole)
+        if callable(func):
+            func()
 
-                tool_item = QTreeWidgetItem([tool_name])
-                tool_item.setData(
-                    0,
-                    Qt.UserRole,
-                    {
-                        "type": "tool",
-                        "category": category_name,
-                        "key": tool_name,
-                        **tool_data
-                    }
-                )
-
-                category_item.addChild(tool_item)
-
-        self.treeTOOLS.itemClicked.connect(self.on_item_clicked)
-
-    def on_item_clicked(self, item):
-
-        action = item.data(0, Qt.UserRole)
-        if not action:
-            return
-
-        parent = item.parent()
-        self._call_function(action)
-
-    def _call_function(self, action):
-
-        seq_dirname = get_project_variable("QS2_seq_dirname")
+    def _run_clean_ua(self):
         seq_dir = get_project_variable("QS2_seq_dir")
-        seq_identifier = get_project_variable("QS2_seq_identifier")
         style_folder = get_global_variable("QS2_styles_directory")
+
+        if not seq_dir:
+            raise RuntimeError("Aucune forêt sélectionnée")
+
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+        messageBar(self.iface, "Nettoyage UA en cours...", "i", duration=0)
+
+        try:
+            ua_layer = seq_read("v.seq.ua", seq_dir, add_to_project=True)
+            if not ua_layer or not ua_layer.isValid():
+                raise RuntimeError("Impossible de charger la couche UA")
+
+            ua_name = seq_layer("v.seq.ua")["name"]
+            ua_source = ua_layer.source()
+
+            backup_path = self.backup_ua(ua_layer, ua_name, ua_source)
+
+            # 2. run cleaning algo
+            cleaned_ua = self.clean_ua(ua_layer)
+
+            QgsProject.instance().removeMapLayer(ua_layer.id())
+
+            # write cleaned layer directly
+            options = QgsVectorFileWriter.SaveVectorOptions()
+            options.driverName = "GPKG"
+            options.layerName = ua_name
+            options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
+
+            err, msg, *_ = QgsVectorFileWriter.writeAsVectorFormatV3(
+                cleaned_ua,
+                str(ua_source),
+                QgsProject.instance().transformContext(),
+                options
+            )
+
+            if err != QgsVectorFileWriter.NoError:
+                raise RuntimeError(msg)
+
+            seq_read("v.seq.ua", seq_dir, add_to_project=True, style_folder=style_folder) 
+                
+            messageBar(self.iface, f"UA nettoyée. Sauvegarde : {backup_path}", "s")
+
+        except Exception as e:
+            messageLog(f"[TOOLS] ERROR: {e}")
+            messageBar(self.iface, f"Erreur : {str(e)}", "w")
         
-        skip_check = action.get("skip_check", False)
+        finally:
+            QApplication.restoreOverrideCursor()
 
-        if not skip_check:
+    def backup_ua(self, layer, name, source):
 
-            if not seq_identifier or not seq_dir :
-                messageBar(self.iface, "Aucun projet Sequoia2 ouvert. Veuillez ouvrir un projet Sequoia2 pour utiliser cet outil.","w",10)
-                return
+        date_str = datetime.now().strftime("%Y%m%dT%H%M%S")
+        source = Path(source)
+        backup_path = source.with_name(f"{source.stem}_{date_str}{source.suffix}")
 
-            if not style_folder:
-                messageBar(self.iface, "Aucun dossier de styles configuré. Veuillez configurer un dossier de styles dans les paramètres globaux pour utiliser cet outil.","w",10)
-                return
+        options = QgsVectorFileWriter.SaveVectorOptions()
+        options.driverName = "GPKG"
+        options.layerName = name
+        options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteFile
 
-        else:
-            project_name = project_name or ""
-            style_folder = style_folder or ""
+        err, msg, *_ = QgsVectorFileWriter.writeAsVectorFormatV3(
+            layer,
+            str(backup_path),
+            QgsProject.instance().transformContext(),
+            options,
+        )
 
-        mod_name = action.get("module")
-        func_name = action.get("function")
+        if err != QgsVectorFileWriter.NoError:
+            raise RuntimeError(f"Impossible d'écrire la sauvegarde : {msg}")
 
-        if not mod_name or not func_name:
+        return backup_path
+        
+    def clean_ua(self, ua_layer):
 
-            messageBar(self.iface, "Cette action n'est pas encore disponible","w",10)
-            return
+        clean = processing.run(
+            "grass:v.clean",
+            {
+                "input": ua_layer,
+                "type": [4],
+                "tool": 1,
+                "threshold": 0.05,
+                "GRASS_SNAP_TOLERANCE_PARAMETER": 0.2,
+                "output": "TEMPORARY_OUTPUT",
+                "error": "TEMPORARY_OUTPUT"
+            }
+        )["output"]
 
-        module = importlib.import_module(mod_name)
-        func = getattr(module, func_name)
+        clean = processing.run(
+            "native:deleteduplicategeometries",
+            {"INPUT": clean, "OUTPUT": "TEMPORARY_OUTPUT"}
+        )["OUTPUT"]
 
-        func(project_name, style_folder, dockwidget=self, iface=self.iface)
+        processing.run(
+            "qgis:selectbyexpression",
+            {
+                "INPUT": clean,
+                "EXPRESSION": "$area < 20",
+                "METHOD": 0
+            }
+        )
+
+        clean = processing.run(
+            "qgis:eliminateselectedpolygons",
+            {"INPUT": clean, "MODE": 2, "OUTPUT": "TEMPORARY_OUTPUT"}
+        )["OUTPUT"]
+
+
+        # overwrite UA
+        clean = processing.run(
+            "native:fixgeometries",
+            {"INPUT": clean, "OUTPUT": "TEMPORARY_OUTPUT"}
+        )["OUTPUT"]
+
+        clean = processing.run(
+            "native:multiparttosingleparts",
+            {"INPUT": clean, "OUTPUT": "TEMPORARY_OUTPUT"}
+        )["OUTPUT"]
+
+        return clean
+    

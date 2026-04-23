@@ -35,8 +35,8 @@ class GlobalSettingsDialog(QDialog, FORM_CLASS):
 
         # Connections
         self.buttonBox.accepted.connect(self.save_settings)
-        self.stylesButton.clicked.connect(self.select_styles_directory)
-        self.modelsButton.clicked.connect(self.select_models_directory)
+        self.btn_styles_directory.clicked.connect(self.select_styles_directory)
+        self.btn_models_directory.clicked.connect(self.select_models_directory)
         self.btn_add_project_suggestion.clicked.connect(self._on_add_suggestion)
         self.btn_rm_project_suggestion.clicked.connect(self._on_rm_suggestion)
         
@@ -44,20 +44,22 @@ class GlobalSettingsDialog(QDialog, FORM_CLASS):
         self.cb_suggest_enabled.toggled.connect(self.btn_add_project_suggestion.setEnabled)
         self.cb_suggest_enabled.toggled.connect(self.btn_rm_project_suggestion.setEnabled)
 
-
     def load_settings(self):
         styles_dir = get_global_variable("QS2_styles_directory") or ""
-        self.stylesInput.setText(styles_dir)
+        self.le_styles_directory.setText(styles_dir)
 
         models_dir = get_global_variable("QS2_models_directory") or ""
-        self.modelsInput.setText(models_dir)
+        self.le_models_directory.setText(models_dir)
 
-        self.userInput.setText(get_global_variable("QS2_user_full_name") or "")
-        self.orga.setText(get_global_variable("QS2_organisation") or "")
-        self.adress.setText(get_global_variable("QS2_adress_organisation") or "")
-
-        self.open_maps.clicked.connect(lambda: open_maps(self.adress.text()))
-
+        self.le_username.setText(get_global_variable("QS2_username") or "")
+        self.le_organization.setText(get_global_variable("QS2_organization") or "")
+        self.le_address_street.setText(get_global_variable("QS2_address_street") or "")
+        self.le_address_postal_code.setText(get_global_variable("QS2_address_postal_code") or "")
+        self.le_address_city.setText(get_global_variable("QS2_address_city") or "")
+        self.le_phone.setText(get_global_variable("QS2_phone") or "")
+        self.le_email.setText(get_global_variable("QS2_email") or "")
+        self.le_website.setText(get_global_variable("QS2_website") or "")
+    
         suggest_enabled = bool(get_global_variable("QS2_project_suggestions_enabled"))
         self.cb_suggest_enabled.setChecked(suggest_enabled)
         self.list_seq_suggestions.setEnabled(suggest_enabled)
@@ -69,17 +71,19 @@ class GlobalSettingsDialog(QDialog, FORM_CLASS):
             self._add_suggestion(folder)
 
     def save_settings(self):
-        set_global_variable("QS2_styles_directory", self.stylesInput.text())
-        set_global_variable("QS2_models_directory", self.modelsInput.text())
-        set_global_variable("QS2_user_full_name", self.userInput.text())
-        set_global_variable("QS2_adress_organisation", self.adress.text())
-        set_global_variable("QS2_organisation", self.orga.text())
-
+        set_global_variable("QS2_styles_directory", self.le_styles_directory.text())
+        set_global_variable("QS2_models_directory", self.le_models_directory.text())
+        set_global_variable("QS2_username", self.le_username.text())
+        set_global_variable("QS2_organization", self.le_organization.text())
+        set_global_variable("QS2_address_street", self.le_address_street.text())
+        set_global_variable("QS2_address_postal_code", self.le_address_postal_code.text())
+        set_global_variable("QS2_address_city", self.le_address_city.text())
+        set_global_variable("QS2_phone", self.le_phone.text())
+        set_global_variable("QS2_email", self.le_email.text())
+        set_global_variable("QS2_website", self.le_website.text())
 
         suggest_enabled = bool(self.cb_suggest_enabled.isChecked())
-        messageLog(f"suggest_enabled before save: {suggest_enabled}")
         set_global_variable("QS2_project_suggestions_enabled", suggest_enabled)
-        messageLog(f"suggest_enabled after save: {get_global_variable('QS2_project_suggestions_enabled')}")
 
         suggestion = self.list_seq_suggestions
         folders = [str(Path(suggestion.item(i).text()).resolve()) for i in range(suggestion.count())]
@@ -109,7 +113,7 @@ class GlobalSettingsDialog(QDialog, FORM_CLASS):
             )
             return
 
-        self.stylesInput.setText(folder)
+        self.le_styles_directory.setText(folder)
 
     def select_models_directory(self):
         base_path = QgsProject.instance().homePath() or str(Path.home())
@@ -121,7 +125,7 @@ class GlobalSettingsDialog(QDialog, FORM_CLASS):
         )
 
         if folder:
-            self.modelsInput.setText(folder)
+            self.le_models_directory.setText(folder)
 
     def _add_suggestion(self, folder_path):
         folder_path = str(Path(folder_path).resolve())

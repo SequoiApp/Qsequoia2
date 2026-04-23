@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>406</width>
-    <height>441</height>
+    <width>496</width>
+    <height>541</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,23 +17,23 @@
    <item>
     <layout class="QFormLayout" name="formLayout">
      <item row="0" column="0">
-      <widget class="QLabel" name="label_style">
+      <widget class="QLabel" name="lbl_styles_directory">
        <property name="text">
         <string>Bibliothèque de styles</string>
        </property>
       </widget>
      </item>
      <item row="0" column="1">
-      <layout class="QHBoxLayout">
+      <layout class="QHBoxLayout" name="hbox_styles_directory">
        <item>
-        <widget class="QLineEdit" name="stylesInput">
+        <widget class="QLineEdit" name="le_styles_directory">
          <property name="enabled">
           <bool>false</bool>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="stylesButton">
+        <widget class="QPushButton" name="btn_styles_directory">
          <property name="toolTip">
           <string>Open a style folder</string>
          </property>
@@ -45,23 +45,23 @@
       </layout>
      </item>
      <item row="1" column="0">
-      <widget class="QLabel" name="label_models">
+      <widget class="QLabel" name="lbl_models_directory">
        <property name="text">
         <string>Bibliothèque de modèles</string>
        </property>
       </widget>
      </item>
      <item row="1" column="1">
-      <layout class="QHBoxLayout">
+      <layout class="QHBoxLayout" name="hbox_models_directory">
        <item>
-        <widget class="QLineEdit" name="modelsInput">
+        <widget class="QLineEdit" name="le_models_directory">
          <property name="enabled">
           <bool>false</bool>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="modelsButton">
+        <widget class="QPushButton" name="btn_models_directory">
          <property name="toolTip">
           <string>Open a models folder</string>
          </property>
@@ -73,70 +73,86 @@
       </layout>
      </item>
      <item row="2" column="0">
-      <widget class="QLabel" name="label_user">
+      <widget class="QLabel" name="lbl_username">
        <property name="text">
         <string>Utilisateur</string>
        </property>
       </widget>
      </item>
      <item row="2" column="1">
-      <widget class="QLineEdit" name="userInput">
+      <widget class="QLineEdit" name="le_username">
        <property name="enabled">
         <bool>true</bool>
        </property>
       </widget>
      </item>
      <item row="3" column="0">
-      <widget class="QLabel" name="label">
+      <widget class="QLabel" name="lbl_organization">
        <property name="text">
         <string>Organisation</string>
        </property>
       </widget>
      </item>
      <item row="3" column="1">
-      <widget class="QLineEdit" name="orga"/>
+      <widget class="QLineEdit" name="le_organization"/>
      </item>
      <item row="4" column="0">
-      <widget class="QLabel" name="label_2">
+      <widget class="QLabel" name="lbl_address_street">
        <property name="text">
         <string>Adresse</string>
        </property>
       </widget>
      </item>
      <item row="4" column="1">
-      <layout class="QHBoxLayout">
-       <item>
-        <widget class="QLineEdit" name="adress"/>
-       </item>
-       <item>
-        <spacer name="horizontalSpacer">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item>
-        <widget class="QToolButton" name="open_maps">
-         <property name="toolTip">
-          <string>Ouvrir dans Maps</string>
-         </property>
-         <property name="text">
-          <string>🌍</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
+      <widget class="QLineEdit" name="le_address_street"/>
      </item>
      <item row="5" column="0">
-      <widget class="QLabel" name="label_3">
+      <widget class="QLabel" name="lbl_address_postal_code">
        <property name="text">
-        <string/>
+        <string>Code postal</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="1">
+      <widget class="QLineEdit" name="le_address_postal_code"/>
+     </item>
+     <item row="6" column="0">
+      <widget class="QLabel" name="lbl_address_city">
+       <property name="text">
+        <string>Commune</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="1">
+      <widget class="QLineEdit" name="le_address_city"/>
+     </item>
+     <item row="8" column="0">
+      <widget class="QLabel" name="lbl_email">
+       <property name="text">
+        <string>Email</string>
+       </property>
+      </widget>
+     </item>
+     <item row="8" column="1">
+      <widget class="QLineEdit" name="le_email"/>
+     </item>
+     <item row="9" column="0">
+      <widget class="QLabel" name="lbl_website">
+       <property name="text">
+        <string>Site web</string>
+       </property>
+      </widget>
+     </item>
+     <item row="9" column="1">
+      <widget class="QLineEdit" name="le_website"/>
+     </item>
+     <item row="7" column="1">
+      <widget class="QLineEdit" name="le_phone"/>
+     </item>
+     <item row="7" column="0">
+      <widget class="QLabel" name="lbl_phone">
+       <property name="text">
+        <string>Téléphone</string>
        </property>
       </widget>
      </item>
@@ -165,7 +181,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QLabel" name="label_5">
+      <widget class="QLabel" name="lbl_suggest_enabled">
        <property name="text">
         <string>Rechercher les dossiers Sequoia disponibles</string>
        </property>

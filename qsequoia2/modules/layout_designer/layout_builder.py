@@ -15,7 +15,7 @@ from qgis.core import (
 from qgis.PyQt.QtWidgets import QMessageBox
 
 from ..utils.Qmessage import messageBar, messageLog
-from ..utils.variable import get_global_variable, get_project_variable
+from ..utils.variable import get_global_variable, get_project_variable, set_project_variable
 from ..utils.seq_config import seq_field, seq_read
 from .processing import buffer, multipart_to_singleparts
 
@@ -48,6 +48,9 @@ class LayoutBuilder:
 
 
         fmt, orient, bbox = self._compute_layout_info(parca)
+        set_project_variable("QS2_layout_format", fmt)
+        set_project_variable("QS2_layout_orient", orient)
+        
         layout_name, qpt = self._create_layout_name(fmt, orient)
 
         layout = self._resolve_layout(layout_name)

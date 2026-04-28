@@ -13,10 +13,10 @@ from ..utils.seq_config import seq_layer
 from ..utils.Qmessage import messageLog
 from .data_table import *
 
-UI_PATH = Path(__file__).parent / 'table_check.ui'
+UI_PATH = Path(__file__).parent / 'ua_checker.ui'
 FORM_CLASS, _ = uic.loadUiType(str(UI_PATH))
 
-class table_check(QWidget, FORM_CLASS):
+class ua_checker(QWidget, FORM_CLASS):
 
     def __init__(self, iface, parent=None):
         super().__init__(parent)

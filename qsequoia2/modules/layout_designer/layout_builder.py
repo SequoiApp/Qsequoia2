@@ -3,7 +3,9 @@ from pathlib import Path
 from qgis.PyQt.QtXml import QDomDocument
 from qgis.core import (
     QgsLayoutFrame,
+    QgsLayoutItem,
     QgsLayoutItemMap,
+    QgsLayoutItemLegend,
     QgsPrintLayout,
     QgsReadWriteContext,
     QgsRectangle,
@@ -62,6 +64,7 @@ class LayoutBuilder:
         self._configure_maps(layout, bbox)
         self._configure_legends(layout)
         self._add_parcels_table(layout)
+        self._clean_layout_template(layout)
         self._set_visibility()
 
         messageLog(f"Layout '{layout.name()}' configuré avec succès")
@@ -327,3 +330,27 @@ class LayoutBuilder:
             node = root.findLayer(layer.id())
             if node:
                 node.setItemVisibilityCheckedParentRecursive(True)
+
+    def _clean_layout_template(self, layout):
+        """Remove template maps and legends not declared in layout config."""
+
+        configured_map_ids = {m.id for m in self.layout.maps}
+        configured_legend_ids = {l.id for l in self.layout.legends}
+
+        for item in list(layout.items()):
+
+            if not isinstance(item, QgsLayoutItem):
+                continue
+
+            item_id = item.id()
+
+            if not item_id:
+                continue
+
+            if isinstance(item, QgsLayoutItemMap) and item_id not in configured_map_ids:
+                layout.removeLayoutItem(item)
+                messageLog(f"[LAYOUT] Removed unused map item: {item_id}")
+
+            elif isinstance(item, QgsLayoutItemLegend) and item_id not in configured_legend_ids:
+                layout.removeLayoutItem(item)
+                messageLog(f"[LAYOUT] Removed unused legend item: {item_id}")

@@ -43,9 +43,6 @@ assemblage:
         - v.seq.owner.line
         - v.seq.parca.poly
       wmts: &assemblage_wmts
-        - wmts_scan25
-        - wmts_scan25_grey
-        - wmts_scan100
         - wmts_pci
       tms: &assemblage_tms
         - tms.plan_ign.standard
@@ -105,10 +102,6 @@ situation:
       tms: &situation_tms
         - tms.plan_ign.standard
         - tms.plan_ign.classique
-      wmts: &situation_wmts
-        - wmts_scan25
-        - wmts_scan25_grey
-        - wmts_scan100
 
   layout:
     maps:

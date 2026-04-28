@@ -134,7 +134,8 @@ situation:
     legends:
       - id: legend1
         map: map1
-        layers: *situation_seq
+        layers:
+          - v.seq.forest.poly
 
 peuplement:
   alias: "Peuplements"

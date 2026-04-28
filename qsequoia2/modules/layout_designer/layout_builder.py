@@ -59,10 +59,10 @@ class LayoutBuilder:
 
         layout = self._create_layout(layout_name, qpt)
 
-        self._set_visibility()
         self._configure_maps(layout, bbox)
         self._configure_legends(layout)
         self._add_parcels_table(layout)
+        self._set_visibility()
 
         messageLog(f"Layout '{layout.name()}' configuré avec succès")
         return layout
@@ -314,21 +314,16 @@ class LayoutBuilder:
         root = self.project.layerTreeRoot()
         root.setItemVisibilityCheckedRecursive(False)
 
-        visible_keys = {
-            key
-            for map_spec in self.layout.maps
-            for key in map_spec.layers
-        }
+        main_maps = [m for m in self.layout.maps if m.main_map]
 
-        messageLog(f"Layers in layout maps: {sorted(visible_keys)}")
+        if len(main_maps) != 1:
+            raise ValueError(f"Expected exactly one main map, found {len(main_maps)}.")
 
-        for key in visible_keys:
+        for key in main_maps[0].layers:
             layer = self._layer(key)
             if not layer:
                 continue
 
             node = root.findLayer(layer.id())
-            if not node:
-                continue
-
-            node.setItemVisibilityCheckedParentRecursive(True)
+            if node:
+                node.setItemVisibilityCheckedParentRecursive(True)

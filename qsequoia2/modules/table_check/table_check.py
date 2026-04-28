@@ -2,9 +2,12 @@ from pathlib import Path
 
 from PyQt5 import uic
 from qgis.PyQt.QtWidgets import QWidget
-from qgis.core import QgsProject, QgsApplication, QgsExpression, QgsExpressionContext, QgsExpressionContextUtils, QgsFeatureRequest, QgsVectorLayer
-from PyQt5.QtWidgets import QTableWidgetItem, QHeaderView
+from qgis.core import QgsProject, QgsApplication, QgsExpression, QgsExpressionContext, QgsExpressionContextUtils, QgsFeatureRequest
 from PyQt5.QtCore import Qt, QTimer
+from qgis.PyQt.QtWidgets import QTreeWidgetItem
+from qgis.PyQt.QtGui import QColor
+from qgis.PyQt.QtCore import Qt
+
 
 from ..utils.seq_config import seq_layer
 from ..utils.Qmessage import messageLog
@@ -25,6 +28,8 @@ class table_check(QWidget, FORM_CLASS):
 
         self.btn_refresh.setIcon(QgsApplication.getThemeIcon("/mActionRefresh.svg"))
         self.btn_refresh.clicked.connect(self.on_ua_layer_loaded)
+
+        self._setup_ui_errors(False)
 
 
         # réaction au changement de parcelle sélectionnée, lambda pour éviter de devoir passer la valeur à la fonction
@@ -83,6 +88,8 @@ class table_check(QWidget, FORM_CLASS):
 
         if ids is not None:
             ua_feats = [f for f in self.ua_layer.getFeatures() if f.id() in ids]
+            bad_fields, good_fields = self.check_feats(self.ua_layer)
+            self._set_checker_status(bad_fields)
         else:
             ua_feats = list(self.ua_layer.getFeatures())
             self.ua_layer.removeSelection()
@@ -110,6 +117,12 @@ class table_check(QWidget, FORM_CLASS):
         self.lbl_sspf.setEnabled(state)
         self.lbl_surf.setEnabled(state)
         self.le_surf.setEnabled(state)
+    
+    def _setup_ui_errors(self, state):
+        self.lbl_errors.setVisible(state)
+        self.lbl_feats_status.setVisible(state)
+        self.tree_checker.setVisible(state)
+        self.tree_checker.setVisible(state)
     
 
     def _on_layers_removed(self, layer_ids):
@@ -185,4 +198,91 @@ class table_check(QWidget, FORM_CLASS):
         self.iface.mapCanvas().refresh()
 
         return ids
+
+
+    def check_feats(self, ua_layer):
+        index_list = get_seq_config("seq_tables")["ua"]
+
+        index_to_skip = [
+            "idu", "reg_name", "reg_code", "dep_name", "dep_code",
+            "com_name", "com_code", "insee", "prefix", "section",
+            "number", "locality", "gis_area", "cor_area", "cad_area"
+        ]
+
+        index_list = [k.strip() for k in index_list if k.strip() not in index_to_skip]
+        results = {}
+
+        for index in index_list:
+
+            field = seq_field(index)["name"]
+
+            if not ua_layer.selectedFeatures():
+                return {},{}
+            
+            feats_list = get_feats(ua_layer, field)
+            
+            checked, formatted = check_values(feats_list)
+            pf = get_pf_list(ua_layer, True)
+            sspf = get_sspf_list(ua_layer, pf, True)
+            n_parfor = pf[0] + "." + sspf[0]
+            
+            results[index] = {
+                "n_parfor" : n_parfor,
+                "checked": checked,
+                "values": formatted
+                }
+            bad_fields = {k: v for k, v in results.items() if v["checked"] is False}
+            good_fields = {k: v for k, v in results.items() if v["checked"] is True}
+
+        return bad_fields, good_fields
+    
+    def _set_checker_status(self, bad_fields= None):
+
+        if bad_fields:
+            first_field = next(iter(bad_fields))
+            n_parfor = bad_fields[first_field]["n_parfor"]
+            messageLog(f"[UA_CHECKER] : Plusieurs {list(bad_fields.keys())} pour la sous-parcelle {n_parfor}")
+            
+            self._setup_ui_errors(True)
+            self.lbl_feats_status.setPixmap(QgsApplication.getThemeIcon("/mIconWarning.svg").pixmap(16, 16))
+            self.fill_checker_tree(bad_fields)
+
+        else : 
+            self._setup_ui_errors(False)            
+            self.lbl_feats_status.setPixmap(QgsApplication.getThemeIcon("/mIconSuccess.svg").pixmap(16, 16))
+
+
+    def fill_checker_tree(self, bad_fields):
+        
+        tree = self.tree_checker
+        tree.itemDoubleClicked.connect(self._open_attribute_table)
+        tree.setHeaderHidden(True)
+        tree.setRootIsDecorated(False)
+        tree.setIndentation(0)
+        tree.clear()
+
+        icon = QgsApplication.getThemeIcon("/mIconWarning.svg")
+
+        for field, info in bad_fields.items():
+            vals = ", ".join(str(v) for v in info["values"])
+            warn = ""
+            item = QTreeWidgetItem([warn, field, vals])
+            item.setIcon(0, icon)
+
+            for col in range(3):
+                item.setBackground(col, QColor(255, 220, 220))
+                item.setForeground(col, QColor(120, 0, 0))
+                item.setTextAlignment(col, Qt.AlignCenter)
+
+            tree.addTopLevelItem(item)
+
+        tree.resizeColumnToContents(0)
+        tree.resizeColumnToContents(1)
+        tree.resizeColumnToContents(2)
+
+
+    def _open_attribute_table(self):
+        self.iface.showAttributeTable(self.ua_layer)
+
+
         

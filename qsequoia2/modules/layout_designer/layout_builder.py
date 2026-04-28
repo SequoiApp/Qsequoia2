@@ -12,6 +12,7 @@ from qgis.core import (
     QgsUnitTypes,
     QgsVectorLayer,
     QgsWkbTypes,
+    QgsLayoutTableColumn
 )
 
 from qgis.PyQt.QtWidgets import QMessageBox
@@ -289,8 +290,10 @@ class LayoutBuilder:
             legend.refresh()
 
     def _add_parcels_table(self, layout):
+
         table_id = "table1"
-        table_layer = "parca"
+        table_layer_key = "v.seq.pf.poly"
+
         field_pcl_code = seq_field("pcl_code")["name"]
         field_cor_area = seq_field("cor_area")["name"]
 
@@ -302,13 +305,25 @@ class LayoutBuilder:
 
         table = item.multiFrame() if isinstance(item, QgsLayoutFrame) else item
 
-        layer = self._layer(table_layer)
+        layer = self._layer(table_layer_key)
         if not layer:
-            messageLog(f"[LAYOUT] couche table absente: {table_layer}")
+            messageLog(f"[LAYOUT] couche table absente: {table_layer_key}")
             return
 
+        columns = []
+
+        col = QgsLayoutTableColumn()
+        col.setAttribute(field_pcl_code)
+        col.setHeading("Parcelle")
+        columns.append(col)
+
+        col = QgsLayoutTableColumn()
+        col.setAttribute(field_cor_area)
+        col.setHeading("Surface (ha)")
+        columns.append(col)
+
         table.setVectorLayer(layer)
-        table.setDisplayedFields([field_pcl_code, field_cor_area])
+        table.setColumns(columns)
         table.setFeatureFilter(table_filter)
         table.setFilterFeatures(True)
         table.refresh()

@@ -43,9 +43,6 @@ assemblage:
         - v.seq.owner.line
         - v.seq.parca.poly
       wmts: &assemblage_wmts
-        - wmts_scan25
-        - wmts_scan25_grey
-        - wmts_scan100
         - wmts_pci
       tms: &assemblage_tms
         - tms.plan_ign.standard
@@ -102,13 +99,12 @@ situation:
         - v.seq.forest.point
         - v.seq.forest.line
         - v.seq.forest.poly
+      wmts: &situation_wmts
+        - wmts_scan_regional
+        - wmts_scan1000
       tms: &situation_tms
         - tms.plan_ign.standard
         - tms.plan_ign.classique
-      wmts: &situation_wmts
-        - wmts_scan25
-        - wmts_scan25_grey
-        - wmts_scan100
 
   layout:
     maps:
@@ -121,9 +117,7 @@ situation:
           - v.curves.line
           - v.access.entry.point
           - v.access.prsf.point
-          - v.seq.forest.line
           - v.seq.forest.poly
-          - v.seq.ua.poly
           - tms.plan_ign.standard
       - id: map2
         main_map: false
@@ -134,7 +128,8 @@ situation:
     legends:
       - id: legend1
         map: map1
-        layers: *situation_seq
+        layers:
+          - v.seq.forest.poly
 
 peuplement:
   alias: "Peuplements"

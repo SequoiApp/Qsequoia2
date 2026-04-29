@@ -3,13 +3,16 @@ from pathlib import Path
 from qgis.PyQt.QtXml import QDomDocument
 from qgis.core import (
     QgsLayoutFrame,
+    QgsLayoutItem,
     QgsLayoutItemMap,
+    QgsLayoutItemLegend,
     QgsPrintLayout,
     QgsReadWriteContext,
     QgsRectangle,
     QgsUnitTypes,
     QgsVectorLayer,
     QgsWkbTypes,
+    QgsLayoutTableColumn
 )
 
 from qgis.PyQt.QtWidgets import QMessageBox
@@ -59,10 +62,11 @@ class LayoutBuilder:
 
         layout = self._create_layout(layout_name, qpt)
 
-        self._set_visibility()
         self._configure_maps(layout, bbox)
         self._configure_legends(layout)
         self._add_parcels_table(layout)
+        self._hide_unused_template_items(layout)
+        self._set_visibility()
 
         messageLog(f"Layout '{layout.name()}' configuré avec succès")
         return layout
@@ -286,8 +290,10 @@ class LayoutBuilder:
             legend.refresh()
 
     def _add_parcels_table(self, layout):
+
         table_id = "table1"
-        table_layer = "parca"
+        table_layer_key = "v.seq.pf.poly"
+
         field_pcl_code = seq_field("pcl_code")["name"]
         field_cor_area = seq_field("cor_area")["name"]
 
@@ -299,13 +305,25 @@ class LayoutBuilder:
 
         table = item.multiFrame() if isinstance(item, QgsLayoutFrame) else item
 
-        layer = self._layer(table_layer)
+        layer = self._layer(table_layer_key)
         if not layer:
-            messageLog(f"[LAYOUT] couche table absente: {table_layer}")
+            messageLog(f"[LAYOUT] couche table absente: {table_layer_key}")
             return
 
+        columns = []
+
+        col = QgsLayoutTableColumn()
+        col.setAttribute(field_pcl_code)
+        col.setHeading("Parcelle")
+        columns.append(col)
+
+        col = QgsLayoutTableColumn()
+        col.setAttribute(field_cor_area)
+        col.setHeading("Surface (ha)")
+        columns.append(col)
+
         table.setVectorLayer(layer)
-        table.setDisplayedFields([field_pcl_code, field_cor_area])
+        table.setColumns(columns)
         table.setFeatureFilter(table_filter)
         table.setFilterFeatures(True)
         table.refresh()
@@ -314,21 +332,39 @@ class LayoutBuilder:
         root = self.project.layerTreeRoot()
         root.setItemVisibilityCheckedRecursive(False)
 
-        visible_keys = {
-            key
-            for map_spec in self.layout.maps
-            for key in map_spec.layers
-        }
+        main_maps = [m for m in self.layout.maps if m.main_map]
 
-        messageLog(f"Layers in layout maps: {sorted(visible_keys)}")
+        if len(main_maps) != 1:
+            raise ValueError(f"Expected exactly one main map, found {len(main_maps)}.")
 
-        for key in visible_keys:
+        for key in main_maps[0].layers:
             layer = self._layer(key)
             if not layer:
                 continue
 
             node = root.findLayer(layer.id())
-            if not node:
+            if node:
+                node.setItemVisibilityCheckedParentRecursive(True)
+
+    def _hide_unused_template_items(self, layout):
+        """Hide template maps and legends not declared in layout config."""
+
+        configured_map_ids = {m.id for m in self.layout.maps}
+        configured_legend_ids = {l.id for l in self.layout.legends}
+
+        for item in list(layout.items()):
+            if not isinstance(item, QgsLayoutItem):
                 continue
 
-            node.setItemVisibilityCheckedParentRecursive(True)
+            item_id = item.id()
+
+            if not item_id:
+                continue
+
+            if isinstance(item, QgsLayoutItemMap) and item_id not in configured_map_ids:
+                item.setVisibility(False)
+                messageLog(f"[LAYOUT] Hidden unused map item: {item_id}")
+
+            elif isinstance(item, QgsLayoutItemLegend) and item_id not in configured_legend_ids:
+                item.setVisibility(False)
+                messageLog(f"[LAYOUT] Hidden unused legend item: {item_id}")

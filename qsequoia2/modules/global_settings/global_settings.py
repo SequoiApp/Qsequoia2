@@ -1,13 +1,14 @@
 from pathlib import Path
+from sys import prefix
 
 from qgis.PyQt import uic
 from qgis.PyQt.QtWidgets import QDialog, QFileDialog, QMessageBox
 from qgis.PyQt.QtCore import pyqtSignal
-from qgis.core import QgsProject, QgsApplication
+from qgis.core import QgsProject, QgsApplication, QgsExpressionContextUtils
 
 # Utils
 from ..utils.variable import get_global_variable, set_global_variable
-from ..utils.Qmessage import messageLog
+from ..utils.Qmessage import messageBar, messageLog
 from .go_to_maps import *
 
 FORM_CLASS, _ = uic.loadUiType(
@@ -29,6 +30,7 @@ class GlobalSettingsDialog(QDialog, FORM_CLASS):
         # Style button
         self.btn_add_project_suggestion.setIcon(QgsApplication.getThemeIcon("/mActionAdd.svg"))
         self.btn_rm_project_suggestion.setIcon(QgsApplication.getThemeIcon("/mActionRemove.svg"))
+        self.btn_clear_var.setIcon(QgsApplication.getThemeIcon("/mActionReload.svg"))
 
         # Load settings
         self.load_settings()
@@ -39,6 +41,7 @@ class GlobalSettingsDialog(QDialog, FORM_CLASS):
         self.btn_models_directory.clicked.connect(self.select_models_directory)
         self.btn_add_project_suggestion.clicked.connect(self._on_add_suggestion)
         self.btn_rm_project_suggestion.clicked.connect(self._on_rm_suggestion)
+        self.btn_clear_var.clicked.connect(self._on_clear_global_variables)
         
         self.cb_suggest_enabled.toggled.connect(self.list_seq_suggestions.setEnabled)
         self.cb_suggest_enabled.toggled.connect(self.btn_add_project_suggestion.setEnabled)
@@ -151,8 +154,47 @@ class GlobalSettingsDialog(QDialog, FORM_CLASS):
             row = self.list_seq_suggestions.row(item)
             self.list_seq_suggestions.takeItem(row)
 
-    
+    def _on_clear_global_variables(self):
+        prefix = "QS2_"
+        max_length = 80
+        global_scope = QgsExpressionContextUtils.globalScope()
 
+        qs2_variables = sorted(
+            name for name in global_scope.variableNames()
+            if name.startswith(prefix)
+        )
+
+        def elide_text(text, max_length=max_length):
+            text = str(text)
+            if len(text) <= max_length:
+                return text
+            return text[:max_length - 3] + "..."
+    
+        variables_text = "\n".join(
+            f"• {name}: {elide_text(global_scope.variable(name))}"
+            for name in qs2_variables
+        )
+
+        confirm = QMessageBox.question(
+            self.iface.mainWindow(),
+            "Réinitialiser les variables",
+            (
+                "Les variables globales Qsequoia2 suivantes vont être supprimées :\n\n"
+                f"{variables_text}\n\n"
+                "Voulez-vous continuer ?"
+            ),
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No,
+        )
+
+        if confirm == QMessageBox.No:
+            return []
+
+        for name in qs2_variables:
+            QgsExpressionContextUtils.removeGlobalVariable(name)
+
+        messageBar(self.iface, f"{len(qs2_variables)} variable(s) globale(s) Qsequoia2 supprimée(s).", "s")
+        return qs2_variables
 
 
     

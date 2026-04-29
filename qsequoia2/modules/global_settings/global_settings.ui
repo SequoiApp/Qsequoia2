@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>496</width>
-    <height>541</height>
+    <height>575</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -243,6 +243,31 @@
         </spacer>
        </item>
       </layout>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="Line" name="line_2">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="hbox_clear_var">
+     <item>
+      <widget class="QToolButton" name="btn_clear_var">
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="lbl_clear_var">
+       <property name="text">
+        <string>Réinitialiser les variables</string>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>

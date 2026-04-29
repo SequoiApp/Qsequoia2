@@ -1,13 +1,20 @@
-import importlib
-import yaml
+from datetime import datetime
 from pathlib import Path
 
-from PyQt5.QtWidgets import QMessageBox
-from PyQt5.QtCore import Qt
-from qgis.PyQt.QtWidgets import QWidget, QTreeWidget, QVBoxLayout, QTreeWidgetItem
+from qgis import processing
+from qgis.core import (
+    QgsProject,
+    QgsVectorFileWriter,
+    QgsProviderRegistry,
+)
+
 from PyQt5 import uic
-from ..utils.Qmessage import *
+from PyQt5.QtWidgets import QWidget, QTreeWidgetItem, QApplication
+from PyQt5.QtCore import Qt
+
+from qsequoia2.modules.tools.ua_cleaner import run_clean_ua
 from qsequoia2.modules.utils.variable import get_global_variable, get_project_variable
+from qsequoia2.modules.utils.Qmessage import messageBar
 
 UI_PATH = Path(__file__).parent / "tools.ui"
 FORM_CLASS, _ = uic.loadUiType(str(UI_PATH))
@@ -26,77 +33,38 @@ class ToolsDialog(QWidget, FORM_CLASS):
         
     def _init_tree(self):
 
-        self.treeTOOLS.clear()
-        self.treeTOOLS.setHeaderHidden(True)
+        self.tw_tools.clear()
+        self.tw_tools.setHeaderLabels(["UA Tools"])
 
-        yaml_path = Path(__file__).resolve().parents[2] / "config" / "qs2_tools.yaml"
-        data = yaml.safe_load(yaml_path.read_text(encoding="utf-8")) or {}
+        clean_item = QTreeWidgetItem(["Nettoyer UA"])
+        clean_item.setData(0, Qt.UserRole, self._run_clean_ua)
 
-        for category_name, tools in data.items():
+        self.tw_tools.addTopLevelItem(clean_item)
 
-            category_item = QTreeWidgetItem([category_name])
-            category_item.setExpanded(True)
-            self.treeTOOLS.addTopLevelItem(category_item)
+        self.tw_tools.itemDoubleClicked.connect(self._run)
 
-            for tool_name, tool_data in tools.items():
+    def _run(self, item):
+        func = item.data(0, Qt.UserRole)
+        if callable(func):
+            func()
 
-                tool_item = QTreeWidgetItem([tool_name])
-                tool_item.setData(
-                    0,
-                    Qt.UserRole,
-                    {
-                        "type": "tool",
-                        "category": category_name,
-                        "key": tool_name,
-                        **tool_data
-                    }
-                )
-
-                category_item.addChild(tool_item)
-
-        self.treeTOOLS.itemClicked.connect(self.on_item_clicked)
-
-    def on_item_clicked(self, item):
-
-        action = item.data(0, Qt.UserRole)
-        if not action:
-            return
-
-        parent = item.parent()
-        self._call_function(action)
-
-    def _call_function(self, action):
-
-        seq_dirname = get_project_variable("QS2_seq_dirname")
+    def _run_clean_ua(self):
         seq_dir = get_project_variable("QS2_seq_dir")
-        seq_identifier = get_project_variable("QS2_seq_identifier")
         style_folder = get_global_variable("QS2_styles_directory")
-        
-        skip_check = action.get("skip_check", False)
 
-        if not skip_check:
+        if not seq_dir:
+            raise RuntimeError("Aucune forêt sélectionnée")
 
-            if not seq_identifier or not seq_dir :
-                messageBar(self.iface, "Aucun projet Sequoia2 ouvert. Veuillez ouvrir un projet Sequoia2 pour utiliser cet outil.","w",10)
-                return
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+        messageBar(self.iface, "Nettoyage UA en cours...", "i", duration=0)
 
-            if not style_folder:
-                messageBar(self.iface, "Aucun dossier de styles configuré. Veuillez configurer un dossier de styles dans les paramètres globaux pour utiliser cet outil.","w",10)
-                return
+        try:
+            backup_path = run_clean_ua(seq_dir, style_folder)
 
-        else:
-            project_name = project_name or ""
-            style_folder = style_folder or ""
+            messageBar(self.iface, f"UA nettoyée. Sauvegarde : {backup_path}", "s")
 
-        mod_name = action.get("module")
-        func_name = action.get("function")
+        except Exception as e:
+            messageBar(self.iface, f"Erreur : {str(e)}", "w")
 
-        if not mod_name or not func_name:
-
-            messageBar(self.iface, "Cette action n'est pas encore disponible","w",10)
-            return
-
-        module = importlib.import_module(mod_name)
-        func = getattr(module, func_name)
-
-        func(project_name, style_folder, dockwidget=self, iface=self.iface)
+        finally:
+            QApplication.restoreOverrideCursor()

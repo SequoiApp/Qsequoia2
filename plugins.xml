@@ -5,8 +5,8 @@
          <homepage>https://sequoiapp.github.io/Qsequoia2/</homepage>
          <file_name>qsequoia2.zip</file_name>
          <author_name>Organisation SEQUOIAPP : Alexandre Le Bars, Paul Carteron, Matthieu Chevereau</author_name>
-         <download_url>https://github.com/SequoiApp/Qsequoia2/releases/download/v1.0.7/qsequoia2.zip</download_url>
-         <qgis_minimum_version>3.36</qgis_minimum_version>
+         <download_url>https://github.com/SequoiApp/Qsequoia2/releases/download/v1.0.6/qsequoia2.zip</download_url>
+         <qgis_minimum_version>3.44</qgis_minimum_version>
          <experimental>true</experimental>
       </pyqgis_plugin>
 </plugins>

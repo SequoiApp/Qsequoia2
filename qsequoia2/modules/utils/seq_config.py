@@ -1,4 +1,5 @@
 from pathlib import Path
+from urllib.parse import urlparse
 import urllib.request
 import yaml
 import os
@@ -20,6 +21,16 @@ _SEQ_CONFIG_URLS = {
 
 _CACHE_DIR = Path(QgsApplication.qgisSettingsDirPath()) / "qsequoia2"
 
+
+def _safe_urlopen(url, timeout=10):
+    parsed = urlparse(url)
+
+    if parsed.scheme not in ["http", "https"]:
+        raise ValueError(f"Blocked unsafe URL scheme: {parsed.scheme}")
+
+    return urllib.request.urlopen(url, timeout=timeout)
+
+
 def sync_seq_configs(timeout: int = 3) -> None:
     """
     Download latest configs to cache.
@@ -34,7 +45,7 @@ def sync_seq_configs(timeout: int = 3) -> None:
         path = _CACHE_DIR / f"{key}.yaml"
 
         try:
-            response = urllib.request.urlopen(url, timeout=timeout)
+            response = _safe_urlopen(url, timeout=timeout)
             content = response.read().decode("utf-8")
             path.write_text(content, encoding="utf-8")
 
@@ -204,7 +215,6 @@ def _norm_project_path(raw_path, project=None):
     raw_path = project.readPath(str(raw_path))
     return os.path.normcase(os.path.normpath(str(Path(raw_path).resolve())))
 
-
 def _vector_file_path(layer, project=None):
     project = project or QgsProject.instance()
     parts = QgsProviderRegistry.instance().decodeUri(
@@ -213,12 +223,10 @@ def _vector_file_path(layer, project=None):
     )
     return _norm_project_path(parts.get("path"), project)
 
-
 def _raster_file_path(layer, project=None):
     project = project or QgsProject.instance()
     raw = layer.dataProvider().dataSourceUri() or layer.source()
     return _norm_project_path(raw, project)
-
 
 def _find_existing_seq_layer(path, layer_type, group=None):
     project = QgsProject.instance()

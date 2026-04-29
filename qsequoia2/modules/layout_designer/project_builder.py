@@ -1,16 +1,16 @@
 from dataclasses import dataclass
 
 from PyQt5.QtCore import Qt
-from qgis.PyQt.QtCore import QTimer, pyqtSignal
+from qgis.PyQt.QtCore import QTimer
 from PyQt5.QtWidgets import QApplication
 from qgis.core import QgsMapLayer, QgsProject
 
-from qsequoia2.modules.utils.variable import get_global_variable, get_project_variable, set_project_variable
+from qsequoia2.modules.utils.variable import get_global_variable, get_project_variable
 
-from ..utils.Qmessage import messageBar, messageLog
-from ..utils.seq_config import seq_layer, seq_read
-from ..utils.wmts import wmts_layer, wmts_read
-from ..utils.tms import tms_layer, tms_read
+from ..utils.Qmessage import  messageLog
+from ..utils.seq_config import seq_read
+from ..utils.wmts import wmts_read
+from ..utils.tms import tms_read
 from ..utils.qgz_project import open_seq_project
 
 @dataclass

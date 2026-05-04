@@ -103,7 +103,7 @@
          </sizepolicy>
         </property>
         <property name="toolTip">
-         <string>Sélectionner un dosssier</string>
+         <string>Sélectionner un dossier</string>
         </property>
         <property name="styleSheet">
          <string notr="true">background-color: rgb(227, 227, 227);</string>

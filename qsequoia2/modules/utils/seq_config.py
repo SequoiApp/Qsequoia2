@@ -48,9 +48,10 @@ def sync_seq_configs(timeout: int = 3) -> None:
             response = _safe_urlopen(url, timeout=timeout)
             content = response.read().decode("utf-8")
             path.write_text(content, encoding="utf-8")
+            messageLog(f"Config '{key}' synced successfully.")
 
         except Exception:
-            # Silent fallback
+            messageLog(f"Warning: Failed to sync config '{key}' from '{url}'. Using cached version if available.")
             pass
     
     return None
@@ -186,7 +187,7 @@ def seq_field(field: str) -> dict:
 
     return cfg[field]
 
-def get_style(layer_key, style_folder):
+def get_styles(layer_key, style_folder):
 
     if not style_folder:
         raise ValueError("'styles_directory' is not set")
@@ -199,13 +200,10 @@ def get_style(layer_key, style_folder):
     layer_name = layer["name"]
 
     # Expected style filename
-    target = f"{layer_name}.qml"
+    pattern = f"{layer_name}*.qml"
 
     # Recursive search
-    for path in style_dir.rglob(target):
-        return str(path)
-
-    return None
+    return [str(path) for path in style_dir.rglob(pattern)]
 
 def _norm_project_path(raw_path, project=None):
     project = project or QgsProject.instance()
@@ -295,9 +293,26 @@ def seq_read(key, seq_dir, add_to_project=False, group=None, style_folder=None):
         raise RuntimeError(f"Invalid layer: {path}")
 
     if style_folder:
-        style_path = get_style(key, style_folder)
-        if style_path:
-            layer.loadNamedStyle(style_path)
+        styles = get_styles(key, style_folder)
+
+        if styles:
+            sm = layer.styleManager()
+            default_style = sm.currentStyle()
+            for style in styles:
+                style = Path(style)
+                style_name = style.stem
+
+                sm.addStyle(style_name, sm.style(sm.currentStyle()))
+                sm.setCurrentStyle(style_name)
+
+                layer.loadNamedStyle(str(style))
+
+            # Ensure the exact base style is selected
+            base_style_name = meta["name"]
+            if base_style_name in sm.styles():
+                sm.setCurrentStyle(base_style_name)
+
+            sm.removeStyle(default_style)
             layer.triggerRepaint()
 
     if add_to_project:

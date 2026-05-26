@@ -6,7 +6,7 @@ qgisMinimumVersion=3.44
 description=QSequoia2 simplifies daily french forest management tasks in QGIS by providing tools for importing, structuring, visualizing, and styling forestry data from RSequoia2.
 
 
-version=1.0.8
+version=1.0.9
 
 author=Alexandre Le Bars; Paul Carteron; Matthieu Chevereau
 

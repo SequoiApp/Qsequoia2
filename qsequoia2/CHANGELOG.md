@@ -9,6 +9,6 @@ All notable changes to QSequoia2 will be documented in this file.
 
 ### Changed
 
-
 ### Fixed
+- Show a message bar warning when the Add Data module skips an already loaded layer
 

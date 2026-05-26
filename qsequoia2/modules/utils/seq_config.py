@@ -6,10 +6,9 @@ import os
 
 from qgis.core import QgsApplication, QgsProject, QgsVectorLayer, QgsRasterLayer, QgsProviderRegistry
 
-from .Qmessage import messageLog
 from .layer_tree import get_group
 from .plugin_vars import CONFIG_CACHE
-from .Qmessage import messageLog
+from .Qmessage import messageLog, messageBar
 from .alias import get_alias
 
 _BASE_URL = "https://raw.githubusercontent.com/SequoiApp/Rsequoia2/main/inst/config"
@@ -282,7 +281,7 @@ def seq_read(key, seq_dir, add_to_project=False, group=None, style_folder=None):
         existing = _find_existing_seq_layer(path, layer_type, group)
         if existing:
             messageLog(f"[SEQ] Déjà chargé : {existing.name()} dans '{group.name()}'")
-            return existing
+            raise RuntimeError(f"Couche déjà chargée : {existing.name()}")
 
     if layer_type in {"vect", "xlsx"}:
         layer = QgsVectorLayer(path_str, alias, "ogr")

@@ -1,13 +1,23 @@
 from qgis.core import *
 from ..utils.seq_config import *
-from ..utils.alias import get_alias
 from qgis.PyQt.QtCore import QVariant
+from collections import defaultdict
 
-def map_seq_layer_loader(key: str) -> QgsVectorLayer :
-    layer = QgsProject.instance().mapLayersByName(get_alias(key))
-    if not layer:
-        return None
-    return layer[0]
+
+def seq_desc_fields() -> list:
+    keys = [
+        "std_type", "std_wealth", "std_stage", "std_year",
+        "is_damaged", "is_available", "is_compartmented",
+        "res_spe1", "res_spe2", "res_struct",
+        "cop_spe1", "cop_spe2", "cop_density", "cop_nature",
+        "reg_spe1", "reg_spe2", "reg_stage", "reg_density",
+        "treatment",
+        "is_subsidized", "subsidy",
+        "comment", "station"
+    ]
+
+    return keys
+
 
 def sspf_surface_calculation(ua_layer) -> str:
 
@@ -40,6 +50,94 @@ def selectFeaturesByExpression(layer, expr, iface):
 
     return ids
 
+
+
+def build_mngnt_code(ua_layer, pf_field, sspf_field):
+    groups = defaultdict(list)
+
+    for feat in ua_layer.getFeatures():
+
+        pf = feat[pf_field]
+        sspf = feat[sspf_field]
+
+        ug = f"{pf}.{sspf}"
+
+        groups[ug].append(feat)
+    
+    return groups
+
+
+def ua_check_ug(ua_layer, verbose=True) -> dict:
+
+    pf_field = seq_field("pcl_code")["name"]
+    sspf_field = seq_field("sub_code")["name"]
+
+    desc_fields = []
+
+    for key in seq_desc_fields():
+        field = seq_field(key)["name"]
+        desc_fields.append(field)
+
+
+    groups = build_mngnt_code(ua_layer, pf_field, sspf_field)
+
+    report = {}
+
+    for ug, feats in groups.items():
+
+        inc_ug = {}
+
+        for field in desc_fields:
+
+            values = {
+
+                str(f[field])
+
+                for f in feats
+
+                if f[field] not in (None, "")
+            }
+
+            if len(values) > 1:
+
+                inc_ug[field] = sorted(values)
+
+        if inc_ug:
+
+            report[ug] = inc_ug
+
+    is_valid = len(report) == 0
+
+    if not is_valid:
+
+        messageLog(f"WARNING: {len(report)} inconsistent UG detected")
+
+        for i, (ug, fields) in enumerate(report.items()):
+
+            if i > 0:
+                messageLog("-" * 50)
+
+            messageLog(f"UG '{ug}' has inconsistent descriptive fields:")
+
+            for field, vals in fields.items():
+
+                vals_str = ", ".join(vals)
+
+                messageLog(f"  - {field} contains multiple values: {vals_str}")
+
+    elif verbose:
+
+        messageLog("All UG are consistent.")
+
+    return report
+
+
+
+
+
+# utilitaires non utilisés ici
+# TODO à passer en plugin annexe ou en utilitaire tools ? 
+    
 def get_pf_list(ua_layer, by_selc_feats = None) -> list:
     """return the list of all pf name (str)"""
 
@@ -51,7 +149,6 @@ def get_pf_list(ua_layer, by_selc_feats = None) -> list:
     
         values = ua_layer.uniqueValues(ua_layer.fields().indexOf(field))
     
-
     return [v for v in values]
 
 
@@ -79,41 +176,3 @@ def get_sspf_list(ua_layer, pf_list=None, by_selc_feats = None) -> list :
             sspf_list.append(d)
             
     return sspf_list
-
-
-def get_feats(ua_layer, field: str, pf: str, sspf: str) -> list:
-    """Retourne les valeurs du champ pour une sous-parcelle PF/SSPF."""
-    sspf_field = seq_field("sub_code")["name"]
-    pf_field = seq_field("pcl_code")["name"]
-
-    # Vérification du champ
-    if field not in [f.name() for f in ua_layer.fields()]:
-        return []
-
-    expr = f"\"{pf_field}\" = '{pf}' AND \"{sspf_field}\" = '{sspf}'"
-
-    feats_list = []
-    for feat in ua_layer.getFeatures(QgsFeatureRequest().setFilterExpression(expr)):
-        feats_list.append(feat[field])
-
-    return feats_list
-
-
-
-def check_values(feats_list) -> bool:
-    checked_feats =  len(set(feats_list)) == 1
-    if checked_feats == True:
-        return checked_feats, [feats_list[0]]
-    
-    return checked_feats, list(set(feats_list))
-
-    
-
-
-
-
-
-
-
-    
-

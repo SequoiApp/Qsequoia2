@@ -1,16 +1,13 @@
 from pathlib import Path
-
 from PyQt5 import uic
 from qgis.PyQt.QtWidgets import QWidget
-from qgis.core import QgsProject, QgsApplication, QgsExpression, QgsExpressionContext, QgsExpressionContextUtils, QgsFeatureRequest
+from qgis.core import QgsProject, QgsApplication
 from PyQt5.QtCore import Qt, QTimer
 from qgis.PyQt.QtWidgets import QTreeWidgetItem
 from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtCore import Qt
 
-
 from ..utils.seq_config import seq_layer
-from ..utils.Qmessage import messageLog
 from .ua_checker_utils import *
 
 UI_PATH = Path(__file__).parent / 'ua_checker.ui'
@@ -33,7 +30,7 @@ class ua_checker(QWidget, FORM_CLASS):
 
         self.cb_parcelle.currentTextChanged.connect(lambda value: self._on_cb_parcelle_changed(value))
         self.cb_sspf.currentTextChanged.connect(lambda value: self._on_cb_parcelle_changed(value))
-        QgsProject.instance().layersRemoved.connect(self._on_layers_removed)
+        self.project.layersRemoved.connect(self._on_layers_removed)
 
     def on_project_loaded(self):
         # attendre que QGIS ait fini de charger les couches et le projet
@@ -41,11 +38,8 @@ class ua_checker(QWidget, FORM_CLASS):
 
 
     def _ua_loader(self):
-
-        project = QgsProject.instance()
         meta = seq_layer("ua")
-
-        for layer in project.mapLayers().values():
+        for layer in self.project.mapLayers().values():
             source = layer.source()
             if not source or "://" in source:
                 continue
@@ -56,20 +50,18 @@ class ua_checker(QWidget, FORM_CLASS):
         return None
 
     def on_ua_layer_loaded(self): 
+        self.ua_layer = self._ua_loader()
 
-        layer = self._ua_loader()
-
-        if not layer:
+        if not self.ua_layer:
             self._ua_status(state=False)
             self._setup_ui_verif(state = False)
             return
 
-        self.ua_layer = layer
         self._ua_status(state=True)
         self._setup_ui_verif(state = True)
         self._check_data()
-        self.populate_cb_from_field("cb_parcelle", layer, "N_PARFOR")
-        self.populate_cb_from_field("cb_sspf", layer, "N_SSPARFOR")
+        self.populate_cb_from_field("cb_parcelle", self.ua_layer, "N_PARFOR")
+        self.populate_cb_from_field("cb_sspf", self.ua_layer, "N_SSPARFOR")
 
     def _ua_status(self, state):
         if state:
@@ -81,9 +73,8 @@ class ua_checker(QWidget, FORM_CLASS):
 
     def _check_data(self):
 
-        bad_ua = self.check_feats()
-        self._set_checker_status(bad_ua)
-        ua_feats = list(self.ua_layer.getFeatures())
+        inc_ua = ua_check_ug(self.ua_layer)
+        self._set_checker_status(inc_ua)
         self.ua_layer.removeSelection()
 
         for_ui = {
@@ -116,10 +107,8 @@ class ua_checker(QWidget, FORM_CLASS):
         self.tree_checker.setVisible(state)
     
 
-    def _on_layers_removed(self, layer_ids):
+    def _on_layers_removed(self):
         QTimer.singleShot(0,self.on_ua_layer_loaded)
-
-    # Utilitaire pour remplir les comboBox de sélection
 
     def populate_cb_from_field(self, cb_name, layer, field_name):
 
@@ -140,7 +129,6 @@ class ua_checker(QWidget, FORM_CLASS):
         
         if expr is None:
             self.ua_layer.removeSelection()
-
         if expr:
             ids = selectFeaturesByExpression(self.ua_layer, expr, self.iface)
 
@@ -172,81 +160,22 @@ class ua_checker(QWidget, FORM_CLASS):
             return None
 
         return " AND ".join(filters)
-    
 
-    def check_feats(self):
 
-        index_field_list = [
+    def _set_checker_status(self, inc_ua=None):
 
-                    "std_type", "std_wealth", "std_stage", "std_year",
-                    "is_damaged", "is_available", "is_compartmented",
-                    "res_spe1", "res_spe2", "res_struct",
-                    "cop_spe1", "cop_spe2", "cop_density", "cop_nature",
-                    "reg_spe1", "reg_spe2", "reg_stage", "reg_density",
-                    "treatment","is_subsidized", "subsidy",
-                    "comment", "station"
-                ]
-        
-        bad_ua = {}
-
-        pf_list = get_pf_list(self.ua_layer, False)
-
-        for pf in pf_list:
-
-            sspf_list = get_sspf_list(self.ua_layer, pf, False)
-
-            for sspf in sspf_list:
-
-                n_parfor = f"{pf}.{sspf}"
-
-                for index in index_field_list:
-
-                    field = seq_field(index)["name"]
-
-                    feats_list = get_feats(self.ua_layer, field, pf, sspf)
-
-                    checked, formatted = check_values(feats_list)
-
-                    entry = {
-                            "n_parfor": n_parfor,
-                            "checked": checked,
-                            "values": formatted
-                            }
-
-                    if not checked:
-                        bad_ua.setdefault(field, []).append(entry)
-        return bad_ua
-    
-    def _set_checker_status(self, bad_ua=None):
-
-        if not bad_ua:
+        if not inc_ua:
             self._setup_ui_errors(False)
-            self.lbl_feats_status.setPixmap(
-                QgsApplication.getThemeIcon("/mIconSuccess.svg").pixmap(16, 16)
-            )
+            self.lbl_feats_status.setPixmap(QgsApplication.getThemeIcon("/mIconSuccess.svg").pixmap(16, 16))
             return
 
-        parcelles = set()
-
-        for entries in bad_ua.values():
-            for entry in entries:
-                parcelles.add(entry["n_parfor"])
-
-        parcelles_txt = ", ".join(sorted(parcelles))
-
-        messageLog(
-            f"[UA_CHECKER] : Erreurs détectées pour les sous-parcelles : {parcelles_txt}"
-        )
-
         self._setup_ui_errors(True)
-        self.lbl_feats_status.setPixmap(
-            QgsApplication.getThemeIcon("/mIconWarning.svg").pixmap(16, 16)
-        )
-        self._fill_checker_tree(bad_ua)
+        self.lbl_feats_status.setPixmap(QgsApplication.getThemeIcon("/mIconWarning.svg").pixmap(16, 16))
+        self._fill_checker_tree(inc_ua)
 
 
     def _fill_checker_tree(self, bad_ua):
-            
+
         tree = self.tree_checker
         tree.itemDoubleClicked.connect(self._on_tree_item_clicked)
         tree.setHeaderHidden(True)
@@ -256,16 +185,15 @@ class ua_checker(QWidget, FORM_CLASS):
 
         icon = QgsApplication.getThemeIcon("/mIconWarning.svg")
 
-        for field, entries in bad_ua.items():
+        for n_parfor, fields in bad_ua.items():
 
-            for entry in entries:
+            for field, values in fields.items():
 
-                n_parfor = entry["n_parfor"]
-                vals = ", ".join(str(v) for v in entry["values"])
+                vals = ", ".join(str(v) for v in values)
 
                 warn = ""
 
-                item = QTreeWidgetItem([warn, n_parfor, field,  vals])
+                item = QTreeWidgetItem([warn, n_parfor, field, vals])
                 item.setIcon(0, icon)
 
                 for col in range(4):

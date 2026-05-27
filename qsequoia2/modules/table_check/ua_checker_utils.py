@@ -1,11 +1,13 @@
 from qgis.core import *
 from ..utils.seq_config import *
+from ..utils.alias import get_alias
+from qgis.PyQt.QtCore import QVariant
 
-# ================================================
-# region vérificateur
-# ================================================
-
-# Calcul des surfaces par parcelles ou sous parcelles séléctionné
+def map_seq_layer_loader(key: str) -> QgsVectorLayer :
+    layer = QgsProject.instance().mapLayersByName(get_alias(key))
+    if not layer:
+        return None
+    return layer[0]
 
 def sspf_surface_calculation(ua_layer) -> str:
 
@@ -19,6 +21,24 @@ def sspf_surface_calculation(ua_layer) -> str:
     return f"{round(surf,4)} ha"
 
 
+def selectFeaturesByExpression(layer, expr, iface):
+
+    exp = QgsExpression(expr)
+    context = QgsExpressionContext()
+    context.appendScopes(QgsExpressionContextUtils.globalProjectLayerScopes(layer))
+    request = QgsFeatureRequest(exp, context)
+
+    ids = [f.id() for f in layer.getFeatures(request)]
+
+    iface.layerTreeView().setCurrentLayer(layer)
+
+    layer.removeSelection()
+    layer.selectByIds(ids)
+
+    iface.mapCanvas().zoomToSelected(layer)
+    iface.mapCanvas().refresh()
+
+    return ids
 
 def get_pf_list(ua_layer, by_selc_feats = None) -> list:
     """return the list of all pf name (str)"""
@@ -44,9 +64,12 @@ def get_sspf_list(ua_layer, pf_list=None, by_selc_feats = None) -> list :
     if pf_list is None:
         pf_list = get_pf_list(ua_layer)
 
+    if isinstance(pf_list, (str, QVariant)):
+        pf_list = [pf_list]
+
     sspf_list = []
 
-    for pf in pf_list: 
+    for pf in pf_list:
         if by_selc_feats :
             sub_values = {f[sspf_field]for f in ua_layer.selectedFeatures()if str(f[pf_field]) == pf}            
         else :
@@ -58,19 +81,24 @@ def get_sspf_list(ua_layer, pf_list=None, by_selc_feats = None) -> list :
     return sspf_list
 
 
+def get_feats(ua_layer, field: str, pf: str, sspf: str) -> list:
+    """Retourne les valeurs du champ pour une sous-parcelle PF/SSPF."""
+    sspf_field = seq_field("sub_code")["name"]
+    pf_field = seq_field("pcl_code")["name"]
 
-def get_feats(ua_layer, field : str) -> list :
-    """return the list of features of index"""
+    # Vérification du champ
     if field not in [f.name() for f in ua_layer.fields()]:
-        messageLog(f"[UA_CHECKER] : field {field} not found in {ua_layer}")
         return []
-    feats_list = []
 
-    for feat in ua_layer.selectedFeatures():
+    expr = f"\"{pf_field}\" = '{pf}' AND \"{sspf_field}\" = '{sspf}'"
+
+    feats_list = []
+    for feat in ua_layer.getFeatures(QgsFeatureRequest().setFilterExpression(expr)):
         feats_list.append(feat[field])
-    
+
     return feats_list
-            
+
+
 
 def check_values(feats_list) -> bool:
     checked_feats =  len(set(feats_list)) == 1

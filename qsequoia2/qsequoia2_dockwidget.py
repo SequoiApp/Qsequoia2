@@ -6,7 +6,7 @@ from qgis.PyQt.QtCore import pyqtSignal, Qt
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QCompleter, QFileDialog, QApplication
 
-from qsequoia2.modules.table_check.ua_checker import ua_checker
+from qsequoia2.modules.ua_checker.ua_checker import ua_checker
 from qsequoia2.modules.add_data.add_data import AddDataTabWidget
 from qsequoia2.modules.layout_designer.layout_designer import LayoutDesignerWidget
 from qsequoia2.modules.forest_data.forest_data import ForestDataWidget

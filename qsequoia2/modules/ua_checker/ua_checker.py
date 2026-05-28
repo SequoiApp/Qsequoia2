@@ -28,8 +28,8 @@ class ua_checker(QWidget, FORM_CLASS):
 
         self._setup_ui_errors(False)
 
-        self.cb_parcelle.currentTextChanged.connect(lambda value: self._on_cb_parcelle_changed(value))
-        self.cb_sspf.currentTextChanged.connect(lambda value: self._on_cb_parcelle_changed(value))
+        self.cb_pf.currentTextChanged.connect(lambda value: self._on_cb_pf_changed(value))
+        self.cb_sspf.currentTextChanged.connect(lambda value: self._on_cb_pf_changed(value))
         self.project.layersRemoved.connect(self._on_layers_removed)
 
     def on_project_loaded(self):
@@ -37,7 +37,7 @@ class ua_checker(QWidget, FORM_CLASS):
         QTimer.singleShot(300, self.on_ua_layer_loaded)
 
 
-    def _ua_loader(self):
+    def _find_ua_loader(self):
         meta = seq_layer("ua")
         for layer in self.project.mapLayers().values():
             source = layer.source()
@@ -50,17 +50,17 @@ class ua_checker(QWidget, FORM_CLASS):
         return None
 
     def on_ua_layer_loaded(self): 
-        self.ua_layer = self._ua_loader()
+        self.ua_layer = self._find_ua_loader()
 
         if not self.ua_layer:
             self._ua_status(state=False)
-            self._setup_ui_verif(state = False)
+            self._ui_status(state = False)
             return
 
         self._ua_status(state=True)
-        self._setup_ui_verif(state = True)
+        self._ui_status(state = True)
         self._check_data()
-        self.populate_cb_from_field("cb_parcelle", self.ua_layer, "N_PARFOR")
+        self.populate_cb_from_field("cb_pf", self.ua_layer, "N_PARFOR")
         self.populate_cb_from_field("cb_sspf", self.ua_layer, "N_SSPARFOR")
 
     def _ua_status(self, state):
@@ -72,33 +72,17 @@ class ua_checker(QWidget, FORM_CLASS):
             self.lbl_ua_status.setStyleSheet("color: red;")
 
     def _check_data(self):
-
-        inc_ua = ua_check_ug(self.ua_layer)
-        self._set_checker_status(inc_ua)
+        inconsistent_ug = ua_check_ug(self.ua_layer)
+        self._set_checker_status(inconsistent_ug)
         self.ua_layer.removeSelection()
-
-        for_ui = {
-                    "pf_list" : get_pf_list(self.ua_layer),
-                    "sspf_list" : get_sspf_list(self.ua_layer),
-                    "surf" : sspf_surface_calculation(self.ua_layer)
-                }
-
-        self.add_in_ui(for_ui)
-
-    def add_in_ui(self, ui):
-        self.le_surf.setText(ui["surf"])
-        self.le_nb_pf.setText(str(len(ui["pf_list"])))
-        self.le_nb_sspf.setText(str(len(ui["sspf_list"])))
+        self.le_surf.setText(sspf_surface_calculation(self.ua_layer))
+        self.le_nb_pf.setText(str(len(get_pf_list(self.ua_layer))))
+        self.le_nb_sspf.setText(str(len(get_sspf_list(self.ua_layer))))
 
     # Utilitaire pour UI 
-    def _setup_ui_verif(self, state):
-
-        self.cb_parcelle.setEnabled(state)
+    def _ui_status(self, state):
+        self.cb_pf.setEnabled(state)
         self.cb_sspf.setEnabled(state)
-        self.cb_sspf.setEnabled(state)
-        self.lbl_sspf.setEnabled(state)
-        self.lbl_surf.setEnabled(state)
-        self.le_surf.setEnabled(state)
     
     def _setup_ui_errors(self, state):
         self.lbl_errors.setVisible(state)
@@ -119,23 +103,23 @@ class ua_checker(QWidget, FORM_CLASS):
         cb.addItems(values)
         cb.setCurrentIndex(0)
 
-    def _on_cb_parcelle_changed(self, value=None, pf_value=None, sspf_value=None):
+    def _on_cb_pf_changed(self, value=None, pf_value=None, sspf_value=None):
 
         if value is not None:
-            pf_value = self.cb_parcelle.currentText()
+            pf_value = self.cb_pf.currentText()
             sspf_value = self.cb_sspf.currentText()
 
         expr = self.build_sspf_expression(pf_value, sspf_value)
         
         if expr is None:
             self.ua_layer.removeSelection()
-        if expr:
-            ids = selectFeaturesByExpression(self.ua_layer, expr, self.iface)
 
-            if ids:
-                surf = sspf_surface_calculation(self.ua_layer)
-                if surf:
-                    self.le_surf.setText(surf)
+        ids = select_feats_by_expression(self.ua_layer, expr, self.iface)
+
+        if ids:
+            surf = sspf_surface_calculation(self.ua_layer)
+            if surf:
+                self.le_surf.setText(surf)
 
     def build_sspf_expression(self, pf_value=None, sspf_value=None):
 
@@ -210,7 +194,7 @@ class ua_checker(QWidget, FORM_CLASS):
         n_parfor = item.text(1)
         pf = n_parfor.split(".")[0]
         sspf = n_parfor.split(".")[1]
-        self._on_cb_parcelle_changed(value=None,pf_value=pf,sspf_value=sspf)
+        self._on_cb_pf_changed(value=None,pf_value=pf,sspf_value=sspf)
 
 
 

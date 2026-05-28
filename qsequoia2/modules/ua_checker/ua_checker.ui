@@ -6,28 +6,60 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>889</width>
-    <height>528</height>
+    <width>493</width>
+    <height>488</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QFormLayout" name="formLayout">
+  <layout class="QFormLayout" name="formLayout_2">
+   <item row="0" column="0">
+    <widget class="QPushButton" name="btn_refresh">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Recharger la couche UA&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+   </item>
    <item row="0" column="1">
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="QPushButton" name="btn_refresh">
-       <property name="toolTip">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Recharger la couche UA&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-       </property>
+      <widget class="QLabel" name="lbl_ua_status">
        <property name="text">
-        <string/>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;Couche UA non chargée&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
       </widget>
      </item>
      <item>
-      <spacer name="horizontalSpacer">
+      <widget class="QLabel" name="lbl_feats_status">
+       <property name="text">
+        <string>feats_status</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="1" column="1">
+    <widget class="Line" name="line_3">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="QLabel" name="lbl_pf_2">
+     <property name="text">
+      <string> Nombre Parcelle</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1">
+    <layout class="QHBoxLayout" name="hbox_nb_pf" stretch="0,0">
+     <item>
+      <spacer name="horizontalSpacer_2">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
@@ -40,61 +72,66 @@
       </spacer>
      </item>
      <item>
-      <widget class="QLabel" name="lbl_feats_status">
-       <property name="text">
-        <string>feats_status</string>
+      <widget class="QLineEdit" name="le_nb_pf">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Nombre de parcelles qui composent la forêt&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="readOnly">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
     </layout>
    </item>
-   <item row="1" column="0">
-    <widget class="QLabel" name="lbl_pf_2">
-     <property name="text">
-      <string>Nombre parcelles</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="1">
-    <widget class="QLineEdit" name="le_nb_pf">
-     <property name="toolTip">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Nombre de parcelles qui composent la forêt&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="0">
+   <item row="4" column="0">
     <widget class="QLabel" name="lbl_sspf_2">
      <property name="text">
-      <string>Nombre sous-parcelles</string>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="1">
-    <widget class="QLineEdit" name="le_nb_sspf">
-     <property name="toolTip">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Nombre de sous parcelles qui composent la forêt&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="1">
-    <widget class="Line" name="line">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+      <string>Nombre Sous-parcelles</string>
      </property>
     </widget>
    </item>
    <item row="4" column="1">
-    <layout class="QHBoxLayout" name="horizontalLayout_3">
+    <layout class="QHBoxLayout" name="hbox_nb_sspf">
+     <item>
+      <spacer name="horizontalSpacer_3">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="le_nb_sspf">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Nombre de sous parcelles qui composent la forêt&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="11" column="0" colspan="2">
+    <layout class="QHBoxLayout" name="hbox_cb_ug" stretch="0,1,0,1">
+     <property name="spacing">
+      <number>6</number>
+     </property>
      <item>
       <widget class="QLabel" name="lbl_pf">
        <property name="enabled">
         <bool>false</bool>
+       </property>
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
        </property>
        <property name="text">
         <string>Parcelles : </string>
@@ -102,7 +139,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QComboBox" name="cb_parcelle">
+      <widget class="QComboBox" name="cb_pf">
        <property name="enabled">
         <bool>false</bool>
        </property>
@@ -127,8 +164,8 @@
      </item>
     </layout>
    </item>
-   <item row="5" column="1">
-    <layout class="QHBoxLayout" name="horizontalLayout_6">
+   <item row="12" column="0" colspan="2">
+    <layout class="QHBoxLayout" name="hbox_surf">
      <item>
       <widget class="QLabel" name="lbl_surf">
        <property name="enabled">
@@ -164,48 +201,52 @@
      </item>
     </layout>
    </item>
-   <item row="7" column="0">
-    <widget class="QLabel" name="lbl_errors">
-     <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;Erreur(s) trouvée(s) :&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
-    </widget>
-   </item>
-   <item row="7" column="1">
-    <widget class="QTreeWidget" name="tree_checker">
-     <column>
-      <property name="text">
-       <string>warn</string>
-      </property>
-     </column>
-     <column>
-      <property name="text">
-       <string>parfor</string>
-      </property>
-     </column>
-     <column>
-      <property name="text">
-       <string>Champs</string>
-      </property>
-     </column>
-     <column>
-      <property name="text">
-       <string>Valeurs</string>
-      </property>
-     </column>
-    </widget>
-   </item>
-   <item row="6" column="1">
+   <item row="13" column="0" colspan="2">
     <widget class="Line" name="line_2">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
     </widget>
    </item>
-   <item row="0" column="0">
-    <widget class="QLabel" name="lbl_ua_status">
-     <property name="text">
-      <string/>
+   <item row="14" column="0" colspan="2">
+    <layout class="QHBoxLayout" name="hbox_tree_checker">
+     <item>
+      <widget class="QLabel" name="lbl_errors">
+       <property name="text">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;Erreur(s) trouvée(s) :&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QTreeWidget" name="tree_checker">
+       <column>
+        <property name="text">
+         <string>warn</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>parfor</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Champs</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Valeurs</string>
+        </property>
+       </column>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="10" column="0" colspan="2">
+    <widget class="Line" name="line">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
      </property>
     </widget>
    </item>

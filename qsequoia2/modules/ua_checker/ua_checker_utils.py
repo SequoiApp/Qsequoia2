@@ -1,4 +1,4 @@
-from qgis.core import *
+from qgis.core import QgsExpression, QgsExpressionContext, QgsFeatureRequest, QgsExpressionContextUtils
 from ..utils.seq_config import *
 from qgis.PyQt.QtCore import QVariant
 from collections import defaultdict
@@ -20,18 +20,15 @@ def seq_desc_fields() -> list:
 
 
 def sspf_surface_calculation(ua_layer) -> str:
-
-    feats = list(ua_layer.getSelectedFeatures())
-    if not feats: 
-        surf = sum(f.geometry().area() for f in ua_layer.getFeatures()) / 10000
-        return f"{round(surf,4)} ha"
-    tmp = QgsVectorLayer("Polygon?crs=" + ua_layer.crs().authid(), "tmp", "memory")
-    tmp.dataProvider().addFeatures(feats)
-    surf = sum(f.geometry().area() for f in tmp.getFeatures()) / 10000
-    return f"{round(surf,4)} ha"
+    selected = ua_layer.getSelectedFeatures()
+    has_selected = ua_layer.selectedFeatureCount()
+    all = ua_layer.getFeatures()
+    features = selected if has_selected else all 
+    area_ha = sum(f.geometry().area() for f in features) / 10000
+    return f"{area_ha:.4f} ha"
 
 
-def selectFeaturesByExpression(layer, expr, iface):
+def select_feats_by_expression(layer, expr, iface):
 
     exp = QgsExpression(expr)
     context = QgsExpressionContext()
@@ -85,7 +82,7 @@ def ua_check_ug(ua_layer, verbose=True) -> dict:
 
     for ug, feats in groups.items():
 
-        inc_ug = {}
+        bad = {}
 
         for field in desc_fields:
 
@@ -100,11 +97,11 @@ def ua_check_ug(ua_layer, verbose=True) -> dict:
 
             if len(values) > 1:
 
-                inc_ug[field] = sorted(values)
+                bad[field] = sorted(values)
 
-        if inc_ug:
+        if bad:
 
-            report[ug] = inc_ug
+            report[ug] = bad
 
     is_valid = len(report) == 0
 
@@ -131,13 +128,6 @@ def ua_check_ug(ua_layer, verbose=True) -> dict:
 
     return report
 
-
-
-
-
-# utilitaires non utilisés ici
-# TODO à passer en plugin annexe ou en utilitaire tools ? 
-    
 def get_pf_list(ua_layer, by_selc_feats = None) -> list:
     """return the list of all pf name (str)"""
 

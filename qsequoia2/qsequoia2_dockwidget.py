@@ -191,7 +191,6 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         tools_tab = add_tab(ToolsDialog(iface=self.iface, parent=self), "processingAlgorithm.svg",  "Outils")
 
 
-        self.projectChanged.connect(ua_check_tab.on_project_loaded)
         self.projectChanged.connect(add_data_tab.on_project_changed)
         
         self.projectLoaded.connect(forest_tab.on_project_loaded)

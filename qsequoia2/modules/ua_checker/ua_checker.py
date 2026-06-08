@@ -32,11 +32,6 @@ class ua_checker(QWidget, FORM_CLASS):
         self.cb_sspf.currentTextChanged.connect(lambda value: self._on_cb_pf_changed(value))
         self.project.layersRemoved.connect(self._on_layers_removed)
 
-    def on_project_loaded(self):
-        # attendre que QGIS ait fini de charger les couches et le projet
-        QTimer.singleShot(300, self.on_ua_layer_loaded)
-
-
     def _find_ua_loader(self):
         meta = seq_layer("ua")
         for layer in self.project.mapLayers().values():
@@ -75,9 +70,9 @@ class ua_checker(QWidget, FORM_CLASS):
         inconsistent_ug = ua_check_ug(self.ua_layer)
         self._set_checker_status(inconsistent_ug)
         self.ua_layer.removeSelection()
-        self.le_surf.setText(sspf_surface_calculation(self.ua_layer))
-        self.le_nb_pf.setText(str(len(get_pf_list(self.ua_layer))))
-        self.le_nb_sspf.setText(str(len(get_sspf_list(self.ua_layer))))
+        self.lbl_surf_sig.setText(f"Surface SIG : {sspf_surface_calculation(self.ua_layer)}")
+        self.lbl_nb_pf.setText(f"Nombre parcelles forestières : {str(len(get_pf_list(self.ua_layer)))}")
+        self.lbl_nb_sspf.setText(f"Nombre sous-parcelles forestières : {str(len(get_sspf_list(self.ua_layer)))}")
 
     # Utilitaire pour UI 
     def _ui_status(self, state):
@@ -86,11 +81,8 @@ class ua_checker(QWidget, FORM_CLASS):
     
     def _setup_ui_errors(self, state):
         self.lbl_errors.setVisible(state)
-        self.lbl_feats_status.setVisible(state)
-        self.tree_checker.setVisible(state)
         self.tree_checker.setVisible(state)
     
-
     def _on_layers_removed(self):
         QTimer.singleShot(0,self.on_ua_layer_loaded)
 
@@ -119,7 +111,7 @@ class ua_checker(QWidget, FORM_CLASS):
         if ids:
             surf = sspf_surface_calculation(self.ua_layer)
             if surf:
-                self.le_surf.setText(surf)
+                self.lbl_surf_sig.setText(f"Surface SIG : {surf}")
 
     def build_sspf_expression(self, pf_value=None, sspf_value=None):
 
@@ -150,11 +142,9 @@ class ua_checker(QWidget, FORM_CLASS):
 
         if not inc_ua:
             self._setup_ui_errors(False)
-            self.lbl_feats_status.setPixmap(QgsApplication.getThemeIcon("/mIconSuccess.svg").pixmap(16, 16))
             return
 
         self._setup_ui_errors(True)
-        self.lbl_feats_status.setPixmap(QgsApplication.getThemeIcon("/mIconWarning.svg").pixmap(16, 16))
         self._fill_checker_tree(inc_ua)
 
 
@@ -186,7 +176,7 @@ class ua_checker(QWidget, FORM_CLASS):
                     item.setTextAlignment(col, Qt.AlignCenter)
 
                 tree.addTopLevelItem(item)
-
+                
         for col in range(4):
             tree.resizeColumnToContents(col)
 

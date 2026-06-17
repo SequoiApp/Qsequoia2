@@ -163,6 +163,7 @@ peuplement:
         - v.seq.sspf.point
         - v.seq.sspf.line
         - v.seq.sspf.poly
+        - v.seq.ua.poly
       tms: &peuplement_tms
         - tms.plan_ign.standard
         - tms.plan_ign.classique

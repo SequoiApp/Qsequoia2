@@ -1,14 +1,15 @@
 # region RASTER
-r.alt.mnt: "Modèle Numérique de Terrain (MNT)"
-r.alt.mns: "Modèle Numérique de Surface (MNS)"
-r.alt.mnh: "Modèle Numérique de Hauteur (MNH)"
+r.alt.mnt.rge: "Modèle Numérique de Terrain (MNT)"
+r.alt.mns.rge: "Modèle Numérique de Surface (MNS)"
+r.alt.mnh.rge: "Modèle Numérique de Hauteur (MNH)"
+r.alt.mnt.lidar: "Modèle Numérique de Terrain (MNT)"
+r.alt.mns.lidar: "Modèle Numérique de Surface (MNS)"
+r.alt.mnh.lidar: "Modèle Numérique de Hauteur (MNH)"
+r.alt.ombrage.mnh: "Ombrage (MNH)"
 r.alt.pente: "Pentes"
 r.alt.expo: "Exposition"
 r.ortho.irc: "Orthophoto IRC"
 r.ortho.rgb: "Orthophoto RGB"
-r.scan.25: "Scan 25"
-r.scan.100: "Scan 100"
-r.scan.oaci: "Scan OACI"
 r.sol.geol: "Fond géologique"
 r.seq.plt: "Carte des peuplements"
 # endregion
@@ -29,6 +30,7 @@ v.seq.sspf.point: "Sous-parcelles forestières (centroïdes)"
 v.seq.sspf.line: "Sous-parcelles forestières (limites)"
 v.seq.sspf.poly: "Sous-parcelles forestières"
 v.seq.ame.poly: "Aménagements"
+v.seq.occup.poly: "Occupation"
 # endregion
 
 # region COMMUNES
@@ -69,11 +71,6 @@ v.gpu.supa.poly: "Servitudes d’utilité publique (SUP)"
 v.gpu.supg.point: "Générateur ponctuels (SUP)"
 v.gpu.supg.line: "Générateur linéaires (SUP)"
 v.gpu.supg.poly: "Générateur surfaciques (SUP)"
-# endregion
-
-# --- ARS ---
-v.ars.perimetre.poly: "Périmètres de protection (ARS)"
-v.ars.captage.point: "Points de captage (ARS)"
 # endregion
 
 # region Infrastructures

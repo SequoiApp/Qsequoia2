@@ -225,9 +225,10 @@ def _raster_file_path(layer, project=None):
     raw = layer.dataProvider().dataSourceUri() or layer.source()
     return _norm_project_path(raw, project)
 
-def _find_existing_seq_layer(path, layer_type, group=None):
+
+def _find_existing_seq_layer(uri, layer_type, group=None):
     project = QgsProject.instance()
-    target = _norm_project_path(path, project)
+    target = _norm_project_path(uri, project)
 
     layers = (
         [node.layer() for node in group.findLayers()]
@@ -236,17 +237,28 @@ def _find_existing_seq_layer(path, layer_type, group=None):
     )
 
     for layer in layers:
-        if layer_type in {"vect", "xlsx"} and isinstance(layer, QgsVectorLayer):
-            if _vector_file_path(layer, project) == target:
-                return layer
 
-        elif layer_type == "rast" and isinstance(layer, QgsRasterLayer):
-            if _raster_file_path(layer, project) == target:
-                return layer
+        if isinstance(layer, QgsVectorLayer) and layer_type in {"vect", "xlsx"}:
+            src = layer.source().split("|")[0]
+
+        elif isinstance(layer, QgsRasterLayer) and layer_type == "rast":
+            src = layer.source()
+
+        else:
+            continue
+
+        if _norm_project_path(src, project) == target:
+            return layer
 
     return None
 
+def _seq_layer_uri(path, layer_name=None):
+    path = str(path)
+    return f"{path}|layername={layer_name}" if layer_name else path
+
+
 def seq_read(key, seq_dir, add_to_project=False, group=None, style_folder=None):
+
     meta = seq_layer(key)
     if not meta:
         raise RuntimeError(f"Couche Sequoia inconnue: {key}")
@@ -276,49 +288,106 @@ def seq_read(key, seq_dir, add_to_project=False, group=None, style_folder=None):
     if add_to_project:
         group = group or get_group(family, project=project)
 
-        existing = _find_existing_seq_layer(path, layer_type, group)
-        if existing:
-            messageLog(f"[SEQ] Déjà chargé : {existing.name()} dans '{group.name()}'")
-            raise RuntimeError(f"Couche déjà chargée : {existing.name()}")
+    layer_defs = []
 
     if layer_type in {"vect", "xlsx"}:
-        layer = QgsVectorLayer(path_str, alias, "ogr")
+
+        if path.suffix.lower() == ".gpkg":
+
+            tmp = QgsVectorLayer(path_str, "", "ogr")
+            if not tmp.isValid():
+                raise RuntimeError(f"Invalid layer: {path}")
+
+            sublayers = tmp.dataProvider().subLayers()
+
+            if len(sublayers) <= 1:
+                layer_defs.append((path_str, alias))
+
+            else:
+                for sl in sublayers:
+
+                    # extraction robuste du nom
+                    parts = sl.split("!!::!!")
+                    if len(parts) < 2:
+                        continue
+
+                    name = parts[1].strip()
+                    if not name:
+                        continue
+
+                    uri = _seq_layer_uri(path_str, name)
+                    layer_defs.append((uri, name))
+
+        else:
+            layer_defs.append((path_str, alias))
+
     elif layer_type == "rast":
-        layer = QgsRasterLayer(path_str, alias)
+        layer_defs.append((path_str, alias))
+
     else:
         raise ValueError(f"Unsupported layer type: {layer_type}")
 
-    if not layer.isValid():
-        raise RuntimeError(f"Invalid layer: {path}")
 
-    if style_folder:
-        styles = get_styles(key, style_folder)
+    layers = []
 
-        if styles:
-            sm = layer.styleManager()
-            default_style = sm.currentStyle()
-            for style in styles:
-                style = Path(style)
-                style_name = style.stem
+    for uri, name in layer_defs:
 
-                sm.addStyle(style_name, sm.style(sm.currentStyle()))
-                sm.setCurrentStyle(style_name)
+        if add_to_project:
+            existing = _find_existing_seq_layer(uri, layer_type, group)
+            if existing:
+                messageLog(f"[SEQ] Déjà chargé : {existing.name()} dans '{group.name()}'")
+                raise RuntimeError(f"Couche déjà chargée : {existing.name()}")
 
-                layer.loadNamedStyle(str(style))
+        if layer_type in {"vect", "xlsx"}:
+            layer = QgsVectorLayer(uri, name, "ogr")
+        else:
+            layer = QgsRasterLayer(uri, name)
 
-            # Ensure the exact base style is selected
-            base_style_name = meta["name"]
-            if base_style_name in sm.styles():
-                sm.setCurrentStyle(base_style_name)
+        if not layer.isValid():
+            raise RuntimeError(f"Invalid layer: {name}")
 
-            sm.removeStyle(default_style)
-            layer.triggerRepaint()
 
-    if add_to_project:
-        project.addMapLayer(layer, False)
-        group.addLayer(layer)
+        if style_folder:
+            styles = get_styles(key, style_folder)
 
-    return layer
+            if styles:
+
+                # match par nom de couche
+                matched = [
+                    s for s in styles
+                    if Path(s).stem.lower() == name.lower()
+                ]
+
+                if not matched:
+                    matched = styles
+
+                sm = layer.styleManager()
+                default_style = sm.currentStyle()
+
+                for style in matched:
+                    style = Path(style)
+                    style_name = style.stem
+
+                    sm.addStyle(style_name, sm.style(sm.currentStyle()))
+                    sm.setCurrentStyle(style_name)
+
+                    layer.loadNamedStyle(str(style))
+
+                base_style_name = meta["name"]
+                if base_style_name in sm.styles():
+                    sm.setCurrentStyle(base_style_name)
+
+                sm.removeStyle(default_style)
+                layer.triggerRepaint()
+
+        if add_to_project:
+            project.addMapLayer(layer, False)
+            group.addLayer(layer)
+
+        layers.append(layer)
+
+    return layers[0]
+
 
 def find_all_seq_dir(root_dir, max_dirs=5000):
     """

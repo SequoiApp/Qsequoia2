@@ -228,7 +228,9 @@ def _raster_file_path(layer, project=None):
 
 def _find_existing_seq_layer(uri, layer_type, group=None):
     project = QgsProject.instance()
-    target = _norm_project_path(uri, project)
+
+    target_path, target_layer = _split_uri(uri)
+    target_path = _norm_project_path(target_path, project)
 
     layers = (
         [node.layer() for node in group.findLayers()]
@@ -239,25 +241,39 @@ def _find_existing_seq_layer(uri, layer_type, group=None):
     for layer in layers:
 
         if isinstance(layer, QgsVectorLayer) and layer_type in {"vect", "xlsx"}:
-            src = layer.source().split("|")[0]
+
+            src_path, src_layer = _split_uri(layer.source())
+
+            if (
+                _norm_project_path(src_path, project) == target_path
+                and src_layer == target_layer
+            ):
+                return layer
 
         elif isinstance(layer, QgsRasterLayer) and layer_type == "rast":
-            src = layer.source()
 
-        else:
-            continue
-
-        if _norm_project_path(src, project) == target:
-            return layer
+            if _norm_project_path(layer.source(), project) == target_path:
+                return layer
 
     return None
+
+def _split_uri(uri):
+    parts = uri.split("|")
+    path = parts[0]
+
+    layer_name = None
+    for part in parts[1:]:
+        if part.startswith("layername="):
+            layer_name = part.split("=", 1)[1]
+
+    return path, layer_name
 
 def _seq_layer_uri(path, layer_name=None):
     path = str(path)
     return f"{path}|layername={layer_name}" if layer_name else path
 
 
-def seq_read(key, seq_dir, add_to_project=False, group=None, style_folder=None):
+def seq_read(key, seq_dir, add_to_project=False, group=None, style_folder=None, layer_name=None):
 
     meta = seq_layer(key)
     if not meta:
@@ -300,23 +316,43 @@ def seq_read(key, seq_dir, add_to_project=False, group=None, style_folder=None):
 
             sublayers = tmp.dataProvider().subLayers()
 
-            if len(sublayers) <= 1:
-                layer_defs.append((path_str, alias))
+            if layer_name is not None:
+                found = False
 
-            else:
                 for sl in sublayers:
-
-                    # extraction robuste du nom
                     parts = sl.split("!!::!!")
                     if len(parts) < 2:
                         continue
 
                     name = parts[1].strip()
-                    if not name:
-                        continue
 
-                    uri = _seq_layer_uri(path_str, name)
-                    layer_defs.append((uri, name))
+                    if name == layer_name:
+                        uri = _seq_layer_uri(path_str, name)
+                        layer_defs.append((uri, name))
+                        found = True
+                        break
+
+                if not found:
+                    raise ValueError(
+                        f"Sublayer '{layer_name}' not found in {path}"
+                    )
+
+            else:
+
+                if len(sublayers) <= 1:
+                    layer_defs.append((path_str, alias))
+                else:
+                    for sl in sublayers:
+                        parts = sl.split("!!::!!")
+                        if len(parts) < 2:
+                            continue
+
+                        name = parts[1].strip()
+                        if not name:
+                            continue
+
+                        uri = _seq_layer_uri(path_str, name)
+                        layer_defs.append((uri, name))
 
         else:
             layer_defs.append((path_str, alias))

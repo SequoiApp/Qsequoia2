@@ -6,20 +6,30 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>408</width>
-    <height>265</height>
+    <width>383</width>
+    <height>211</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
   <layout class="QFormLayout" name="formLayout">
+   <item row="0" column="0" colspan="2">
+    <widget class="QLabel" name="lbl_ua_status">
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+   </item>
    <item row="1" column="0">
     <widget class="QLabel" name="lbl_forest_name">
      <property name="text">
       <string>Nom de la forêt :</string>
      </property>
     </widget>
+   </item>
+   <item row="1" column="1">
+    <widget class="QLineEdit" name="le_forest_name"/>
    </item>
    <item row="2" column="0">
     <widget class="QLabel" name="lbl_type">
@@ -60,48 +70,6 @@
      </item>
     </layout>
    </item>
-   <item row="4" column="0">
-    <widget class="QLabel" name="lbl_reg">
-     <property name="text">
-      <string>Région(s) :</string>
-     </property>
-    </widget>
-   </item>
-   <item row="9" column="0">
-    <widget class="QLabel" name="lbl_surface_unwooded">
-     <property name="text">
-      <string>Surface non boisée (ha) :</string>
-     </property>
-    </widget>
-   </item>
-   <item row="7" column="0">
-    <widget class="QLabel" name="lbl_surface_total">
-     <property name="text">
-      <string>Surface totale :</string>
-     </property>
-    </widget>
-   </item>
-   <item row="5" column="0">
-    <widget class="QLabel" name="lbl_dep">
-     <property name="text">
-      <string>Département(s) :</string>
-     </property>
-    </widget>
-   </item>
-   <item row="6" column="0">
-    <widget class="QLabel" name="lbl_com">
-     <property name="text">
-      <string>Commune(s) :</string>
-     </property>
-    </widget>
-   </item>
-   <item row="8" column="0">
-    <widget class="QLabel" name="lbl_surface_wooded">
-     <property name="text">
-      <string>Surface boisée (ha) :</string>
-     </property>
-    </widget>
-   </item>
    <item row="3" column="0">
     <widget class="QLabel" name="lbl_owner">
      <property name="text">
@@ -119,6 +87,13 @@
      </property>
     </widget>
    </item>
+   <item row="4" column="0">
+    <widget class="QLabel" name="lbl_reg">
+     <property name="text">
+      <string>Région(s) :</string>
+     </property>
+    </widget>
+   </item>
    <item row="4" column="1">
     <widget class="QLineEdit" name="le_reg">
      <property name="enabled">
@@ -126,6 +101,13 @@
      </property>
      <property name="readOnly">
       <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="0">
+    <widget class="QLabel" name="lbl_dep">
+     <property name="text">
+      <string>Département(s) :</string>
      </property>
     </widget>
    </item>
@@ -139,6 +121,13 @@
      </property>
     </widget>
    </item>
+   <item row="6" column="0">
+    <widget class="QLabel" name="lbl_com">
+     <property name="text">
+      <string>Commune(s) :</string>
+     </property>
+    </widget>
+   </item>
    <item row="6" column="1">
     <widget class="QLineEdit" name="le_com">
      <property name="enabled">
@@ -149,6 +138,13 @@
      </property>
     </widget>
    </item>
+   <item row="7" column="0">
+    <widget class="QLabel" name="lbl_surface_total">
+     <property name="text">
+      <string>Surface totale :</string>
+     </property>
+    </widget>
+   </item>
    <item row="7" column="1">
     <widget class="QLineEdit" name="le_surface_total">
      <property name="enabled">
@@ -156,36 +152,6 @@
      </property>
      <property name="readOnly">
       <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="8" column="1">
-    <widget class="QLineEdit" name="le_surface_wooded">
-     <property name="enabled">
-      <bool>true</bool>
-     </property>
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="9" column="1">
-    <widget class="QLineEdit" name="le_surface_unwooded">
-     <property name="enabled">
-      <bool>true</bool>
-     </property>
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="1">
-    <widget class="QLineEdit" name="le_forest_name"/>
-   </item>
-   <item row="0" column="0" colspan="2">
-    <widget class="QLabel" name="lbl_ua_status">
-     <property name="text">
-      <string/>
      </property>
     </widget>
    </item>

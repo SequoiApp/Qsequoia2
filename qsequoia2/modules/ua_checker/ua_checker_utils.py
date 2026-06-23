@@ -78,11 +78,7 @@ def ua_check_ug(ua_layer, verbose=True) -> dict:
     for ug, feats in groups.items():
         bad = {}
         for field in desc_fields:
-            values = {
-                        str(f[field])
-                        for f in feats
-                        if f[field] not in (None, "")
-                    }
+            values = {str(f[field]) if f[field] not in (None, "NULL") else "VIDE" for f in feats}
 
             if len(values) > 1:
                 bad[field] = sorted(values)

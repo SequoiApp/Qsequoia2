@@ -50,6 +50,7 @@ class ua_checker(QWidget, FORM_CLASS):
         if not self.ua_layer:
             self._ua_status(state=False)
             self._ui_status(state = False)
+            self._setup_ui_errors(state= False)
             return
 
         self._ua_status(state=True)

@@ -2,6 +2,17 @@
 
 All notable changes to QSequoia2 will be documented in this file.
 
+## [1.0.10] - 2026-06-23
+
+### Changed
+- Complete refactor of ua_checker module :
+  - Minimal UI 
+  - Coherence check of all descriptive field inside same UG
+  - Auto-select & zoom on UA 
+- New `QS2_surface_soumise` variable based on `DGD_SOUMIS` & `DGD_BOISE` fields
+- Update new aliases to macth new RSequoia2 layer (LIDAR & OCCUPATION)
+
+
 ## [1.0.8] - 2026-04-17
 
 ### Added

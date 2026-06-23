@@ -2,7 +2,7 @@
 
 All notable changes to QSequoia2 will be documented in this file.
 
-## [1.0.10] - 2026-06-23
+## [1.1.0] - 2026-06-23
 
 ### Changed
 - Complete refactor of ua_checker module :

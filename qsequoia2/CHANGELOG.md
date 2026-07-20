@@ -2,6 +2,11 @@
 
 All notable changes to QSequoia2 will be documented in this file.
 
+## [1.1.1] - 2026-07-20
+### Added
+- Tool to merge `sequoia2` PLT raster in toolbox
+
+
 ## [1.1.0] - 2026-06-23
 
 ### Changed

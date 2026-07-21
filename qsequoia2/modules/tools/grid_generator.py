@@ -14,16 +14,20 @@ from PyQt5.QtWidgets import (
     QPushButton,
     QVBoxLayout,
 )
+from qgis.PyQt.QtGui import QColor
 
 from qgis import processing
+
 from qgis.core import (
     Qgis,
-    QgsMapLayer,
     QgsProcessingException,
     QgsProject,
+    QgsMarkerSymbol,
+    QgsSimpleMarkerSymbolLayer,
+    QgsSingleSymbolRenderer,
     QgsVectorLayer,
 )
-from qgis.gui import QgsFileWidget, QgsMapLayerComboBox
+from qgis.gui import QgsMapLayerComboBox
 
 from qsequoia2.modules.utils.Qmessage import messageBar
 
@@ -32,19 +36,12 @@ class GridGenerator(QDialog):
     """
     Generate a regular sampling grid from a polygon layer.
 
-    Sample size:
-        n = (t * CV / ER)²
+    Sample size: n = (t * CV / ER)²
 
     CV and ER must use the same unit, normally percentages.
     """
 
-    def __init__(
-        self,
-        iface,
-        parent=None,
-        *,
-        student_factor: float = 2.0,
-    ):
+    def __init__(self, iface, parent=None, *, student_factor: float = 2.0):
         super().__init__(parent or iface.mainWindow())
 
         self.iface = iface
@@ -62,7 +59,6 @@ class GridGenerator(QDialog):
     # ------------------------------------------------------------------
     # UI
     # ------------------------------------------------------------------
-
     def _build_ui(self):
         self.layer_input = QgsMapLayerComboBox(self)
 
@@ -70,55 +66,33 @@ class GridGenerator(QDialog):
         self.er_input = QDoubleSpinBox(self)
 
         self.area_value = QLabel("—", self)
-        self.student_value = QLabel(
-            f"{self.student_factor:.3f}",
-            self,
-        )
         self.required_value = QLabel("—", self)
 
         self.points_ha_input = QDoubleSpinBox(self)
         self.spacing_value = QLabel("—", self)
 
-        self.calculate_button = QPushButton(
-            "Calculer le nombre de placettes",
-            self,
-        )
-
-        self.output_input = QgsFileWidget(self)
+        self.calculate_button = QPushButton("Calculer le nombre de placettes", self,)
 
         parameters_form = QFormLayout()
         parameters_form.addRow("Couche polygonale", self.layer_input)
         parameters_form.addRow("Coefficient de variation (CV)", self.cv_input)
         parameters_form.addRow("Erreur relative (ER)", self.er_input)
-        parameters_form.addRow("Facteur de Student (t)", self.student_value)
 
         parameters_group = QGroupBox("Paramètres statistiques", self)
         parameters_group.setLayout(parameters_form)
 
         results_form = QFormLayout()
         results_form.addRow("Surface", self.area_value)
-        results_form.addRow(
-            "Nombre théorique de placettes",
-            self.required_value,
-        )
-        results_form.addRow(
-            "Densité de placettes",
-            self.points_ha_input,
-        )
+        results_form.addRow("Nombre théorique de placettes", self.required_value,)
+        results_form.addRow("Densité de placettes", self.points_ha_input,)
         results_form.addRow("Espacement de la grille", self.spacing_value)
 
         results_group = QGroupBox("Résultat", self)
         results_group.setLayout(results_form)
 
-        self.buttons = QDialogButtonBox(
-            QDialogButtonBox.Cancel,
-            parent=self,
-        )
+        self.buttons = QDialogButtonBox(QDialogButtonBox.Cancel, parent=self,)
 
-        self.generate_button = self.buttons.addButton(
-            "Générer la grille",
-            QDialogButtonBox.AcceptRole,
-        )
+        self.generate_button = self.buttons.addButton("Générer la grille",QDialogButtonBox.AcceptRole,)
 
         calculate_layout = QHBoxLayout()
         calculate_layout.addStretch()
@@ -128,76 +102,39 @@ class GridGenerator(QDialog):
         layout.addWidget(parameters_group)
         layout.addLayout(calculate_layout)
         layout.addWidget(results_group)
-        layout.addWidget(QLabel("Sortie GeoPackage (facultative)", self))
-        layout.addWidget(self.output_input)
         layout.addWidget(self.buttons)
 
     def _configure_ui(self):
-        self.layer_input.setFilters(
-            Qgis.LayerFilter.PolygonLayer
-        )
-        self.layer_input.setAllowEmptyLayer(True)
+        self.layer_input.setFilters(Qgis.LayerFilter.PolygonLayer)
+        self.layer_input.setAllowEmptyLayer(False)
         self.layer_input.setShowCrs(True)
 
-        self.cv_input.setRange(0.01, 1_000)
-        self.cv_input.setDecimals(2)
+        self.cv_input.setRange(1, 100)
+        self.cv_input.setDecimals(0)
         self.cv_input.setSuffix(" %")
-        self.cv_input.setValue(30)
-        self.cv_input.setKeyboardTracking(False)
+        self.cv_input.setValue(60)
 
-        self.er_input.setRange(0.01, 100)
-        self.er_input.setDecimals(2)
+        self.er_input.setRange(1, 100)
+        self.er_input.setDecimals(0)
         self.er_input.setSuffix(" %")
-        self.er_input.setValue(10)
-        self.er_input.setKeyboardTracking(False)
+        self.er_input.setValue(20)
 
-        self.points_ha_input.setRange(0, 100_000)
+        self.points_ha_input.setRange(0, 20)
         self.points_ha_input.setDecimals(4)
         self.points_ha_input.setSuffix(" point/ha")
-        self.points_ha_input.setKeyboardTracking(False)
-
-        self.output_input.setStorageMode(
-            QgsFileWidget.SaveFile
-        )
-        self.output_input.setFilter(
-            "GeoPackage (*.gpkg)"
-        )
-        self.output_input.setDialogTitle(
-            "Enregistrer la grille de placettes"
-        )
-        self.output_input.setConfirmOverwrite(True)
-        self.output_input.setUseLink(False)
-
-        project_home = QgsProject.instance().homePath()
-        if project_home:
-            self.output_input.setDefaultRoot(project_home)
 
         self.generate_button.setEnabled(False)
 
     def _connect_signals(self):
-        self.calculate_button.clicked.connect(
-            self.calculate
-        )
-        self.buttons.accepted.connect(
-            self.generate
-        )
-        self.buttons.rejected.connect(
-            self.reject
-        )
+        self.calculate_button.clicked.connect(self.calculate)
+        self.buttons.accepted.connect(self.generate)
+        self.buttons.rejected.connect(self.reject)
 
-        self.layer_input.layerChanged.connect(
-            self._invalidate_calculation
-        )
-        self.cv_input.valueChanged.connect(
-            self._invalidate_calculation
-        )
-        self.er_input.valueChanged.connect(
-            self._invalidate_calculation
-        )
+        self.layer_input.layerChanged.connect(self._invalidate_calculation)
+        self.cv_input.valueChanged.connect(self._invalidate_calculation)
+        self.er_input.valueChanged.connect(self._invalidate_calculation)
 
-        self.points_ha_input.valueChanged.connect(
-            self._update_spacing
-        )
+        self.points_ha_input.valueChanged.connect(self._update_spacing)
 
     def _set_active_layer(self):
         layer = self.iface.activeLayer()
@@ -232,19 +169,11 @@ class GridGenerator(QDialog):
             density = self.required_points / area_ha
 
         except ValueError as error:
-            messageBar(
-                self.iface,
-                str(error),
-                "w",
-            )
+            messageBar(self.iface, str(error), "w",)
             return
 
-        self.area_value.setText(
-            f"{area_ha:,.2f} ha".replace(",", " ")
-        )
-        self.required_value.setText(
-            str(self.required_points)
-        )
+        self.area_value.setText(f"{area_ha:,.2f} ha".replace(",", " "))
+        self.required_value.setText(str(self.required_points))
 
         # This remains editable after calculation.
         self.points_ha_input.setValue(density)
@@ -336,53 +265,45 @@ class GridGenerator(QDialog):
     # ------------------------------------------------------------------
     # Processing
     # ------------------------------------------------------------------
-
     def generate(self):
         try:
             layer = self._input_layer()
             self._validate_crs(layer)
+            spacing = self._spacing(self.points_ha_input.value())
 
-            density = self.points_ha_input.value()
-            spacing = self._spacing(density)
-            output = self._output_destination()
+            QApplication.setOverrideCursor(Qt.WaitCursor)
 
-            QApplication.setOverrideCursor(
-                Qt.WaitCursor
-            )
+            try:
+                grid = processing.run(
+                    "native:creategrid",
+                    {
+                        "TYPE": 0,
+                        "EXTENT": layer.extent(),
+                        "HSPACING": spacing,
+                        "VSPACING": spacing,
+                        "HOVERLAY": 0,
+                        "VOVERLAY": 0,
+                        "CRS": layer.crs(),
+                        "OUTPUT": "TEMPORARY_OUTPUT",
+                    },
+                )["OUTPUT"]
 
-            grid = processing.run(
-                "native:creategrid",
-                {
-                    "TYPE": 0,
-                    "EXTENT": layer.extent(),
-                    "HSPACING": spacing,
-                    "VSPACING": spacing,
-                    "HOVERLAY": 0,
-                    "VOVERLAY": 0,
-                    "CRS": layer.crs(),
-                    "OUTPUT": "TEMPORARY_OUTPUT",
-                },
-            )["OUTPUT"]
+                grid = processing.run(
+                    "native:extractbylocation",
+                    {
+                        "INPUT": grid,
+                        "PREDICATE": [0],
+                        "INTERSECT": layer,
+                        "OUTPUT": "TEMPORARY_OUTPUT",
+                    },
+                )["OUTPUT"]
+                grid.setName(f"Grille ({self.points_ha_input.value()} pts/ha)")
+                self.style_grid(grid)
 
-            result = processing.run(
-                "native:extractbylocation",
-                {
-                    "INPUT": grid,
-                    "PREDICATE": [0],
-                    "INTERSECT": layer,
-                    "OUTPUT": output,
-                },
-            )
+            finally:
+                QApplication.restoreOverrideCursor()
 
-            output_layer = self._load_output_layer(
-                result["OUTPUT"]
-            )
-
-        except (
-            ValueError,
-            QgsProcessingException,
-            RuntimeError,
-        ) as error:
+        except (ValueError, QgsProcessingException) as error:
             messageBar(
                 self.iface,
                 f"Impossible de générer la grille : {error}",
@@ -390,23 +311,16 @@ class GridGenerator(QDialog):
             )
             return
 
-        finally:
-            QApplication.restoreOverrideCursor()
-
-        generated_count = output_layer.featureCount()
-
-        theoretical = (
-            f" Objectif théorique : {self.required_points}."
-            if self.required_points
-            else ""
-        )
+        project = QgsProject.instance()
+        project.addMapLayer(grid)
+        node = project.layerTreeRoot().findLayer(grid.id())
+        node.setCustomProperty("showFeatureCount", True)
 
         messageBar(
             self.iface,
             (
-                f"{generated_count} placettes générées. "
-                f"Sortie : {self._output_label()}."
-                f"{theoretical}"
+                f"{grid.featureCount()} placettes générées. "
+                f"Objectif théorique : {self.required_points}."
             ),
             "s",
         )
@@ -417,9 +331,7 @@ class GridGenerator(QDialog):
         layer = self.layer_input.currentLayer()
 
         if not layer or not layer.isValid():
-            raise ValueError(
-                "Sélectionnez une couche polygonale valide."
-            )
+            raise ValueError("Sélectionnez une couche polygonale valide.")
 
         return layer
 
@@ -428,64 +340,34 @@ class GridGenerator(QDialog):
         crs = layer.crs()
 
         if not crs.isValid():
-            raise ValueError(
-                "La couche ne possède pas de SCR valide."
-            )
+            raise ValueError("La couche ne possède pas de SCR valide.")
 
         if crs.mapUnits() != Qgis.DistanceUnit.Meters:
-            raise ValueError(
-                "La couche doit utiliser un SCR projeté en mètres."
-            )
+            raise ValueError("La couche doit utiliser un SCR projeté en mètres.")
 
-    def _output_destination(self):
-        path = self.output_input.filePath().strip()
+    @staticmethod
+    def style_grid(grid: QgsVectorLayer) -> None:
+        symbol = QgsMarkerSymbol.createSimple({
+            "name": "cross",
+            "size": "2.4",
+            "color": "#ff5400",
+            "outline_color": "#ff5400",
+            "outline_width": "0.75",
+        })
 
-        if not path:
-            return "TEMPORARY_OUTPUT"
+        halo = QgsMarkerSymbol.createSimple({
+            "name": "cross",
+            "size": "2.4",
+            "color": "white",
+            "outline_color": "white",
+            "outline_width": "1.15"
+        })
 
-        output = Path(path)
-
-        if output.suffix.lower() != ".gpkg":
-            output = output.with_suffix(".gpkg")
-
-        output.parent.mkdir(
-            parents=True,
-            exist_ok=True,
+        symbol.insertSymbolLayer(
+            0,
+            halo.takeSymbolLayer(0),
         )
 
-        return str(output)
-
-    def _load_output_layer(self, output):
-        if isinstance(output, QgsMapLayer):
-            layer = output
-        else:
-            output = str(output)
-
-            layer = QgsVectorLayer(
-                output,
-                Path(output).stem,
-                "ogr",
-            )
-
-        if not layer or not layer.isValid():
-            raise RuntimeError(
-                "La grille a été créée mais ne peut pas être chargée."
-            )
-
-        if QgsProject.instance().mapLayer(layer.id()) is None:
-            QgsProject.instance().addMapLayer(layer)
-
-        return layer
-
-    def _output_label(self):
-        path = self.output_input.filePath().strip()
-
-        if not path:
-            return "couche temporaire"
-
-        output = Path(path)
-
-        if output.suffix.lower() != ".gpkg":
-            output = output.with_suffix(".gpkg")
-
-        return str(output)
+        symbol.setOpacity(0.95)
+        grid.setRenderer(QgsSingleSymbolRenderer(symbol))
+        grid.triggerRepaint()

@@ -14,6 +14,7 @@ from qsequoia2.modules.tools.tools import ToolsDialog
 from qsequoia2.modules.utils.variable import get_global_variable
 from qsequoia2.modules.utils.seq_config import *
 from qsequoia2.modules.utils.Qmessage import *
+from qsequoia2.modules.utils.configure_snapping import configure_snapping
 
 PLUGIN_DIR = Path(__file__).resolve().parent
 ICONS_DIR = PLUGIN_DIR / "icons"
@@ -190,10 +191,9 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         layout_tab = add_tab(LayoutDesignerWidget(iface=self.iface, parent=self), "mActionNewLayout.svg", "Conception de mise en page")
         tools_tab = add_tab(ToolsDialog(iface=self.iface, parent=self), "processingAlgorithm.svg",  "Outils")
 
-
         self.projectChanged.connect(add_data_tab.on_project_changed)
-        
         self.projectLoaded.connect(forest_tab.on_project_loaded)
+        self.projectLoaded.connect(configure_snapping)
 
     def refresh(self):
         self._update_project_visibility()

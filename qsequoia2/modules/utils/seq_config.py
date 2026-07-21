@@ -29,7 +29,6 @@ def _safe_urlopen(url, timeout=10):
 
     return urllib.request.urlopen(url, timeout=timeout)
 
-
 def sync_seq_configs(timeout: int = 3) -> None:
     """
     Download latest configs to cache.

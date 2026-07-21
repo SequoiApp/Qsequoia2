@@ -12,7 +12,6 @@ from .layout_builder import LayoutBuilder
 from .project_builder import ProjectBuilder
 from .project_config_loader import ProjectConfigLoader
 
-
 UI_PATH = Path(__file__).parent / "layout_designer.ui"
 FORM_CLASS, _ = uic.loadUiType(str(UI_PATH))
 
@@ -28,8 +27,7 @@ class LayoutDesignerWidget(QWidget, FORM_CLASS):
         self.iface = iface
         self.parent = parent
         self.project = QgsProject.instance()
-        self.cfg = ProjectConfigLoader(LAYOUT_CONFIG)
-        self._pending_layout = None
+        self.cfg = ProjectConfigLoader(LAYOUT_CONFIG)      
         
         self.setupUi(self)
         self._init_ui()
@@ -84,6 +82,7 @@ class LayoutDesignerWidget(QWidget, FORM_CLASS):
                 return
 
             QTimer.singleShot(0, lambda: self._build_layout(project_key, seq_id, ctx.layers))
+
 
         except Exception as e:
             messageBar(self.iface, str(e), "critical", 10)

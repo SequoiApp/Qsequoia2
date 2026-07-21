@@ -88,9 +88,6 @@ class Qsequoia2:
         self._connect_dockwidget()
 
         self.iface.addDockWidget(Qt.RightDockWidgetArea, self.dockwidget)
-
-        # activation du snapping
-        configure_snapping()
     
     
     def _connect_dockwidget(self):

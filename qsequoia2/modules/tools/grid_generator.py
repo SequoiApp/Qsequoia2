@@ -3,8 +3,10 @@ from pathlib import Path
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (
+    QWidget,
     QApplication,
     QDialog,
+    QSizePolicy,
     QDialogButtonBox,
     QDoubleSpinBox,
     QFormLayout,
@@ -14,16 +16,15 @@ from PyQt5.QtWidgets import (
     QPushButton,
     QVBoxLayout,
 )
-from qgis.PyQt.QtGui import QColor
 
 from qgis import processing
 
 from qgis.core import (
+    QgsApplication,
     Qgis,
     QgsProcessingException,
     QgsProject,
     QgsMarkerSymbol,
-    QgsSimpleMarkerSymbolLayer,
     QgsSingleSymbolRenderer,
     QgsVectorLayer,
 )
@@ -74,9 +75,33 @@ class GridGenerator(QDialog):
         self.calculate_button = QPushButton("Calculer le nombre de placettes", self,)
 
         parameters_form = QFormLayout()
-        parameters_form.addRow("Couche polygonale", self.layer_input)
-        parameters_form.addRow("Coefficient de variation (CV)", self.cv_input)
-        parameters_form.addRow("Erreur relative (ER)", self.er_input)
+        parameters_form.addRow("Couche polygonale", self.layer_input,)
+
+        self.cv_input.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed,)
+
+        cv_info = QLabel(self)
+        cv_info.setPixmap(QgsApplication.getThemeIcon("/mIconInfo.svg").pixmap(16, 16))
+        cv_info.setFixedSize(16, 16)
+        cv_info.setToolTip(
+            """
+            <b>Coefficient de variation indicatif :</b><br>
+            • Futaie régulière résineuse : 20 à 40 %<br>
+            • Futaie régulière feuillue : 20 à 40 %<br>
+            • Futaie irrégulière : 40 à 60 %<br>
+            • Mélange futaie-taillis : 40 à 60 %
+            """
+        )
+
+        cv_field = QWidget(self)
+        cv_layout = QHBoxLayout(cv_field)
+        cv_layout.setContentsMargins(0, 0, 0, 0)
+        cv_layout.setSpacing(4)
+
+        cv_layout.addWidget(self.cv_input, 1)
+        cv_layout.addWidget(cv_info, 0)
+
+        parameters_form.addRow("Coefficient de variation (CV)", cv_field,)
+        parameters_form.addRow("Erreur relative (ER)", self.er_input,)
 
         parameters_group = QGroupBox("Paramètres statistiques", self)
         parameters_group.setLayout(parameters_form)

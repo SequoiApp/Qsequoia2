@@ -39,7 +39,6 @@ class ProjectBuilder:
             self.seq_id,
             self.seq_dir,
             suffix = suffix,
-            ask_create=True,
             ask_unsaved=True,
             preserve_qs2_variables=True
         )

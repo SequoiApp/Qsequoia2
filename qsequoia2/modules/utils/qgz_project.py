@@ -69,25 +69,15 @@ def confirm_project_close(project, iface) -> bool:
 
     return True
 
-def new_seq_project(
-    project,
-    iface,
-    path: Path,
-    datum: str = "EPSG:2154",
-    ask: bool = True,
-    variables: Optional[dict] = None,
-) -> Optional[Path]:
+def new_seq_project(project,
+                    iface,
+                    path: Path,
+                    datum: str = "EPSG:2154",
+                    variables: Optional[dict] = None
+                    ) -> Optional[Path]:
+
     """Create a new QGIS project at the given path."""
     path = Path(path)
-
-    if ask and QMessageBox.question(
-        iface.mainWindow(),
-        "Projet SEQUOIA",
-        f"Aucun projet {path.name} trouvé.\nCréer un nouveau projet ?",
-        QMessageBox.Yes | QMessageBox.Cancel,
-        QMessageBox.Cancel,
-    ) == QMessageBox.Cancel:
-        return None
 
     path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -99,19 +89,19 @@ def new_seq_project(
     if not project.write():
         raise RuntimeError(f"Failed to create project: {path}")
 
+
     return path
 
 
-def open_seq_project(
-    project,
-    iface,
-    seq_id: str,
-    seq_dir: Path,
-    suffix: str,
-    ask_unsaved: bool = True,
-    ask_create: bool = True,
-    preserve_qs2_variables: bool = False,
-) -> Optional[Path]:
+def open_seq_project(project,
+                     iface,
+                     seq_id: str,
+                     seq_dir: Path,
+                     suffix: str,
+                     ask_unsaved: bool = True,
+                     preserve_qs2_variables: bool = False,
+                     ) -> Optional[Path]:
+
     """Open an existing Sequoia project or create it if missing."""
     if ask_unsaved and not confirm_project_close(project, iface):
         return None
@@ -124,10 +114,6 @@ def open_seq_project(
         load_project(project, path, variables)
         return path
 
-    return new_seq_project(
-        project,
-        iface,
-        seq_dir / f"{seq_id}_{suffix}.qgz",
-        ask=ask_create,
-        variables=variables,
-    )
+    new_project_path = new_seq_project(project, iface, seq_dir / f"{seq_id}_{suffix}.qgz", variables=variables)
+    messageBar(iface, f"Project {seq_id}_{suffix}.qgz was created in current seq_dir","s", 15)
+    return new_project_path

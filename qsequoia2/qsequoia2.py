@@ -122,7 +122,6 @@ class Qsequoia2:
             seq_id,
             seq_dir,
             suffix = "SEQUOIA",
-            ask_create=True,
             ask_unsaved=True,
             preserve_qs2_variables=False
         )

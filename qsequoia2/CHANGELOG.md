@@ -2,9 +2,15 @@
 
 All notable changes to QSequoia2 will be documented in this file.
 
+## [1.1.2] - Unreleased
+### Added
+- New project pedologie (#125)
+
+
 ## [1.1.1] - 2026-07-20
 ### Added
 - Tool to merge `sequoia2` PLT raster in toolbox
+- Tool to generate forest plot grid
 
 
 ## [1.1.0] - 2026-06-23

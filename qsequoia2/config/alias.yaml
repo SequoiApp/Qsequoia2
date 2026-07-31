@@ -161,6 +161,7 @@ v.secu.old.poly: "Obligations légales de débrousaillement"
 # endregion
 
 # region CADASTRE
+v.cad.etalab.poly: Cadastre brute (Etalab)
 v.cad.vides.poly: Vides cadastraux
 v.cad.batiment.poly: Bâtiments cadastrés
 v.cad.borne.point: Bornes cadastrales

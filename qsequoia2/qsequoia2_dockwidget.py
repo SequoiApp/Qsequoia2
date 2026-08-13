@@ -1,5 +1,6 @@
 from pathlib import Path
 from enum import Enum
+from typing import Optional
 
 from qgis.PyQt import QtWidgets, uic
 from qgis.PyQt.QtCore import pyqtSignal, Qt
@@ -156,7 +157,7 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             messageBar(self.iface, f"Dossier valide : {seq_dir}", "s", 10)
     
 
-    def _set_seq_dir_status(self, state: SeqDirState, label: str | None = None):
+    def _set_seq_dir_status(self, state: SeqDirState, label: Optional[str] = None):
         status_map = {
             SeqDirState.VALID: ("/mIconSuccess.svg", "Dossier valide"),
             SeqDirState.INVALID: ("/mIconWarning.svg", "Dossier invalide"),

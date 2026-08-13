@@ -22,7 +22,7 @@ https://raw.githubusercontent.com/SequoiApp/Qsequoia2/main/plugins.xml
 
 Compatibilité :
 
-* QGIS 3.44 ou supérieur
+* QGIS 3.40 ou supérieur
 
 ---
 
@@ -48,7 +48,7 @@ https://raw.githubusercontent.com/SequoiApp/Qsequoia2/main/plugins.xml
 
 Requirements:
 
-* QGIS 3.44 or higher
+* QGIS 3.40 or higher
 
 ---
 

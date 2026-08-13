@@ -2,6 +2,12 @@
 
 All notable changes to QSequoia2 will be documented in this file.
 
+## [Unreleased]
+
+### Changed
+- Lowered the minimum supported QGIS version from 3.44 to 3.40.
+- Replaced Python 3.10-only union annotations with Python 3.9-compatible typing annotations.
+
 ## [1.1.1] - 2026-07-20
 ### Added
 - Tool to merge `sequoia2` PLT raster in toolbox

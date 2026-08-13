@@ -42,14 +42,14 @@ Developed by foresters for foresters, it automates data import, organization, an
 
 # 🇫🇷 Prérequis
 
-* QGIS 3.44 ou supérieur
+* QGIS 3.40 ou supérieur
 * Accès à Internet
 
 ---
 
 # 🇬🇧 Requirements
 
-* QGIS 3.44 or higher
+* QGIS 3.40 or higher
 * Internet access
 
 ---

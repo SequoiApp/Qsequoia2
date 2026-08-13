@@ -11,7 +11,7 @@ from qsequoia2.modules.add_data.add_data import AddDataTabWidget
 from qsequoia2.modules.layout_designer.layout_designer import LayoutDesignerWidget
 from qsequoia2.modules.forest_data.forest_data import ForestDataWidget
 from qsequoia2.modules.tools.tools import ToolsDialog
-from qsequoia2.modules.utils.variable import get_global_variable
+from qsequoia2.modules.utils.variable import get_global_variable, get_project_variable
 from qsequoia2.modules.utils.seq_config import *
 from qsequoia2.modules.utils.Qmessage import *
 from qsequoia2.modules.utils.configure_snapping import configure_snapping
@@ -176,6 +176,15 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.lbl_forest_id.setText(fm.elidedText(label, Qt.ElideRight, 150))
             self.lbl_forest_id.setToolTip(label)
             self.lbl_forest_id.show()
+
+    def refresh_project_status(self):
+        seq_dir = get_project_variable("QS2_seq_dir")
+        seq_id = get_project_variable("QS2_seq_id")
+
+        if seq_dir and seq_id:
+            self._set_seq_dir_status(SeqDirState.VALID, str(seq_id))
+        else:
+            self._set_seq_dir_status(SeqDirState.EMPTY)
 
     def _init_tabs(self):
 

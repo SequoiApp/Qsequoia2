@@ -2,6 +2,11 @@
 
 All notable changes to QSequoia2 will be documented in this file.
 
+## [Unreleased]
+
+### Changed
+- Opened the PLT raster merge dialog even when no matching raster is found, with a warning allowing users to select inputs manually.
+
 ## [1.1.1] - 2026-07-20
 ### Added
 - Tool to merge `sequoia2` PLT raster in toolbox

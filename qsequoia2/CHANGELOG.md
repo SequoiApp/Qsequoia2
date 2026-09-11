@@ -2,7 +2,11 @@
 
 All notable changes to QSequoia2 will be documented in this file.
 
-## [Unreleased]
+## [1.1.2] - Unreleased
+### Added
+- New project pedologie (#125)
+### Changed
+- Opened the PLT raster merge dialog even when no matching raster is found, with a warning allowing users to select inputs manually.
 
 ### Fixed
 - Prevented native QGIS crashes while switching projects with an open layout designer by using the application-level project lifecycle and blocking re-entrant project loads [#94]
@@ -12,6 +16,7 @@ All notable changes to QSequoia2 will be documented in this file.
 ## [1.1.1] - 2026-07-20
 ### Added
 - Tool to merge `sequoia2` PLT raster in toolbox
+- Tool to generate forest plot grid
 
 
 ## [1.1.0] - 2026-06-23

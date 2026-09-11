@@ -18,7 +18,7 @@ from qgis.core import (
 from qgis.PyQt.QtWidgets import QMessageBox
 
 from ..utils.Qmessage import messageBar, messageLog
-from ..utils.variable import get_global_variable, get_project_variable, set_project_variable
+from ..utils.variable import get_project_variable, set_project_variable
 from ..utils.seq_config import seq_field, seq_read
 from .processing import buffer, multipart_to_singleparts
 
@@ -34,13 +34,23 @@ class LayoutBuilder:
         ("A0", (841, 1189)),
     )
 
-    def __init__(self, iface, project, seq_id, layout_cfg, layers, coeff_cadre: float = 0.90):
+    def __init__(
+        self,
+        iface,
+        project,
+        seq_id,
+        layout_cfg,
+        layers,
+        models_dir=None,
+        coeff_cadre: float = 0.95,
+    ):
         self.iface = iface
         self.project = project
         self.seq_id = seq_id
         self.layout = layout_cfg
         self.key = self.layout.key
         self.layers = layers
+        self.models_dir = Path(models_dir) if models_dir else None
         self.coeff_cadre = coeff_cadre
 
     def build(self):
@@ -124,8 +134,12 @@ class LayoutBuilder:
         needed_w = (bbox.width() / scale) * 1000.0
         needed_h = (bbox.height() / scale) * 1000.0
 
-        available_w = (mm[0] - 2 * marge_mm) * self.coeff_cadre
-        available_h = (mm[1] - 2 * marge_mm) * self.coeff_cadre
+        paper_w, paper_h = mm
+        if self._pick_orient(bbox) == "landscape":
+            paper_w, paper_h = paper_h, paper_w
+
+        available_w = (paper_w - 2 * marge_mm) * self.coeff_cadre
+        available_h = (paper_h - 2 * marge_mm) * self.coeff_cadre
 
         return needed_w <= available_w and needed_h <= available_h
 
@@ -160,14 +174,8 @@ class LayoutBuilder:
         return None
 
     def _create_layout_name(self, fmt: str, orient: str):
-        qpt, final_orient = self._find_template(
-            [
-                Path(get_global_variable("QS2_models_directory") or ""),
-                TEMPLATE_DIR,
-            ],
-            fmt,
-            orient,
-        )
+        models_dirs = [self.models_dir] if self.models_dir else [TEMPLATE_DIR]
+        qpt, final_orient = self._find_template(models_dirs, fmt, orient)
 
         messageLog(f"[TEMPLATE] Template trouvé: {qpt} (format={fmt}, orient={final_orient})")
 
@@ -196,7 +204,7 @@ class LayoutBuilder:
         tried = []
 
         for models_dir in models_dirs:
-            if not models_dir.exists():
+            if not models_dir.is_dir():
                 tried.append(f"{models_dir} (absent)")
                 continue
 

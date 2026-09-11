@@ -5,7 +5,8 @@ All notable changes to QSequoia2 will be documented in this file.
 ## [1.1.2] - Unreleased
 ### Added
 - New project pedologie (#125)
-
+### Changed
+- Opened the PLT raster merge dialog even when no matching raster is found, with a warning allowing users to select inputs manually.
 
 ## [1.1.1] - 2026-07-20
 ### Added

@@ -114,6 +114,18 @@ class Qsequoia2:
 
             self.dockwidget = None
 
+    def _remove_dockwidget(self):
+        """Remove and schedule deletion of the plugin dock widget."""
+        dockwidget = self.dockwidget
+        if dockwidget is None:
+            return
+
+        # Clear our reference first so callbacks triggered during removal
+        # cannot try to reuse the instance being destroyed.
+        self.dockwidget = None
+        self.iface.removeDockWidget(dockwidget)
+        dockwidget.deleteLater()
+
     def _on_project_changed(self, seq_dir, seq_id):
 
         path = open_seq_project(
@@ -170,14 +182,20 @@ class Qsequoia2:
  
     def unload(self):
 
+        # A plugin reload calls unload() on the current instance. The dock
+        # widget must therefore be removed here, otherwise QGIS keeps the old
+        # widget alive after the new plugin instance has been started.
+        self._remove_dockwidget()
+
         # Remove actions
-        for action in getattr(self, "actions", []):
+        for action in self.actions:
             self.iface.removePluginMenu(self.menu, action)
-            self.iface.removeToolBarIcon(action)
+        self.actions.clear()
 
         # Remove toolbar
-        if hasattr(self, "toolbar") and self.toolbar:
+        if self.toolbar:
             self.iface.mainWindow().removeToolBar(self.toolbar)
+            self.toolbar.deleteLater()
             self.toolbar = None
 
         # Remove translator

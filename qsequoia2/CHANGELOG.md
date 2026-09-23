@@ -2,8 +2,12 @@
 
 All notable changes to QSequoia2 will be documented in this file.
 
-
 ## [1.1.2] - Unreleased
+
+### Changed
+- Lowered the minimum supported QGIS version from 3.44 to 3.40.
+- Replaced Python 3.10-only union annotations with Python 3.9-compatible typing annotations.
+
 ### Added
 - New project pedologie (#125)
 

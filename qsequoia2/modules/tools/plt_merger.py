@@ -2,7 +2,7 @@ from pathlib import Path
 
 import processing
 
-from qsequoia2.modules.utils.Qmessage import messageBox, messageBar
+from qsequoia2.modules.utils.Qmessage import messageBar, messageBox
 from qsequoia2.modules.utils.seq_config import find_seq_id, seq_layer
 
 
@@ -39,11 +39,11 @@ class PltMerger:
         if not rasters:
             messageBox(
                 self.iface,
-                "Fusion des rasters",
-                "Aucun raster contenant « _PLT » n’a été trouvé.",
-                "i",
+                "PLT_MERGER",
+                f"Aucun raster contenant « _PLT » n’a été trouvé dans « {self.root} ».\n "
+                "Sélectionnez les rasters manuellement.",
+                "w",
             )
-            return
 
         result = processing.execAlgorithmDialog(
             "gdal:merge",

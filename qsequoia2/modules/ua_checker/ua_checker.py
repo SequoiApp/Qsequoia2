@@ -1,11 +1,12 @@
 from pathlib import Path
 from PyQt5 import uic
-from qgis.PyQt.QtWidgets import QWidget
+from qgis.PyQt.QtWidgets import QWidget, QMessageBox
 from qgis.core import QgsProject, QgsApplication
 from PyQt5.QtCore import Qt, QTimer
 from qgis.PyQt.QtWidgets import QTreeWidgetItem
 from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtCore import Qt
+from qsequoia2.modules.utils.Qmessage import messageBox
 from qsequoia2.modules.utils.variable import get_project_variable
 
 from .ua_checker_utils import *
@@ -43,6 +44,16 @@ class UaCheckerWidget(QWidget, FORM_CLASS):
             return
 
         self._ua_status(state=True)
+
+        if not self.ua_layer.isEditable():
+            messageBox(
+                self.iface,
+                "Couche UA non éditable",
+                "Activez le mode édition de la couche UA avant de poursuivre.",
+                "w"
+            )
+            return
+
         self._ui_status(state = True)
         self._check_data()
         self.populate_cb_from_field("cb_pf", self.ua_layer, "N_PARFOR")

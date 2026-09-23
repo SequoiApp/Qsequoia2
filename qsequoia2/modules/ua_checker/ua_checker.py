@@ -13,7 +13,7 @@ from .ua_checker_utils import *
 UI_PATH = Path(__file__).parent / 'ua_checker.ui'
 FORM_CLASS, _ = uic.loadUiType(str(UI_PATH))
 
-class ua_checker(QWidget, FORM_CLASS):
+class UaCheckerWidget(QWidget, FORM_CLASS):
 
     def __init__(self, iface, parent=None):
         super().__init__(parent)
@@ -186,8 +186,3 @@ class ua_checker(QWidget, FORM_CLASS):
         pf = n_parfor.split(".")[0]
         sspf = n_parfor.split(".")[1]
         self._on_cb_pf_changed(value=None,pf_value=pf,sspf_value=sspf)
-
-
-
-
-        

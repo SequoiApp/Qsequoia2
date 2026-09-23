@@ -7,7 +7,7 @@ from PyQt5.QtCore import QTimer
 from qgis.core import QgsProject
 
 from ..utils.Qmessage import messageBar, messageLog
-from ..utils.variable import get_project_variable, set_project_variable
+from ..utils.variable import get_global_variable, get_project_variable, set_project_variable
 from .layout_builder import LayoutBuilder
 from .project_builder import ProjectBuilder
 from .project_config_loader import ProjectConfigLoader
@@ -28,6 +28,7 @@ class LayoutDesignerWidget(QWidget, FORM_CLASS):
         self.parent = parent
         self.project = QgsProject.instance()
         self.cfg = ProjectConfigLoader(LAYOUT_CONFIG)      
+        self._project_loading = False
         
         self.setupUi(self)
         self._init_ui()
@@ -46,13 +47,21 @@ class LayoutDesignerWidget(QWidget, FORM_CLASS):
         self.btn_run.clicked.connect(self._accept)
 
     def _accept(self):
+        if self._project_loading:
+            return
+
         seq_id = get_project_variable("QS2_seq_id") or None
         seq_dir = get_project_variable("QS2_seq_dir") or None
+        models_dir = get_global_variable("QS2_models_directory") or None
             
         if not seq_dir:
             messageBar(self.iface, "Aucun répertoire sélectionné", "w")
             return
     
+        self._project_loading = True
+        container = self.parent if self.parent else self
+        container.setEnabled(False)
+
         try:
             project_key = self.combo_project.currentData()
             if not project_key:
@@ -81,13 +90,24 @@ class LayoutDesignerWidget(QWidget, FORM_CLASS):
             if is_sequoia_project or not open_composer:
                 return
 
-            QTimer.singleShot(0, lambda: self._build_layout(project_key, seq_id, ctx.layers))
+            QTimer.singleShot(
+                0,
+                lambda: self._build_layout(
+                    project_key,
+                    seq_id,
+                    ctx.layers,
+                    models_dir,
+                ),
+            )
 
 
         except Exception as e:
             messageBar(self.iface, str(e), "critical", 10)
+        finally:
+            container.setEnabled(True)
+            self._project_loading = False
 
-    def _build_layout(self, project_key, seq_id, layers):
+    def _build_layout(self, project_key, seq_id, layers, models_dir):
         try:
             layout_cfg = self.cfg.get_layout(project_key)
             coeff_cadre = self.dsb_occup.value() / 100
@@ -103,6 +123,7 @@ class LayoutDesignerWidget(QWidget, FORM_CLASS):
                 seq_id=seq_id,
                 layout_cfg=layout_cfg,
                 layers=layers,
+                models_dir=models_dir,
                 coeff_cadre=coeff_cadre,
             ).build()
 

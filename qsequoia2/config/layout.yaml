@@ -308,3 +308,30 @@ geologie:
       - id: legend1
         map: map1
         layers: *geologie_seq
+
+pedologie:
+  alias : "Pédologie"
+  canvas:
+    zoom_on: "v.seq.forest.line"
+    layers:
+      sequoia: &pedologie_seq
+        - v.seq.forest.line
+        - v.seq.pf.point
+        - v.seq.pf.line
+        - v.seq.pf.poly
+        - v.sol.pedo.poly
+      tms:
+        - tms.plan_ign.standard
+        - tms.plan_ign.classique
+        - tms.plan_ign.epure
+
+  layout:
+    maps:
+      - id: map1
+        main_map: true
+        scale: 15000
+        layers: [*pedologie_seq, tms.plan_ign.epure]
+    legends:
+      - id: legend1
+        map: map1
+        layers: *pedologie_seq

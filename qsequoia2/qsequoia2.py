@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 import os
 
-from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt, QUrl
+from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt, QUrl, QTimer
 from qgis.PyQt.QtGui import QIcon, QDesktopServices
 from qgis.PyQt.QtWidgets import QAction
 from qgis.core import *
@@ -42,6 +42,7 @@ class Qsequoia2:
         self.toolbar = None
         self.dockwidget = None
         self.dlg = None
+        self._project_loading = False
 
     def tr(self, message):
         return QCoreApplication.translate('Qsequoia2', message)
@@ -60,6 +61,9 @@ class Qsequoia2:
         self.iface.addPluginToMenu(self.menu, action)
 
         self.actions.append(action)
+
+        self.iface.projectRead.connect(self._schedule_project_status_refresh)
+        self.iface.newProjectCreated.connect(self._schedule_project_status_refresh)
 
         # Fetch Rsequoia2 config
         sync_seq_configs()
@@ -115,29 +119,50 @@ class Qsequoia2:
             self.dockwidget = None
 
     def _on_project_changed(self, seq_dir, seq_id):
-
-        path = open_seq_project(
-            self.project,
-            self.iface,
-            seq_id,
-            seq_dir,
-            suffix = "SEQUOIA",
-            ask_create=True,
-            ask_unsaved=True,
-            preserve_qs2_variables=False
-        )
-
-        if not path:
+        if self._project_loading:
             return
 
-        messageLog(f"[PROJECT] Opened project: {path}")
-        messageBar(self.iface, f"Projet prêt : {seq_id}", level="success")
+        self._project_loading = True
+        dockwidget = self.dockwidget
+        if dockwidget:
+            dockwidget.setEnabled(False)
 
-        set_project_variable("QS2_seq_dir", seq_dir)
-        set_project_variable("QS2_seq_id", seq_id)
+        try:
+            path = open_seq_project(
+                self.project,
+                self.iface,
+                seq_id,
+                seq_dir,
+                suffix="SEQUOIA",
+                ask_create=True,
+                ask_unsaved=True,
+                preserve_qs2_variables=False,
+            )
 
+            if not path:
+                return
+
+            messageLog(f"[PROJECT] Opened project: {path}")
+            messageBar(self.iface, f"Projet prêt : {seq_id}", level="success")
+
+            set_project_variable("QS2_seq_dir", seq_dir)
+            set_project_variable("QS2_seq_id", seq_id)
+
+            if self.dockwidget:
+                self.dockwidget.projectLoaded.emit()
+        finally:
+            if dockwidget:
+                dockwidget.setEnabled(True)
+            self._project_loading = False
+
+    def _schedule_project_status_refresh(self):
+        # Project variables are restored immediately after QGIS emits its
+        # project signal, so read them on the next event-loop iteration.
+        QTimer.singleShot(0, self._refresh_project_status)
+
+    def _refresh_project_status(self):
         if self.dockwidget:
-            self.dockwidget.projectLoaded.emit()
+            self.dockwidget.refresh_project_status()
 
     def _open_global_settings(self):
         """Ouvre la fenêtre de configuration globale du plugin."""
@@ -169,6 +194,12 @@ class Qsequoia2:
         QDesktopServices.openUrl(url)
  
     def unload(self):
+
+        try:
+            self.iface.projectRead.disconnect(self._schedule_project_status_refresh)
+            self.iface.newProjectCreated.disconnect(self._schedule_project_status_refresh)
+        except Exception:
+            pass
 
         # Remove actions
         for action in getattr(self, "actions", []):

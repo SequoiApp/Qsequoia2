@@ -12,7 +12,7 @@ from time import time
 # QGIS
 from qgis.PyQt.QtCore import QObject
 from qgis.core import Qgis, QgsMessageLog, QgsProject
-from .Qmessage import messageBar, messageLog, messageBox
+from .Qmessage import messageBar
 import qgis.utils
 from .plugin_vars import *
 
@@ -83,7 +83,13 @@ def reloadQS2(plugin, plug = "qsequoia2"):
 
     if pluginStarted:
         duration = int(round((endTime - startTime) * 1000))
-        messageBox(iface, "IMPORTANT !", f'{plug}\n rechargé en {duration} ms, veuillez fermer puis ouvrir de nouveau l interface du plugin', "i")
+        messageBar(
+            iface,
+            f"L'extension Qsequoia2 a été rechargée en {duration} ms. "
+            "Cliquez sur son icône pour rouvrir l'interface.",
+            level="s",
+            duration=10,
+        )
 
     
 

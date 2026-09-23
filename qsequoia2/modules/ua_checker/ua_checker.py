@@ -103,6 +103,13 @@ class UaCheckerWidget(QWidget, FORM_CLASS):
             pf_value = self.cb_pf.currentText()
             sspf_value = self.cb_sspf.currentText()
 
+            if self.sender() is self.cb_pf:
+                values = get_sspf_list(self.ua_layer, pf_list=pf_value or None)
+                self.cb_sspf.clear()
+                self.cb_sspf.addItem("")
+                self.cb_sspf.addItems(sorted({str(v) for v in values}))
+                sspf_value = ""
+
         expr = self.build_sspf_expression(pf_value, sspf_value)
         
         if expr is None:

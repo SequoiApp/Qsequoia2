@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 from types import SimpleNamespace
+from typing import Optional, Union
 
 import yaml
 
@@ -20,7 +21,7 @@ class ProjectCanvas:
 class LayoutMap:
     id: str
     layers: list[str]
-    scale: int | None = None
+    scale: Optional[int] = None
     main_map: bool = False
 
 @dataclass
@@ -32,12 +33,12 @@ class LegendSpec:
 @dataclass
 class ProjectLayout:
     key: str
-    main_scale: int | None = None
+    main_scale: Optional[int] = None
     maps: list[LayoutMap] = field(default_factory=list)
     legends: list[LegendSpec] = field(default_factory=list)
 
 class ProjectConfigLoader:
-    def __init__(self, config_path: str | Path):
+    def __init__(self, config_path: Union[str, Path]):
         self.config_path = Path(config_path)
         self._cache = None
 

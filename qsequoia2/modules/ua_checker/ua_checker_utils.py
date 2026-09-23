@@ -79,6 +79,9 @@ def ua_check_ug(ua_layer, verbose=True) -> dict:
     for ug, feats in groups.items():
         bad = {}
         for field in desc_fields:
+            if field not in feats[0].fields().names():
+                continue
+            
             values = {str(f[field]) if f[field] not in (None, "NULL") else "VIDE" for f in feats}
 
             if len(values) > 1:

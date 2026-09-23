@@ -1,19 +1,20 @@
 from pathlib import Path
 from PyQt5 import uic
-from qgis.PyQt.QtWidgets import QWidget
+from qgis.PyQt.QtWidgets import QWidget, QMessageBox
 from qgis.core import QgsProject, QgsApplication
 from PyQt5.QtCore import Qt, QTimer
 from qgis.PyQt.QtWidgets import QTreeWidgetItem
 from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtCore import Qt
+from qsequoia2.modules.utils.Qmessage import messageBox
+from qsequoia2.modules.utils.variable import get_project_variable
 
-from ..utils.seq_config import seq_layer
 from .ua_checker_utils import *
 
 UI_PATH = Path(__file__).parent / 'ua_checker.ui'
 FORM_CLASS, _ = uic.loadUiType(str(UI_PATH))
 
-class ua_checker(QWidget, FORM_CLASS):
+class UaCheckerWidget(QWidget, FORM_CLASS):
 
     def __init__(self, iface, parent=None):
         super().__init__(parent)
@@ -32,20 +33,9 @@ class ua_checker(QWidget, FORM_CLASS):
         self.cb_sspf.currentTextChanged.connect(lambda value: self._on_cb_pf_changed(value))
         self.project.layersRemoved.connect(self._on_layers_removed)
 
-    def _find_ua_loader(self):
-        meta = seq_layer("ua")
-        for layer in self.project.mapLayers().values():
-            source = layer.source()
-            if not source or "://" in source:
-                continue
-                
-            path = Path(source)
-            if meta["filename"] in path.name :
-                return layer
-        return None
-
     def on_ua_layer_loaded(self): 
-        self.ua_layer = self._find_ua_loader()
+        seq_id = get_project_variable("QS2_seq_id")
+        self.ua_layer = resolve_seq_layer("ua", self.project, seq_id=seq_id)
 
         if not self.ua_layer:
             self._ua_status(state=False)
@@ -54,6 +44,16 @@ class ua_checker(QWidget, FORM_CLASS):
             return
 
         self._ua_status(state=True)
+
+        if not self.ua_layer.isEditable():
+            messageBox(
+                self.iface,
+                "Couche UA non éditable",
+                "Activez le mode édition de la couche UA avant de poursuivre.",
+                "w"
+            )
+            return
+
         self._ui_status(state = True)
         self._check_data()
         self.populate_cb_from_field("cb_pf", self.ua_layer, "N_PARFOR")
@@ -68,7 +68,8 @@ class ua_checker(QWidget, FORM_CLASS):
             self.lbl_ua_status.setStyleSheet("color: red;")
 
     def _check_data(self):
-        inconsistent_ug = ua_check_ug(self.ua_layer)
+        is_auto_fill = self.cb_auto_fill.isChecked()
+        inconsistent_ug = ua_check_ug(self.ua_layer, auto_fill=is_auto_fill)
         self._set_checker_status(inconsistent_ug)
         self.ua_layer.removeSelection()
         self.lbl_surf_sig.setText(f"Surface SIG : {sspf_surface_calculation(self.ua_layer)}")
@@ -101,6 +102,13 @@ class ua_checker(QWidget, FORM_CLASS):
         if value is not None:
             pf_value = self.cb_pf.currentText()
             sspf_value = self.cb_sspf.currentText()
+
+            if self.sender() is self.cb_pf:
+                values = get_sspf_list(self.ua_layer, pf_list=pf_value or None)
+                self.cb_sspf.clear()
+                self.cb_sspf.addItem("")
+                self.cb_sspf.addItems(sorted({str(v) for v in values}))
+                sspf_value = ""
 
         expr = self.build_sspf_expression(pf_value, sspf_value)
         
@@ -186,8 +194,3 @@ class ua_checker(QWidget, FORM_CLASS):
         pf = n_parfor.split(".")[0]
         sspf = n_parfor.split(".")[1]
         self._on_cb_pf_changed(value=None,pf_value=pf,sspf_value=sspf)
-
-
-
-
-        

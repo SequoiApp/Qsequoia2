@@ -7,7 +7,7 @@ from qgis.PyQt.QtCore import pyqtSignal, Qt
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QCompleter, QFileDialog, QApplication
 
-from qsequoia2.modules.ua_checker.ua_checker import ua_checker
+from qsequoia2.modules.ua_checker.ua_checker import UaCheckerWidget
 from qsequoia2.modules.add_data.add_data import AddDataTabWidget
 from qsequoia2.modules.layout_designer.layout_designer import LayoutDesignerWidget
 from qsequoia2.modules.forest_data.forest_data import ForestDataWidget
@@ -196,7 +196,7 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             return widget 
 
         forest_tab = add_tab(ForestDataWidget(iface=self.iface, parent=self), "mActionCalculateField.svg", "Métadonnées")
-        ua_check_tab = add_tab(ua_checker(self.iface,parent=self), "mActionZoomToSelected.svg", "Vérification des données")
+        ua_check_tab = add_tab(UaCheckerWidget(self.iface,parent=self), "mActionZoomToSelected.svg", "Vérification des données")
         add_data_tab = add_tab(AddDataTabWidget(iface=self.iface, parent=self), "mActionAddLayer.svg", "Ajout de données")
         layout_tab = add_tab(LayoutDesignerWidget(iface=self.iface, parent=self), "mActionNewLayout.svg", "Conception de mise en page")
         tools_tab = add_tab(ToolsDialog(iface=self.iface, parent=self), "processingAlgorithm.svg",  "Outils")

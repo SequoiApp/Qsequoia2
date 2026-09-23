@@ -65,7 +65,7 @@ def build_mngnt_code(ua_layer, pf_field, sspf_field):
     return groups
 
 
-def ua_check_ug(ua_layer, verbose=True) -> dict:
+def ua_check_ug(ua_layer, verbose=True, auto_fill=False) -> dict:
 
     pf_field = seq_field("pcl_code")["name"]
     sspf_field = seq_field("sub_code")["name"]
@@ -75,11 +75,24 @@ def ua_check_ug(ua_layer, verbose=True) -> dict:
     groups = build_mngnt_code(ua_layer, pf_field, sspf_field)
 
     report = {}
-
     for ug, feats in groups.items():
         bad = {}
         for field in desc_fields:
+            if field not in feats[0].fields().names():
+                continue
+            
             values = {str(f[field]) if f[field] not in (None, "NULL") else "VIDE" for f in feats}
+
+            has_unique_value_and_null = len(values) == 2 and "VIDE" in values
+            if auto_fill and has_unique_value_and_null:
+                # first find the unique value
+                fill_value = next(f[field] for f in feats if f[field] not in (None, "NULL"))
+                field_index = ua_layer.fields().indexOf(field)
+                for feat in feats:
+                    if feat[field] in (None, "NULL"):
+                        # apply the unique value where it's NULL
+                        ua_layer.changeAttributeValue(feat.id(), field_index, fill_value)
+                continue
 
             if len(values) > 1:
                 bad[field] = sorted(values)

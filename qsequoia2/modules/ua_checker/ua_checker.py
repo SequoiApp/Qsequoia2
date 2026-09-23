@@ -57,7 +57,8 @@ class UaCheckerWidget(QWidget, FORM_CLASS):
             self.lbl_ua_status.setStyleSheet("color: red;")
 
     def _check_data(self):
-        inconsistent_ug = ua_check_ug(self.ua_layer)
+        is_auto_fill = self.cb_auto_fill.isChecked()
+        inconsistent_ug = ua_check_ug(self.ua_layer, auto_fill=is_auto_fill)
         self._set_checker_status(inconsistent_ug)
         self.ua_layer.removeSelection()
         self.lbl_surf_sig.setText(f"Surface SIG : {sspf_surface_calculation(self.ua_layer)}")

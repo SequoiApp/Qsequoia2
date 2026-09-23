@@ -6,8 +6,8 @@ from PyQt5.QtCore import Qt, QTimer
 from qgis.PyQt.QtWidgets import QTreeWidgetItem
 from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtCore import Qt
+from qsequoia2.modules.utils.variable import get_project_variable
 
-from ..utils.seq_config import seq_layer
 from .ua_checker_utils import *
 
 UI_PATH = Path(__file__).parent / 'ua_checker.ui'
@@ -32,20 +32,9 @@ class UaCheckerWidget(QWidget, FORM_CLASS):
         self.cb_sspf.currentTextChanged.connect(lambda value: self._on_cb_pf_changed(value))
         self.project.layersRemoved.connect(self._on_layers_removed)
 
-    def _find_ua_loader(self):
-        meta = seq_layer("ua")
-        for layer in self.project.mapLayers().values():
-            source = layer.source()
-            if not source or "://" in source:
-                continue
-                
-            path = Path(source)
-            if meta["filename"] in path.name :
-                return layer
-        return None
-
     def on_ua_layer_loaded(self): 
-        self.ua_layer = self._find_ua_loader()
+        seq_id = get_project_variable("QS2_seq_id")
+        self.ua_layer = resolve_seq_layer("ua", self.project, seq_id=seq_id)
 
         if not self.ua_layer:
             self._ua_status(state=False)

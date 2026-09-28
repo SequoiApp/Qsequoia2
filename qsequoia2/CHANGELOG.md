@@ -14,11 +14,13 @@ All notable changes to QSequoia2 will be documented in this file.
 ### Changed
 - Opened the PLT raster merge dialog even when no matching raster is found, with a warning allowing users to select inputs manually.
 - Remove qsequoia2_widget when reloading the plugin
+- Rename `ua_checker` to `UaCheckerWidget` to match naming style of Qsequoia2
 
 ### Fixed
 - Prevented native QGIS crashes while switching projects with an open layout designer by using the application-level project lifecycle and blocking re-entrant project loads [#94]
 - Corrected format selection that wasn't taking into account landscape for paper dimension.
 - Better handling of Qsequoia2 state : When manually creating or switching project Qsequoia2 state properly update
+- Only use existing `seq_desc_field` in `ua_checker` to support older ua version
 
 ## [1.1.1] - 2026-07-20
 ### Added

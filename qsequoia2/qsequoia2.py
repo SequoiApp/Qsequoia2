@@ -128,6 +128,7 @@ class Qsequoia2:
         # cannot try to reuse the instance being destroyed.
         self.dockwidget = None
         self.iface.removeDockWidget(dockwidget)
+        dockwidget.setParent(None)
         dockwidget.deleteLater()
 
     def _on_project_changed(self, seq_dir, seq_id):
@@ -219,9 +220,12 @@ class Qsequoia2:
 
         # Remove toolbar
         if self.toolbar:
-            self.iface.mainWindow().removeToolBar(self.toolbar)
-            self.toolbar.deleteLater()
+            toolbar = self.toolbar
             self.toolbar = None
+
+            self.iface.mainWindow().removeToolBar(toolbar)
+            toolbar.setParent(None)
+            toolbar.deleteLater()
 
         # Remove translator
         if hasattr(self, "translator"):

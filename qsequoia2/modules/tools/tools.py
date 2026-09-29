@@ -5,13 +5,13 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication, QTreeWidgetItem, QWidget
 
 from qsequoia2.modules.tools.plt_merger import PltMerger
+from qsequoia2.modules.tools.grid_generator import GridGenerator
 from qsequoia2.modules.tools.ua_cleaner import run_clean_ua
 from qsequoia2.modules.utils.Qmessage import messageBar
 from qsequoia2.modules.utils.variable import (
     get_global_variable,
     get_project_variable,
 )
-
 
 UI_PATH = Path(__file__).parent / "tools.ui"
 FORM_CLASS, _ = uic.loadUiType(str(UI_PATH))
@@ -34,6 +34,7 @@ class ToolsDialog(QWidget, FORM_CLASS):
         tools = {
             "Nettoyer UA": self._run_clean_ua,
             "Fusionner les rasters PLT": self._open_plt_merge,
+            "Générer une grille de placettes": self._open_grid_generator,
         }
 
         for label, callback in tools.items():
@@ -102,3 +103,10 @@ class ToolsDialog(QWidget, FORM_CLASS):
 
         finally:
             QApplication.restoreOverrideCursor()
+
+    def _open_grid_generator(self):
+        GridGenerator(
+            iface=self.iface,
+            parent=self,
+            student_factor=2.0,
+        ).exec_()

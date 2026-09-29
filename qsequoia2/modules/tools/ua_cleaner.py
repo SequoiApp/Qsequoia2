@@ -1,14 +1,17 @@
+import gc
 from datetime import datetime
 from pathlib import Path
+from shutil import copy2
 from typing import Optional
 
 from qgis import processing
 from qgis.core import (
+    QgsApplication,
     QgsProject,
     QgsVectorFileWriter,
 )
 
-from qsequoia2.modules.utils.seq_config import seq_read, seq_layer
+from qsequoia2.modules.utils.seq_config import resolve_seq_layer, seq_read
 
 
 def run_clean_ua(seq_dir: str, style_folder: Optional[str] = None):
@@ -19,51 +22,40 @@ def run_clean_ua(seq_dir: str, style_folder: Optional[str] = None):
         backup_path (Path)
     """
 
-    ua_layer = seq_read("v.seq.ua", seq_dir, add_to_project=True)
-    if not ua_layer or not ua_layer.isValid():
-        raise RuntimeError("Impossible de charger la couche UA")
+    project = QgsProject.instance()
+    ua_layer = resolve_seq_layer("v.seq.ua", project)
 
-    ua_name = seq_layer("v.seq.ua")["name"]
+    is_loaded = ua_layer is not None
+    if is_loaded:
+        project.removeMapLayer(ua_layer.id())
+        ua_layer = None
+
+    ua_layer = seq_read("v.seq.ua", seq_dir, add_to_project=False)
+
     ua_source = Path(ua_layer.source())
-
-    backup_path = backup_ua(ua_layer, ua_name, ua_source)
-
+    backup_path = backup_ua(ua_source)
     cleaned = clean_ua(ua_layer)
 
-    QgsProject.instance().removeMapLayer(ua_layer.id())
-
-    write_cleaned_layer(cleaned, ua_source, ua_name)
+    write_cleaned_layer(cleaned, ua_source)
 
     # reload clean layer
-    seq_read(
-        "v.seq.ua",
-        seq_dir,
-        add_to_project=True,
-        style_folder=style_folder
-    )
+    seq_read("v.seq.ua", seq_dir, add_to_project=True, style_folder=style_folder)
 
     return backup_path
 
-def backup_ua(layer, name, source: Path) -> Path:
+
+def backup_ua(ua_source: Path) -> Path:
+    """Copy the complete current GeoPackage before replacing it."""
+    if not ua_source.is_file():
+        raise FileNotFoundError(f"GeoPackage UA introuvable : {ua_source}")
+
     date_str = datetime.now().strftime("%Y%m%dT%H%M%S")
-    backup_path = source.with_name(f"{source.stem}_{date_str}{source.suffix}")
+    backup_path = ua_source.with_name(f"{ua_source.stem}_{date_str}{ua_source.suffix}")
 
-    options = QgsVectorFileWriter.SaveVectorOptions()
-    options.driverName = "GPKG"
-    options.layerName = name
-    options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteFile
-
-    err, msg, *_ = QgsVectorFileWriter.writeAsVectorFormatV3(
-        layer,
-        str(backup_path),
-        QgsProject.instance().transformContext(),
-        options,
-    )
-
-    if err != QgsVectorFileWriter.NoError:
-        raise RuntimeError(f"Impossible d'écrire la sauvegarde : {msg}")
+    copy2(ua_source, backup_path)
 
     return backup_path
+
 
 def clean_ua(ua_layer):
     clean = processing.run(
@@ -110,10 +102,12 @@ def clean_ua(ua_layer):
 
     return clean
 
-def write_cleaned_layer(layer, path: Path, name: str):
+
+def write_cleaned_layer(layer, path: Path):
     options = QgsVectorFileWriter.SaveVectorOptions()
     options.driverName = "GPKG"
-    options.layerName = name
+    options.layerName = path.stem
+    # Recreate the GeoPackage so no previous layer can remain beside the UA.
     options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
 
     err, msg, *_ = QgsVectorFileWriter.writeAsVectorFormatV3(

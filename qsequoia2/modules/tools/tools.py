@@ -75,6 +75,7 @@ class ToolsDialog(QWidget, FORM_CLASS):
             return
 
         style_folder = get_global_variable("QS2_styles_directory")
+        seq_id = get_project_variable("QS2_seq_id")
 
         QApplication.setOverrideCursor(Qt.WaitCursor)
         messageBar(
@@ -85,7 +86,7 @@ class ToolsDialog(QWidget, FORM_CLASS):
         )
 
         try:
-            backup_path = run_clean_ua(seq_dir, style_folder)
+            backup_path = run_clean_ua(seq_dir, style_folder, seq_id)
 
             messageBar(
                 self.iface,

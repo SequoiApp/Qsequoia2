@@ -1,17 +1,18 @@
 from pathlib import Path
 from enum import Enum
+from typing import Optional
 
 from qgis.PyQt import QtWidgets, uic
 from qgis.PyQt.QtCore import pyqtSignal, Qt
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QCompleter, QFileDialog, QApplication
 
-from qsequoia2.modules.ua_checker.ua_checker import ua_checker
+from qsequoia2.modules.ua_checker.ua_checker import UaCheckerWidget
 from qsequoia2.modules.add_data.add_data import AddDataTabWidget
 from qsequoia2.modules.layout_designer.layout_designer import LayoutDesignerWidget
 from qsequoia2.modules.forest_data.forest_data import ForestDataWidget
 from qsequoia2.modules.tools.tools import ToolsDialog
-from qsequoia2.modules.utils.variable import get_global_variable
+from qsequoia2.modules.utils.variable import get_global_variable, get_project_variable
 from qsequoia2.modules.utils.seq_config import *
 from qsequoia2.modules.utils.Qmessage import *
 from qsequoia2.modules.utils.configure_snapping import configure_snapping
@@ -156,7 +157,7 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             messageBar(self.iface, f"Dossier valide : {seq_dir}", "s", 10)
     
 
-    def _set_seq_dir_status(self, state: SeqDirState, label: str | None = None):
+    def _set_seq_dir_status(self, state: SeqDirState, label: Optional[str] = None):
         status_map = {
             SeqDirState.VALID: ("/mIconSuccess.svg", "Dossier valide"),
             SeqDirState.INVALID: ("/mIconWarning.svg", "Dossier invalide"),
@@ -177,6 +178,15 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.lbl_forest_id.setToolTip(label)
             self.lbl_forest_id.show()
 
+    def refresh_project_status(self):
+        seq_dir = get_project_variable("QS2_seq_dir")
+        seq_id = get_project_variable("QS2_seq_id")
+
+        if seq_dir and seq_id:
+            self._set_seq_dir_status(SeqDirState.VALID, str(seq_id))
+        else:
+            self._set_seq_dir_status(SeqDirState.EMPTY)
+
     def _init_tabs(self):
 
         def add_tab(widget, icon_name, tooltip):
@@ -186,7 +196,7 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             return widget 
 
         forest_tab = add_tab(ForestDataWidget(iface=self.iface, parent=self), "mActionCalculateField.svg", "Métadonnées")
-        ua_check_tab = add_tab(ua_checker(self.iface,parent=self), "mActionZoomToSelected.svg", "Vérification des données")
+        ua_check_tab = add_tab(UaCheckerWidget(self.iface,parent=self), "mActionZoomToSelected.svg", "Vérification des données")
         add_data_tab = add_tab(AddDataTabWidget(iface=self.iface, parent=self), "mActionAddLayer.svg", "Ajout de données")
         layout_tab = add_tab(LayoutDesignerWidget(iface=self.iface, parent=self), "mActionNewLayout.svg", "Conception de mise en page")
         tools_tab = add_tab(ToolsDialog(iface=self.iface, parent=self), "processingAlgorithm.svg",  "Outils")

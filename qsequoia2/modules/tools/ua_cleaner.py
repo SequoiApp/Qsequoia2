@@ -1,5 +1,6 @@
 from datetime import datetime
 from pathlib import Path
+from typing import Optional
 
 from qgis import processing
 from qgis.core import (
@@ -10,7 +11,7 @@ from qgis.core import (
 from qsequoia2.modules.utils.seq_config import seq_read, seq_layer
 
 
-def run_clean_ua(seq_dir: str, style_folder: str | None = None):
+def run_clean_ua(seq_dir: str, style_folder: Optional[str] = None):
     """
     Full UA cleaning pipeline.
 

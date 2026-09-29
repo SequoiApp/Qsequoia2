@@ -1,6 +1,6 @@
 [general]
 name=qsequoia2
-qgisMinimumVersion=3.44
+qgisMinimumVersion=3.40
 
 
 description=QSequoia2 simplifies daily french forest management tasks in QGIS by providing tools for importing, structuring, visualizing, and styling forestry data from RSequoia2.

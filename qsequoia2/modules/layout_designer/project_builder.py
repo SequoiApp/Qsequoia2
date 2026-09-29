@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Optional
 
 from PyQt5.QtCore import Qt
 from qgis.PyQt.QtCore import QTimer
@@ -15,13 +16,13 @@ from ..utils.qgz_project import open_seq_project
 
 @dataclass
 class BuildContext:
-    seq_id: str | None
+    seq_id: Optional[str]
     canvas: object
     layers: dict[str, QgsMapLayer]
 
 class ProjectBuilder:
 
-    def __init__(self, iface, project: QgsProject, seq_id: str | None, seq_dir, canvas_cfg, on_project_loaded=None):
+    def __init__(self, iface, project: QgsProject, seq_id: Optional[str], seq_dir, canvas_cfg, on_project_loaded=None):
         self.iface = iface
         self.project = project
         self.seq_id = seq_id

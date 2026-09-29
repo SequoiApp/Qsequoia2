@@ -8,7 +8,7 @@ from qsequoia2.modules.utils.variable import (
     get_qs2_project_variables,
     set_project_variable,
 )
-from .Qmessage import messageBar, messageLog
+from .Qmessage import messageBar
 
 def restore_qs2_project_variables(variables: Optional[dict]) -> None:
     """Restore QS2 project variables into the current QGIS project."""
@@ -18,13 +18,15 @@ def restore_qs2_project_variables(variables: Optional[dict]) -> None:
     for name, value in variables.items():
         set_project_variable(name, value)
 
-def load_project(project, path: Path, variables: Optional[dict] = None) -> None:
-    """Load an existing QGIS project and optionally restore QS2 variables."""
+def load_project(iface, path: Path, variables: Optional[dict] = None) -> None:
+    """Load a project through QGIS and optionally restore QS2 variables."""
     path = Path(path)
     try:
-        ok = project.read(str(path))
+        # This closes project-bound UI, notably layout designers, before the
+        # project is replaced. Direct QgsProject.read() bypasses that cleanup.
+        ok = iface.addProject(str(path))
     except Exception as e:
-        messageLog(f"[load_project] Project read crashed {str(e)}", "w")
+        raise RuntimeError(f"Failed to load project: {path}") from e
 
     if not ok:
         raise RuntimeError(f"Failed to load project: {path}")
@@ -91,7 +93,11 @@ def new_seq_project(
 
     path.parent.mkdir(parents=True, exist_ok=True)
 
-    project.clear()
+    # Use QGIS's complete project lifecycle so stale project-bound widgets are
+    # destroyed before configuring the new project.
+    if not iface.newProject(False):
+        raise RuntimeError(f"Failed to initialize project: {path}")
+
     project.setCrs(QgsCoordinateReferenceSystem(datum))
     project.setFileName(str(path))
     restore_qs2_project_variables(variables)
@@ -121,7 +127,7 @@ def open_seq_project(
 
     path = find_seq_project(seq_id, seq_dir, suffix)
     if path:
-        load_project(project, path, variables)
+        load_project(iface, path, variables)
         return path
 
     return new_seq_project(

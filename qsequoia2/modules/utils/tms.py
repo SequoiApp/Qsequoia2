@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional
 import yaml
 
 from qgis.core import QgsVectorTileLayer, QgsProject
@@ -31,7 +32,7 @@ def tms_layer(key: str) -> dict:
     cfg = get_tms_config()
     return cfg.get(key)
 
-def _build_uri(url: str, style: str | None = None) -> str:
+def _build_uri(url: str, style: Optional[str] = None) -> str:
     """
     Build QGIS vector tile URI
     """

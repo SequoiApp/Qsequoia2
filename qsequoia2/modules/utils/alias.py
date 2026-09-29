@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional
 import yaml
 
 from qsequoia2.modules.utils.seq_config import CONFIG_CACHE
@@ -13,7 +14,7 @@ def get_alias_config_path() -> Path:
     return path
 
 
-def get_alias_config() -> dict[str, str | None]:
+def get_alias_config() -> dict[str, Optional[str]]:
     if "alias" in CONFIG_CACHE:
         return CONFIG_CACHE["alias"]
 
@@ -30,6 +31,6 @@ def get_alias_config() -> dict[str, str | None]:
     return data
 
 
-def get_alias(key: str) -> str | None:
+def get_alias(key: str) -> Optional[str]:
     cfg = get_alias_config()
     return cfg.get(key) or None

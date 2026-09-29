@@ -156,13 +156,24 @@ def resolve_seq_layer(key, project, seq_id=None):
         filename = f"{seq_id}_{filename}"
 
     expected_dir = meta["path"]
+    filename = filename.casefold()
 
     for layer in project.mapLayers().values():
         messageLog(f"Checking layer '{layer.name()}' with source '{layer.source()}'...")
         source = layer.source().split("|")[0]  # remove provider suffix : path|layername=...
         path = Path(source)
 
-        if path.name == filename and expected_dir in path.parts:
+        name_matches = (
+            path.name.casefold() == filename
+            if seq_id
+            else path.name.casefold().endswith(filename)
+        )
+        directory_matches = not expected_dir or any(
+            part.casefold() == expected_dir.casefold()
+            for part in path.parts
+        )
+
+        if name_matches and directory_matches:
             return layer
 
     return None

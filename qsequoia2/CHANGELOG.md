@@ -25,7 +25,7 @@ All notable changes to QSequoia2 will be documented in this file.
 ## [1.1.1] - 2026-07-20
 ### Added
 - Tool to merge `sequoia2` PLT raster in toolbox
-- Tool to generate forest plot grid
+- Tool to generate custom grid in toolbox
 
 ## [1.1.0] - 2026-06-23
 
@@ -36,7 +36,6 @@ All notable changes to QSequoia2 will be documented in this file.
   - Auto-select & zoom on UA 
 - New `QS2_surface_soumise` variable based on `DGD_SOUMIS` & `DGD_BOISE` fields
 - Update new aliases to macth new RSequoia2 layer (LIDAR & OCCUPATION)
-
 
 ## [1.0.8] - 2026-04-17
 

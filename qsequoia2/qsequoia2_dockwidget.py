@@ -20,7 +20,7 @@ from qsequoia2.modules.utils.configure_snapping import configure_snapping
 PLUGIN_DIR = Path(__file__).resolve().parent
 ICONS_DIR = PLUGIN_DIR / "icons"
 
-UI_PATH = PLUGIN_DIR / "sequoia2_dockwidget.ui"
+UI_PATH = PLUGIN_DIR / "qsequoia2_dockwidget.ui"
 FORM_CLASS, _ = uic.loadUiType(str(UI_PATH))
 
 

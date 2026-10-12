@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>Qsequoia2</class>
- <widget class="QgsDockWidget" name="Qsequoia2">
+ <widget class="QDockWidget" name="Qsequoia2">
   <property name="geometry">
    <rect>
     <x>0</x>

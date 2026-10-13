@@ -7,165 +7,189 @@
     <x>0</x>
     <y>0</y>
     <width>496</width>
-    <height>575</height>
+    <height>584</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Paramétrage général</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_2">
-   <item>
-    <layout class="QFormLayout" name="formLayout">
-     <item row="0" column="0">
-      <widget class="QLabel" name="lbl_styles_directory">
-       <property name="text">
-        <string>Bibliothèque de styles</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1">
-      <layout class="QHBoxLayout" name="hbox_styles_directory">
-       <item>
-        <widget class="QLineEdit" name="le_styles_directory">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="btn_styles_directory">
-         <property name="toolTip">
-          <string>Open a style folder</string>
-         </property>
-         <property name="text">
-          <string>...</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="lbl_models_directory">
-       <property name="text">
-        <string>Bibliothèque de modèles</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <layout class="QHBoxLayout" name="hbox_models_directory">
-       <item>
-        <widget class="QLineEdit" name="le_models_directory">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="btn_models_directory">
-         <property name="toolTip">
-          <string>Open a models folder</string>
-         </property>
-         <property name="text">
-          <string>...</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item row="2" column="0">
-      <widget class="QLabel" name="lbl_username">
-       <property name="text">
-        <string>Utilisateur</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="1">
-      <widget class="QLineEdit" name="le_username">
+  <layout class="QFormLayout" name="formLayout">
+   <item row="0" column="0">
+    <widget class="QLabel" name="lbl_styles_directory">
+     <property name="text">
+      <string>Bibliothèque de styles</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <layout class="QHBoxLayout" name="hbox_styles_directory">
+     <item>
+      <widget class="QLineEdit" name="le_styles_directory">
        <property name="enabled">
-        <bool>true</bool>
+        <bool>false</bool>
        </property>
       </widget>
      </item>
-     <item row="3" column="0">
-      <widget class="QLabel" name="lbl_organization">
-       <property name="text">
-        <string>Organisation</string>
+     <item>
+      <widget class="QPushButton" name="btn_styles_directory">
+       <property name="toolTip">
+        <string>Open a style folder</string>
        </property>
-      </widget>
-     </item>
-     <item row="3" column="1">
-      <widget class="QLineEdit" name="le_organization"/>
-     </item>
-     <item row="4" column="0">
-      <widget class="QLabel" name="lbl_address_street">
        <property name="text">
-        <string>Adresse</string>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="1">
-      <widget class="QLineEdit" name="le_address_street"/>
-     </item>
-     <item row="5" column="0">
-      <widget class="QLabel" name="lbl_address_postal_code">
-       <property name="text">
-        <string>Code postal</string>
-       </property>
-      </widget>
-     </item>
-     <item row="5" column="1">
-      <widget class="QLineEdit" name="le_address_postal_code"/>
-     </item>
-     <item row="6" column="0">
-      <widget class="QLabel" name="lbl_address_city">
-       <property name="text">
-        <string>Commune</string>
-       </property>
-      </widget>
-     </item>
-     <item row="6" column="1">
-      <widget class="QLineEdit" name="le_address_city"/>
-     </item>
-     <item row="8" column="0">
-      <widget class="QLabel" name="lbl_email">
-       <property name="text">
-        <string>Email</string>
-       </property>
-      </widget>
-     </item>
-     <item row="8" column="1">
-      <widget class="QLineEdit" name="le_email"/>
-     </item>
-     <item row="9" column="0">
-      <widget class="QLabel" name="lbl_website">
-       <property name="text">
-        <string>Site web</string>
-       </property>
-      </widget>
-     </item>
-     <item row="9" column="1">
-      <widget class="QLineEdit" name="le_website"/>
-     </item>
-     <item row="7" column="1">
-      <widget class="QLineEdit" name="le_phone"/>
-     </item>
-     <item row="7" column="0">
-      <widget class="QLabel" name="lbl_phone">
-       <property name="text">
-        <string>Téléphone</string>
+        <string>...</string>
        </property>
       </widget>
      </item>
     </layout>
    </item>
-   <item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="lbl_models_directory">
+     <property name="text">
+      <string>Bibliothèque de modèles</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1">
+    <layout class="QHBoxLayout" name="hbox_models_directory">
+     <item>
+      <widget class="QLineEdit" name="le_models_directory">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btn_models_directory">
+       <property name="toolTip">
+        <string>Open a models folder</string>
+       </property>
+       <property name="text">
+        <string>...</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="2" column="0">
+    <widget class="QLabel" name="lbl_config_layout">
+     <property name="text">
+      <string>Config composeur</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1">
+    <layout class="QHBoxLayout" name="hbox_models_directory_2">
+     <item>
+      <widget class="QLineEdit" name="le_config_layout">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btn_config_layout">
+       <property name="toolTip">
+        <string>Open a models folder</string>
+       </property>
+       <property name="text">
+        <string>...</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="3" column="0">
+    <widget class="QLabel" name="lbl_username">
+     <property name="text">
+      <string>Utilisateur</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1">
+    <widget class="QLineEdit" name="le_username">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="0">
+    <widget class="QLabel" name="lbl_organization">
+     <property name="text">
+      <string>Organisation</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="1">
+    <widget class="QLineEdit" name="le_organization"/>
+   </item>
+   <item row="5" column="0">
+    <widget class="QLabel" name="lbl_address_street">
+     <property name="text">
+      <string>Adresse</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="1">
+    <widget class="QLineEdit" name="le_address_street"/>
+   </item>
+   <item row="6" column="0">
+    <widget class="QLabel" name="lbl_address_postal_code">
+     <property name="text">
+      <string>Code postal</string>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="1">
+    <widget class="QLineEdit" name="le_address_postal_code"/>
+   </item>
+   <item row="7" column="0">
+    <widget class="QLabel" name="lbl_address_city">
+     <property name="text">
+      <string>Commune</string>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="1">
+    <widget class="QLineEdit" name="le_address_city"/>
+   </item>
+   <item row="8" column="0">
+    <widget class="QLabel" name="lbl_phone">
+     <property name="text">
+      <string>Téléphone</string>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="1">
+    <widget class="QLineEdit" name="le_phone"/>
+   </item>
+   <item row="9" column="0">
+    <widget class="QLabel" name="lbl_email">
+     <property name="text">
+      <string>Email</string>
+     </property>
+    </widget>
+   </item>
+   <item row="9" column="1">
+    <widget class="QLineEdit" name="le_email"/>
+   </item>
+   <item row="10" column="0">
+    <widget class="QLabel" name="lbl_website">
+     <property name="text">
+      <string>Site web</string>
+     </property>
+    </widget>
+   </item>
+   <item row="10" column="1">
+    <widget class="QLineEdit" name="le_website"/>
+   </item>
+   <item row="11" column="0" colspan="2">
     <widget class="Line" name="line">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
     </widget>
    </item>
-   <item>
+   <item row="12" column="0" colspan="2">
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
       <widget class="QCheckBox" name="cb_suggest_enabled">
@@ -202,7 +226,7 @@
      </item>
     </layout>
    </item>
-   <item>
+   <item row="13" column="0" colspan="2">
     <layout class="QHBoxLayout" name="horizontalLayout_3">
      <item>
       <widget class="QListWidget" name="list_seq_suggestions"/>
@@ -246,14 +270,14 @@
      </item>
     </layout>
    </item>
-   <item>
+   <item row="14" column="0" colspan="2">
     <widget class="Line" name="line_2">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
     </widget>
    </item>
-   <item>
+   <item row="15" column="0" colspan="2">
     <layout class="QHBoxLayout" name="hbox_clear_var">
      <item>
       <widget class="QToolButton" name="btn_clear_var">
@@ -271,7 +295,7 @@
      </item>
     </layout>
    </item>
-   <item>
+   <item row="16" column="0" colspan="2">
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>

@@ -29,7 +29,7 @@ sequoia = [
     "v.seq.owner.line",
     "v.seq.parca.poly",
 ]
-wmts = ["wmts_pci"]
+wmts = ["wmts.pci"]
 tms = [
     "tms.plan_ign.standard",
     "tms.plan_ign.classique",

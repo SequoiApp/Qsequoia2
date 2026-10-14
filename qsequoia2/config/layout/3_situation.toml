@@ -17,8 +17,8 @@ sequoia = [
     "v.seq.forest.poly",
 ]
 wmts = [
-    "wmts_scan_regional",
-    "wmts_scan1000",
+    "wmts.scan.regional",
+    "wmts.scan1000",
 ]
 tms = [
     "tms.plan_ign.standard",

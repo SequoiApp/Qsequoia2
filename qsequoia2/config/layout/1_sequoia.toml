@@ -11,9 +11,9 @@ sequoia = [
     "v.seq.ua.poly",
 ]
 wmts = [
-    "wmts_irc",
-    "wmts_rgb",
-    "wmts_lidar_mnt",
-    "wmts_spot_2025",
-    "wmts_pci",
+    "wmts.irc",
+    "wmts.rgb",
+    "wmts.lidar.mnt",
+    "wmts.spot.2025",
+    "wmts.pci",
 ]

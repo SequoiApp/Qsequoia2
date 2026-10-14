@@ -14,7 +14,7 @@ sequoia = [
     "v.seq.pf.line",
     "v.seq.pf.poly",
 ]
-wmts = ["wmts_geol"]
+wmts = ["wmts.geol"]
 
 [[layout.maps]]
 id = "map1"
@@ -28,7 +28,7 @@ layers = [
     "v.seq.pf.point",
     "v.seq.pf.line",
     "v.seq.pf.poly",
-    "wmts_geol",
+    "wmts.geol",
 ]
 
 [[layout.legends]]

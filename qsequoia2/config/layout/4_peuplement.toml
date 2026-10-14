@@ -38,9 +38,9 @@ tms = [
     "tms.plan_ign.classique",
 ]
 wmts = [
-    "wmts_irc",
-    "wmts_rgb",
-    "wmts_lidar_mnt",
+    "wmts.irc",
+    "wmts.rgb",
+    "wmts.lidar.mnt",
 ]
 
 [[layout.maps]]

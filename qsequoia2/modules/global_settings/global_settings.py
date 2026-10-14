@@ -127,17 +127,16 @@ class GlobalSettingsDialog(QDialog, FORM_CLASS):
             self.le_models_directory.setText(folder)
 
     def select_config_layout(self):
-        base_path = QgsProject.instance().homePath() or str(Path.home())
+        base_path = self.le_config_layout.text() or QgsProject.instance().homePath() or str(Path.home())
 
-        file_path, _ = QFileDialog.getOpenFileName(
+        folder = QFileDialog.getExistingDirectory(
             self,
-            "Sélectionner le fichier de configuration du layout",
-            base_path,
-            "Fichier QGIS Layout (*.toml)"
+            "Sélectionner le dossier des configurations de projets",
+            base_path
         )
 
-        if file_path:
-            self.le_config_layout.setText(file_path)
+        if folder:
+            self.le_config_layout.setText(folder)
             
     def _add_suggestion(self, folder_path):
         folder_path = str(Path(folder_path).resolve())

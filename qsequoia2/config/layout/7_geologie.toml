@@ -1,0 +1,45 @@
+filename = "geologie"
+alias = "Géologie"
+
+[canvas]
+zoom_on = "v.seq.forest.line"
+
+[canvas.layers]
+sequoia = [
+    "v.sol.bdcharm50.poly",
+    # "v.sol.carhab.poly",
+    # SEQUOIA
+    "v.seq.forest.line",
+    "v.seq.pf.point",
+    "v.seq.pf.line",
+    "v.seq.pf.poly",
+]
+wmts = ["wmts_geol"]
+
+[[layout.maps]]
+id = "map1"
+main_map = true
+scale = 15000
+layers = [
+    "v.sol.bdcharm50.poly",
+    # "v.sol.carhab.poly",
+    # SEQUOIA
+    "v.seq.forest.line",
+    "v.seq.pf.point",
+    "v.seq.pf.line",
+    "v.seq.pf.poly",
+    "wmts_geol",
+]
+
+[[layout.legends]]
+id = "legend1"
+map = "map1"
+layers = [
+    "v.sol.bdcharm50.poly",
+    # "v.sol.carhab.poly",
+    # SEQUOIA
+    "v.seq.forest.line",
+    "v.seq.pf.point",
+    "v.seq.pf.line",
+    "v.seq.pf.poly",
+]

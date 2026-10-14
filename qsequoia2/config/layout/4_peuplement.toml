@@ -1,0 +1,107 @@
+filename = "peuplement"
+alias = "Peuplements"
+
+[canvas]
+zoom_on = "v.seq.forest.line"
+
+[canvas.layers]
+# Layer order is significant: compartment polygons stay behind the other vectors.
+sequoia = [
+    "v.seq.forest.line",
+    "v.access.entry.point",
+    "v.com.graphic.line",
+    "v.com.graphic.point",
+    "v.road.line",
+    "v.curves.line",
+    "v.toponyme.point",
+    "v.infra.point",
+    "v.vege.point",
+    "v.hydro.point",
+    "v.infra.line",
+    "v.vege.line",
+    "v.hydro.line",
+    "v.infra.poly",
+    "v.vege.poly",
+    "v.hydro.poly",
+    "v.roadway.line",
+    "v.roadway.poly",
+    "v.seq.pf.point",
+    "v.seq.pf.line",
+    "v.seq.pf.poly",
+    "v.seq.sspf.point",
+    "v.seq.sspf.line",
+    "v.seq.sspf.poly",
+    "v.seq.ua.poly",
+]
+tms = [
+    "tms.plan_ign.standard",
+    "tms.plan_ign.classique",
+]
+wmts = [
+    "wmts_irc",
+    "wmts_rgb",
+    "wmts_lidar_mnt",
+]
+
+[[layout.maps]]
+id = "map1"
+main_map = true
+scale = 7500
+layers = [
+    "v.seq.forest.line",
+    "v.access.entry.point",
+    "v.com.graphic.line",
+    "v.com.graphic.point",
+    "v.road.line",
+    "v.curves.line",
+    "v.toponyme.point",
+    "v.infra.point",
+    "v.vege.point",
+    "v.hydro.point",
+    "v.infra.line",
+    "v.vege.line",
+    "v.hydro.line",
+    "v.infra.poly",
+    "v.vege.poly",
+    "v.hydro.poly",
+    "v.roadway.line",
+    "v.roadway.poly",
+    "v.seq.pf.point",
+    "v.seq.pf.line",
+    "v.seq.pf.poly",
+    "v.seq.sspf.point",
+    "v.seq.sspf.line",
+    "v.seq.sspf.poly",
+    "v.seq.ua.poly",
+]
+
+[[layout.legends]]
+id = "legend1"
+map = "map1"
+layers = [
+    "v.seq.forest.line",
+    "v.access.entry.point",
+    "v.com.graphic.line",
+    "v.com.graphic.point",
+    "v.road.line",
+    "v.curves.line",
+    "v.toponyme.point",
+    "v.infra.point",
+    "v.vege.point",
+    "v.hydro.point",
+    "v.infra.line",
+    "v.vege.line",
+    "v.hydro.line",
+    "v.infra.poly",
+    "v.vege.poly",
+    "v.hydro.poly",
+    "v.roadway.line",
+    "v.roadway.poly",
+    "v.seq.pf.point",
+    "v.seq.pf.line",
+    "v.seq.pf.poly",
+    "v.seq.sspf.point",
+    "v.seq.sspf.line",
+    "v.seq.sspf.poly",
+    "v.seq.ua.poly",
+]

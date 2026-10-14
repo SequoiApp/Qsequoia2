@@ -1,0 +1,143 @@
+filename = "enjeux_env"
+alias = "Enjeux environnementaux"
+
+[canvas]
+zoom_on = "v.seq.forest.line"
+
+[canvas.layers]
+sequoia = [
+    "v.mnhn.apb.poly",
+    "v.mnhn.apg.poly",
+    "v.mnhn.aphn.poly",
+    "v.mnhn.aplg.poly",
+    "v.mnhn.bios.poly",
+    "v.mnhn.unesco.poly",
+    "v.mnhn.cdl.poly",
+    "v.mnhn.cen.poly",
+    "v.mnhn.geoparc.poly",
+    "v.mnhn.gsf.poly",
+    "v.mnhn.inpg.poly",
+    "v.mnhn.ospar.poly",
+    "v.mnhn.pgsf.poly",
+    "v.mnhn.pn.poly",
+    "v.mnhn.pn2.poly",
+    "v.mnhn.pnm.poly",
+    "v.mnhn.pnr.poly",
+    "v.mnhn.pprnn.poly",
+    "v.mnhn.ramsar.poly",
+    "v.mnhn.rb.poly",
+    "v.mnhn.ripn.poly",
+    "v.mnhn.rnc.poly",
+    "v.mnhn.rncfs.poly",
+    "v.mnhn.rnn.poly",
+    "v.mnhn.rnr.poly",
+    "v.mnhn.sc.poly",
+    "v.mnhn.sic.poly",
+    "v.mnhn.znieff1.poly",
+    "v.mnhn.znieffmer1.poly",
+    "v.mnhn.znieff2.poly",
+    "v.mnhn.znieffmer2.poly",
+    "v.mnhn.zpr.poly",
+    "v.mnhn.zps.poly",
+    # SEQUOIA
+    "v.seq.forest.line",
+    "v.seq.pf.point",
+    "v.seq.pf.line",
+    "v.seq.pf.poly",
+]
+
+tms = [
+    "tms.plan_ign.standard",
+    "tms.plan_ign.classique",
+    "tms.plan_ign.epure",
+]
+
+[[layout.maps]]
+id = "map1"
+main_map = true
+scale = 15000
+layers = [
+    "v.mnhn.apb.poly",
+    "v.mnhn.apg.poly",
+    "v.mnhn.aphn.poly",
+    "v.mnhn.aplg.poly",
+    "v.mnhn.bios.poly",
+    "v.mnhn.unesco.poly",
+    "v.mnhn.cdl.poly",
+    "v.mnhn.cen.poly",
+    "v.mnhn.geoparc.poly",
+    "v.mnhn.gsf.poly",
+    "v.mnhn.inpg.poly",
+    "v.mnhn.ospar.poly",
+    "v.mnhn.pgsf.poly",
+    "v.mnhn.pn.poly",
+    "v.mnhn.pn2.poly",
+    "v.mnhn.pnm.poly",
+    "v.mnhn.pnr.poly",
+    "v.mnhn.pprnn.poly",
+    "v.mnhn.ramsar.poly",
+    "v.mnhn.rb.poly",
+    "v.mnhn.ripn.poly",
+    "v.mnhn.rnc.poly",
+    "v.mnhn.rncfs.poly",
+    "v.mnhn.rnn.poly",
+    "v.mnhn.rnr.poly",
+    "v.mnhn.sc.poly",
+    "v.mnhn.sic.poly",
+    "v.mnhn.znieff1.poly",
+    "v.mnhn.znieffmer1.poly",
+    "v.mnhn.znieff2.poly",
+    "v.mnhn.znieffmer2.poly",
+    "v.mnhn.zpr.poly",
+    "v.mnhn.zps.poly",
+    # SEQUOIA
+    "v.seq.forest.line",
+    "v.seq.pf.point",
+    "v.seq.pf.line",
+    "v.seq.pf.poly",
+    "tms.plan_ign.epure",
+]
+
+[[layout.legends]]
+id = "legend1"
+map = "map1"
+layers = [
+    "v.mnhn.apb.poly",
+    "v.mnhn.apg.poly",
+    "v.mnhn.aphn.poly",
+    "v.mnhn.aplg.poly",
+    "v.mnhn.bios.poly",
+    "v.mnhn.unesco.poly",
+    "v.mnhn.cdl.poly",
+    "v.mnhn.cen.poly",
+    "v.mnhn.geoparc.poly",
+    "v.mnhn.gsf.poly",
+    "v.mnhn.inpg.poly",
+    "v.mnhn.ospar.poly",
+    "v.mnhn.pgsf.poly",
+    "v.mnhn.pn.poly",
+    "v.mnhn.pn2.poly",
+    "v.mnhn.pnm.poly",
+    "v.mnhn.pnr.poly",
+    "v.mnhn.pprnn.poly",
+    "v.mnhn.ramsar.poly",
+    "v.mnhn.rb.poly",
+    "v.mnhn.ripn.poly",
+    "v.mnhn.rnc.poly",
+    "v.mnhn.rncfs.poly",
+    "v.mnhn.rnn.poly",
+    "v.mnhn.rnr.poly",
+    "v.mnhn.sc.poly",
+    "v.mnhn.sic.poly",
+    "v.mnhn.znieff1.poly",
+    "v.mnhn.znieffmer1.poly",
+    "v.mnhn.znieff2.poly",
+    "v.mnhn.znieffmer2.poly",
+    "v.mnhn.zpr.poly",
+    "v.mnhn.zps.poly",
+    # SEQUOIA
+    "v.seq.forest.line",
+    "v.seq.pf.point",
+    "v.seq.pf.line",
+    "v.seq.pf.poly",
+]

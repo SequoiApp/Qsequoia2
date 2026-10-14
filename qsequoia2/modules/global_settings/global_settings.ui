@@ -26,7 +26,7 @@
      <item>
       <widget class="QLineEdit" name="le_styles_directory">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
       </widget>
      </item>
@@ -54,7 +54,7 @@
      <item>
       <widget class="QLineEdit" name="le_models_directory">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
       </widget>
      </item>
@@ -73,7 +73,7 @@
    <item row="2" column="0">
     <widget class="QLabel" name="lbl_config_layout">
      <property name="text">
-      <string>Config composeur</string>
+      <string>Configurations des projets</string>
      </property>
     </widget>
    </item>
@@ -82,14 +82,20 @@
      <item>
       <widget class="QLineEdit" name="le_config_layout">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
+       </property>
+       <property name="placeholderText">
+        <string>Par défaut : configurations du plugin</string>
+       </property>
+       <property name="toolTip">
+        <string>Dossier contenant un fichier .toml par projet. Laisser vide pour utiliser les configurations du plugin.</string>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QPushButton" name="btn_config_layout">
        <property name="toolTip">
-        <string>Open a models folder</string>
+        <string>Sélectionner le dossier des configurations de projets</string>
        </property>
        <property name="text">
         <string>...</string>

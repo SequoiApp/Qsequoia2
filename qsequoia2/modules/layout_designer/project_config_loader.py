@@ -5,7 +5,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Optional, Union
 
-import yaml
+import tomllib
 
 @dataclass
 class ProjectCanvas:
@@ -38,40 +38,56 @@ class ProjectLayout:
     legends: list[LegendSpec] = field(default_factory=list)
 
 class ProjectConfigLoader:
-    def __init__(self, config_path: Union[str, Path]):
-        self.config_path = Path(config_path)
+    """Read one project per TOML file, using its filename field as the project key."""
+
+    def __init__(self, config_dir: Union[str, Path]):
+        self.config_dir = Path(config_dir).expanduser()
         self._cache = None
 
     def _load(self) -> dict:
         if self._cache is None:
-            with open(self.config_path, encoding="utf-8") as f:
-                self._cache = yaml.safe_load(f) or {}
+            if not self.config_dir.is_dir():
+                raise ValueError(f"[CONFIG] Dossier introuvable : {self.config_dir}")
+
+            projects = {}
+            project_files = {}
+            for config_file in sorted(self.config_dir.glob("*.toml")):
+                try:
+                    with config_file.open("rb") as f:
+                        config = tomllib.load(f)
+                except (OSError, tomllib.TOMLDecodeError) as err:
+                    raise ValueError(f"[CONFIG] {config_file}: {err}") from err
+
+                key = config.get("filename", "")
+                if not isinstance(key, str) or not key.strip():
+                    raise ValueError(f"[CONFIG] {config_file.name} : filename doit être un texte non vide")
+                key = key.strip()
+                if key in projects:
+                    raise ValueError(
+                        f"[CONFIG] filename '{key}' déjà utilisé dans deux fichiers :\n"
+                        f"- {project_files[key]}\n"
+                        f"- {config_file.resolve()}"
+                    )
+                projects[key] = config
+                project_files[key] = config_file.resolve()
+
+            if not projects:
+                raise ValueError(f"[CONFIG] Aucun fichier .toml dans : {self.config_dir}")
+
+            self._cache = projects
         return self._cache
 
-    def _flatten(self, value) -> list:
-        if not value:
-            return []   
-
-        if isinstance(value, str):
-            return [value]
-
-        flat = []
-        for v in value:
-            if isinstance(v, list):
-                flat.extend(self._flatten(v))
-            else:
-                flat.append(v)
-        return flat
-
     def get_projects(self) -> list[tuple[str, str]]:
-        data = self._load()
-        return [
-            (key, value.get("alias", key))
-            for key, value in data.items()
-        ]
+        projects = []
+        for key, config in self._load().items():
+            alias = config.get("alias", key)
+            if not isinstance(alias, str):
+                raise ValueError(f"[CONFIG] Projet '{key}' : alias doit être un texte")
+            projects.append((key, alias))
+        return projects
 
     def get_canvas(self, key: str) -> ProjectCanvas:
-        project = self._load().get(key, {})
+        project = self._load()[key]
         raw = project.get("canvas", {})
 
         layers_raw = raw.get("layers", {})
@@ -84,14 +100,14 @@ class ProjectConfigLoader:
             zoom_on=raw.get("zoom_on", ""),
             readonly=raw.get("readonly", []),
             layers=SimpleNamespace(
-                sequoia=self._flatten(layers_raw.get("sequoia", [])),
-                tms=self._flatten(layers_raw.get("tms", [])),
-                wmts=self._flatten(layers_raw.get("wmts", [])),
+                sequoia=layers_raw.get("sequoia", []),
+                tms=layers_raw.get("tms", []),
+                wmts=layers_raw.get("wmts", []),
             ),
         )
 
     def get_layout(self, key: str) -> ProjectLayout:
-        raw = self._load().get(key, {}).get("layout", {})
+        raw = self._load()[key].get("layout", {})
 
         # --- maps ---
         maps_raw = raw.get("maps")
@@ -104,8 +120,8 @@ class ProjectConfigLoader:
             if not map_id:
                 raise ValueError(f"[CONFIG] map missing 'id' in '{key}'")
 
-            layers = self._flatten(item.get("layers", []))
-            if not layers:
+            layers = item.get("layers", [])
+            if not isinstance(layers, list) or not layers:
                 raise ValueError(f"[CONFIG] map '{map_id}' has no layers")
 
             maps.append(
@@ -113,7 +129,7 @@ class ProjectConfigLoader:
                     id=map_id,
                     layers=layers,
                     scale=item.get("scale"),
-                    main_map=item.get("main_map"),
+                    main_map=item.get("main_map", False),
                 )
             )
 
@@ -146,8 +162,8 @@ class ProjectConfigLoader:
                     f"[CONFIG] legend '{legend_id}' references unknown map '{map_ref}'"
                 )
 
-            layers = self._flatten(item.get("layers", []))
-            if not layers:
+            layers = item.get("layers", [])
+            if not isinstance(layers, list) or not layers:
                 raise ValueError(f"[CONFIG] legend '{legend_id}' has no layers")
 
             legends.append(

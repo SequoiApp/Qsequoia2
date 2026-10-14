@@ -1,0 +1,19 @@
+filename = "sequoia"
+alias = "SEQUOIA (projet de travail)"
+
+[canvas]
+zoom_on = "v.seq.parca.poly"
+readonly = ["v.seq.parca.poly"]
+
+[canvas.layers]
+sequoia = [
+    "v.seq.parca.poly",
+    "v.seq.ua.poly",
+]
+wmts = [
+    "wmts.irc",
+    "wmts.rgb",
+    "wmts.lidar.mnt",
+    "wmts.spot.2025",
+    "wmts.pci",
+]

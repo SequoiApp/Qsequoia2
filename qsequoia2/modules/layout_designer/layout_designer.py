@@ -8,6 +8,7 @@ from qgis.core import QgsProject
 
 from ..utils.Qmessage import messageBar, messageLog
 from ..utils.variable import get_global_variable, get_project_variable, set_project_variable
+from ..utils.plugin_vars import PLUGIN_DIR
 from .layout_builder import LayoutBuilder
 from .project_builder import ProjectBuilder
 from .project_config_loader import ProjectConfigLoader
@@ -15,7 +16,6 @@ from .project_config_loader import ProjectConfigLoader
 UI_PATH = Path(__file__).parent / "layout_designer.ui"
 FORM_CLASS, _ = uic.loadUiType(str(UI_PATH))
 
-PLUGIN_DIR = Path(__file__).parents[2]
 DEFAULT_LAYOUT_CONFIG_DIR = PLUGIN_DIR / "config" / "layout"
 
 
@@ -43,7 +43,7 @@ class LayoutDesignerWidget(QWidget, FORM_CLASS):
 
     def refresh_config(self):
         selected_key = self.combo_project.currentData() or "sequoia"
-        config_dir = get_global_variable("QS2_config_layout") or DEFAULT_LAYOUT_CONFIG_DIR
+        config_dir = get_global_variable("QS2_layouts_directory") or DEFAULT_LAYOUT_CONFIG_DIR
         self.cfg = ProjectConfigLoader(config_dir)
         self.combo_project.clear()
 

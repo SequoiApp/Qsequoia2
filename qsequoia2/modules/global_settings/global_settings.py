@@ -27,7 +27,7 @@ class GlobalSettingsDialog(QDialog, FORM_CLASS):
         self._text_settings = {
             "QS2_styles_directory": self.le_styles_directory,
             "QS2_models_directory": self.le_models_directory,
-            "QS2_config_layout": self.le_config_layout,
+            "QS2_layouts_directory": self.le_layouts_directory,
             "QS2_username": self.le_username,
             "QS2_organization": self.le_organization,
             "QS2_address_street": self.le_address_street,
@@ -50,7 +50,7 @@ class GlobalSettingsDialog(QDialog, FORM_CLASS):
         self.buttonBox.accepted.connect(self.save_settings)
         self.btn_styles_directory.clicked.connect(self.select_styles_directory)
         self.btn_models_directory.clicked.connect(self.select_models_directory)
-        self.btn_config_layout.clicked.connect(self.select_config_layout)
+        self.btn_layouts_directory.clicked.connect(self.select_layouts_directory)
         self.btn_add_project_suggestion.clicked.connect(self._on_add_suggestion)
         self.btn_rm_project_suggestion.clicked.connect(self._on_rm_suggestion)
         self.btn_clear_var.clicked.connect(self._on_clear_global_variables)
@@ -126,8 +126,8 @@ class GlobalSettingsDialog(QDialog, FORM_CLASS):
         if folder:
             self.le_models_directory.setText(folder)
 
-    def select_config_layout(self):
-        base_path = self.le_config_layout.text() or QgsProject.instance().homePath() or str(Path.home())
+    def select_layouts_directory(self):
+        base_path = self.le_layouts_directory.text() or QgsProject.instance().homePath() or str(Path.home())
 
         folder = QFileDialog.getExistingDirectory(
             self,
@@ -136,7 +136,7 @@ class GlobalSettingsDialog(QDialog, FORM_CLASS):
         )
 
         if folder:
-            self.le_config_layout.setText(folder)
+            self.le_layouts_directory.setText(folder)
             
     def _add_suggestion(self, folder_path):
         folder_path = str(Path(folder_path).resolve())

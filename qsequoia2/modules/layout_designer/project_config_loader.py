@@ -50,6 +50,7 @@ class ProjectConfigLoader:
                 raise ValueError(f"[CONFIG] Dossier introuvable : {self.config_dir}")
 
             projects = {}
+            project_files = {}
             for config_file in sorted(self.config_dir.glob("*.toml")):
                 try:
                     with config_file.open("rb") as f:
@@ -62,8 +63,13 @@ class ProjectConfigLoader:
                     raise ValueError(f"[CONFIG] {config_file.name} : filename doit être un texte non vide")
                 key = key.strip()
                 if key in projects:
-                    raise ValueError(f"[CONFIG] {config_file.name} : filename '{key}' déjà utilisé")
+                    raise ValueError(
+                        f"[CONFIG] filename '{key}' déjà utilisé dans deux fichiers :\n"
+                        f"- {project_files[key]}\n"
+                        f"- {config_file.resolve()}"
+                    )
                 projects[key] = config
+                project_files[key] = config_file.resolve()
 
             if not projects:
                 raise ValueError(f"[CONFIG] Aucun fichier .toml dans : {self.config_dir}")

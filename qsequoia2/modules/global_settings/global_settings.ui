@@ -71,16 +71,16 @@
     </layout>
    </item>
    <item row="2" column="0">
-    <widget class="QLabel" name="lbl_config_layout">
+    <widget class="QLabel" name="lbl_layouts_directory">
      <property name="text">
       <string>Configurations des projets</string>
      </property>
     </widget>
    </item>
    <item row="2" column="1">
-    <layout class="QHBoxLayout" name="hbox_models_directory_2">
+    <layout class="QHBoxLayout" name="hbox_layouts_directory">
      <item>
-      <widget class="QLineEdit" name="le_config_layout">
+      <widget class="QLineEdit" name="le_layouts_directory">
        <property name="enabled">
         <bool>true</bool>
        </property>
@@ -93,7 +93,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="btn_config_layout">
+      <widget class="QPushButton" name="btn_layouts_directory">
        <property name="toolTip">
         <string>Sélectionner le dossier des configurations de projets</string>
        </property>

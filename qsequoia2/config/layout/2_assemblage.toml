@@ -1,0 +1,96 @@
+filename = "assemblage"
+alias = "Assemblage cadastral"
+
+[canvas]
+zoom_on = "v.seq.parca.poly"
+readonly = ["v.seq.parca.poly"]
+
+[canvas.layers]
+# Layer order is significant: cadastral polygons stay behind the other vectors.
+sequoia = [
+    "v.access.entry.point",
+    "v.com.graphic.line",
+    "v.com.graphic.point",
+    "v.road.line",
+    "v.curves.line",
+    "v.toponyme.point",
+    "v.infra.point",
+    "v.vege.point",
+    "v.hydro.point",
+    "v.infra.line",
+    "v.vege.line",
+    "v.hydro.line",
+    "v.infra.poly",
+    "v.vege.poly",
+    "v.hydro.poly",
+    "v.roadway.line",
+    "v.roadway.poly",
+    "v.seq.forest.line",
+    "v.seq.owner.line",
+    "v.seq.parca.poly",
+]
+wmts = ["wmts.pci"]
+tms = [
+    "tms.plan_ign.standard",
+    "tms.plan_ign.classique",
+    "tms.plan_ign.epure",
+]
+
+[[layout.maps]]
+id = "map1"
+main_map = true
+scale = 7500
+layers = [
+    "v.access.entry.point",
+    "v.com.graphic.line",
+    "v.com.graphic.point",
+    "v.road.line",
+    "v.curves.line",
+    "v.toponyme.point",
+    "v.infra.point",
+    "v.vege.point",
+    "v.hydro.point",
+    "v.infra.line",
+    "v.vege.line",
+    "v.hydro.line",
+    "v.infra.poly",
+    "v.vege.poly",
+    "v.hydro.poly",
+    "v.roadway.line",
+    "v.roadway.poly",
+    "v.seq.forest.line",
+    "v.seq.owner.line",
+    "v.seq.parca.poly",
+]
+
+[[layout.legends]]
+id = "legend1"
+map = "map1"
+layers = [
+    "v.access.entry.point",
+    "v.com.graphic.line",
+    "v.com.graphic.point",
+    "v.road.line",
+    "v.curves.line",
+    "v.toponyme.point",
+    "v.infra.point",
+    "v.vege.point",
+    "v.hydro.point",
+    "v.infra.line",
+    "v.vege.line",
+    "v.hydro.line",
+    "v.infra.poly",
+    "v.vege.poly",
+    "v.hydro.poly",
+    "v.roadway.line",
+    "v.roadway.poly",
+]
+
+[[layout.legends]]
+id = "legend2"
+map = "map1"
+layers = [
+    "v.seq.forest.line",
+    "v.seq.owner.line",
+    "v.seq.parca.poly",
+]

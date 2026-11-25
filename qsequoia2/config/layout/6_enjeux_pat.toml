@@ -1,0 +1,73 @@
+filename = "enjeux_pat"
+alias = "Enjeux patrimoniaux"
+
+[canvas]
+zoom_on = "v.seq.forest.line"
+
+[canvas.layers]
+sequoia = [
+    "v.pat.imdn.poly",
+    "v.pat.padn.poly",
+    "v.pat.immh.poly",
+    "v.pat.pamh.poly",
+    "v.pat.imun.poly",
+    "v.pat.paun.poly",
+    "v.pat.sici.poly",
+    "v.pat.sipr.poly",
+    "v.pat.lacr.poly",
+    "v.pat.zppa.poly",
+    # SEQUOIA
+    "v.seq.forest.line",
+    "v.seq.pf.point",
+    "v.seq.pf.line",
+    "v.seq.pf.poly",
+]
+tms = [
+    "tms.plan_ign.standard",
+    "tms.plan_ign.classique",
+    "tms.plan_ign.epure",
+]
+
+[[layout.maps]]
+id = "map1"
+main_map = true
+scale = 15000
+layers = [
+    "v.pat.imdn.poly",
+    "v.pat.padn.poly",
+    "v.pat.immh.poly",
+    "v.pat.pamh.poly",
+    "v.pat.imun.poly",
+    "v.pat.paun.poly",
+    "v.pat.sici.poly",
+    "v.pat.sipr.poly",
+    "v.pat.lacr.poly",
+    "v.pat.zppa.poly",
+    # SEQUOIA
+    "v.seq.forest.line",
+    "v.seq.pf.point",
+    "v.seq.pf.line",
+    "v.seq.pf.poly",
+    "tms.plan_ign.epure",
+]
+
+[[layout.legends]]
+id = "legend1"
+map = "map1"
+layers = [
+    "v.pat.imdn.poly",
+    "v.pat.padn.poly",
+    "v.pat.immh.poly",
+    "v.pat.pamh.poly",
+    "v.pat.imun.poly",
+    "v.pat.paun.poly",
+    "v.pat.sici.poly",
+    "v.pat.sipr.poly",
+    "v.pat.lacr.poly",
+    "v.pat.zppa.poly",
+    # SEQUOIA
+    "v.seq.forest.line",
+    "v.seq.pf.point",
+    "v.seq.pf.line",
+    "v.seq.pf.poly",
+]

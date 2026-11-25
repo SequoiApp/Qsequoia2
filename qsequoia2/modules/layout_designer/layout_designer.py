@@ -8,6 +8,7 @@ from qgis.core import QgsProject
 
 from ..utils.Qmessage import messageBar, messageLog
 from ..utils.variable import get_global_variable, get_project_variable, set_project_variable
+from ..utils.plugin_vars import PLUGIN_DIR
 from .layout_builder import LayoutBuilder
 from .project_builder import ProjectBuilder
 from .project_config_loader import ProjectConfigLoader
@@ -15,8 +16,7 @@ from .project_config_loader import ProjectConfigLoader
 UI_PATH = Path(__file__).parent / "layout_designer.ui"
 FORM_CLASS, _ = uic.loadUiType(str(UI_PATH))
 
-PLUGIN_DIR = Path(__file__).parents[2]
-LAYOUT_CONFIG = PLUGIN_DIR / "config" / "layout.yaml"
+DEFAULT_LAYOUT_CONFIG_DIR = PLUGIN_DIR / "config" / "layout"
 
 
 class LayoutDesignerWidget(QWidget, FORM_CLASS):
@@ -27,7 +27,6 @@ class LayoutDesignerWidget(QWidget, FORM_CLASS):
         self.iface = iface
         self.parent = parent
         self.project = QgsProject.instance()
-        self.cfg = ProjectConfigLoader(LAYOUT_CONFIG)      
         self._project_loading = False
         
         self.setupUi(self)
@@ -35,19 +34,36 @@ class LayoutDesignerWidget(QWidget, FORM_CLASS):
 
     def _init_ui(self):
 
-        self.combo_project.clear()
-        for key, alias in self.cfg.get_projects():
-            self.combo_project.addItem(alias, key)
-
-        self.combo_project.setCurrentIndex(0)
+        self.refresh_config()
 
         self.cb_composeur.toggled.connect(self.dsb_occup.setEnabled)
         self.dsb_occup.setEnabled(self.cb_composeur.isChecked())
 
         self.btn_run.clicked.connect(self._accept)
 
+    def refresh_config(self):
+        selected_key = self.combo_project.currentData() or "sequoia"
+        config_dir = get_global_variable("QS2_layouts_directory") or DEFAULT_LAYOUT_CONFIG_DIR
+        self.cfg = ProjectConfigLoader(config_dir)
+        self.combo_project.clear()
+
+        try:
+            projects = self.cfg.get_projects()
+        except (OSError, ValueError) as err:
+            self.btn_run.setEnabled(False)
+            messageBar(self.iface, str(err), "c", 10)
+            return False
+
+        for key, alias in projects:
+            self.combo_project.addItem(alias, key)
+
+        index = self.combo_project.findData(selected_key)
+        self.combo_project.setCurrentIndex(max(index, 0))
+        self.btn_run.setEnabled(True)
+        return True
+
     def _accept(self):
-        if self._project_loading:
+        if self._project_loading or not self.refresh_config():
             return
 
         seq_id = get_project_variable("QS2_seq_id") or None

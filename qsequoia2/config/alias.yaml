@@ -37,8 +37,8 @@ v.seq.occup.poly: "Occupation"
 v.com.topo.poly: "Communes (centroïdes)"
 v.com.topo.line: "Communes (limites)"
 v.com.topo.point: "Communes"
-v.com.graphic.point: Communes x Foret (centroïdes)
-v.com.graphic.line: Communes x Foret (limites)
+v.com.graphic.point: "Communes (centroïdes)"
+v.com.graphic.line: "Communes (limites)"
 # endregion
 
 # region SOL

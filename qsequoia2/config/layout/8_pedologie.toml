@@ -1,0 +1,43 @@
+filename = "pedologie"
+alias = "Pédologie"
+
+[canvas]
+zoom_on = "v.seq.forest.line"
+
+[canvas.layers]
+sequoia = [
+    "v.seq.forest.line",
+    "v.seq.pf.point",
+    "v.seq.pf.line",
+    "v.seq.pf.poly",
+    "v.sol.pedo.poly",
+]
+tms = [
+    "tms.plan_ign.standard",
+    "tms.plan_ign.classique",
+    "tms.plan_ign.epure",
+]
+
+[[layout.maps]]
+id = "map1"
+main_map = true
+scale = 15000
+layers = [
+    "v.seq.forest.line",
+    "v.seq.pf.point",
+    "v.seq.pf.line",
+    "v.seq.pf.poly",
+    "v.sol.pedo.poly",
+    "tms.plan_ign.epure",
+]
+
+[[layout.legends]]
+id = "legend1"
+map = "map1"
+layers = [
+    "v.seq.forest.line",
+    "v.seq.pf.point",
+    "v.seq.pf.line",
+    "v.seq.pf.poly",
+    "v.sol.pedo.poly",
+]

@@ -20,9 +20,10 @@ from qgis.PyQt.QtWidgets import QMessageBox
 from ..utils.Qmessage import messageBar, messageLog
 from ..utils.variable import get_project_variable, set_project_variable
 from ..utils.seq_config import seq_field, seq_read
+from ..utils.plugin_vars import PLUGIN_DIR
 from .processing import buffer, multipart_to_singleparts
 
-TEMPLATE_DIR = Path(__file__).parents[2] / "data" / "templates"
+TEMPLATE_DIR = PLUGIN_DIR / "config" / "templates"
 
 
 class LayoutBuilder:

@@ -9,7 +9,8 @@ on:
 
 jobs:
   python-39-syntax:
-    runs-on: ubuntu-latest
+    # Keep a runner with available Python 3.9 builds.
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout repository

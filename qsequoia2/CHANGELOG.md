@@ -2,7 +2,15 @@
 
 All notable changes to QSequoia2 will be documented in this file.
 
-## [1.1.2] - Unreleased
+## [1.1.3] - Unreleased
+
+### Changed
+- Refactor `ua_checker` UI
+
+### Fixed
+- Fix UA warning message showing at each layer removal
+
+## [1.1.2]
 
 ### Changed
 - Lowered the minimum supported QGIS version from 3.44 to 3.40.

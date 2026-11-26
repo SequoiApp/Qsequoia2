@@ -1,18 +1,26 @@
 from pathlib import Path
-from PyQt5 import uic
-from qgis.PyQt.QtWidgets import QWidget, QMessageBox
-from qgis.core import QgsProject, QgsApplication
-from PyQt5.QtCore import Qt, QTimer
-from qgis.PyQt.QtWidgets import QTreeWidgetItem
-from qgis.PyQt.QtGui import QColor
+
+from qgis.PyQt import uic
 from qgis.PyQt.QtCore import Qt
-from qsequoia2.modules.utils.Qmessage import messageBox
+from qgis.PyQt.QtGui import QColor
+from qgis.PyQt.QtWidgets import QWidget, QTreeWidgetItem
+from qgis.core import QgsProject, QgsApplication
+
+from qsequoia2.modules.utils.Qmessage import messageBar, messageBox
+from qsequoia2.modules.utils.seq_config import resolve_seq_layer, seq_field
 from qsequoia2.modules.utils.variable import get_project_variable
 
-from .ua_checker_utils import *
+from .ua_checker_utils import (
+    get_pf_list,
+    get_sspf_list,
+    select_feats_by_expression,
+    sspf_surface_calculation,
+    ua_check_ug,
+)
 
 UI_PATH = Path(__file__).parent / 'ua_checker.ui'
 FORM_CLASS, _ = uic.loadUiType(str(UI_PATH))
+
 
 class UaCheckerWidget(QWidget, FORM_CLASS):
 
@@ -20,30 +28,36 @@ class UaCheckerWidget(QWidget, FORM_CLASS):
         super().__init__(parent)
 
         self.iface = iface
-        self.parent = parent
         self.project = QgsProject.instance()
+        self.ua_layer = None
         self.setupUi(self)
 
-        self.btn_refresh.setIcon(QgsApplication.getThemeIcon("/mActionRefresh.svg"))
-        self.btn_refresh.clicked.connect(self.on_ua_layer_loaded)
+        self.pb_ua_status.setIcon(QgsApplication.getThemeIcon("/mActionRefresh.svg"))
+        self.pb_ua_status.clicked.connect(self._on_pb_ua_status_clicked)
+        self.pb_check_ug.clicked.connect(self._on_pb_check_ug_clicked)
 
-        self._setup_ui_errors(False)
+        self.tree_checker.itemDoubleClicked.connect(self._on_tree_item_clicked)
+        self.cb_pf.activated.connect(self._on_filter_changed)
+        self.cb_sspf.activated.connect(self._on_filter_changed)
 
-        self.cb_pf.currentTextChanged.connect(lambda value: self._on_cb_pf_changed(value))
-        self.cb_sspf.currentTextChanged.connect(lambda value: self._on_cb_pf_changed(value))
-        self.project.layersRemoved.connect(self._on_layers_removed)
+        self._clear_widget()
 
-    def on_ua_layer_loaded(self): 
+    def _on_pb_ua_status_clicked(self):
+        self._clear_widget()
         seq_id = get_project_variable("QS2_seq_id")
         self.ua_layer = resolve_seq_layer("ua", self.project, seq_id=seq_id)
 
-        if not self.ua_layer:
-            self._ua_status(state=False)
-            self._ui_status(state = False)
-            self._setup_ui_errors(state= False)
-            return
+        if self.ua_layer is None:
+            return False
 
-        self._ua_status(state=True)
+        self.lbl_ua_status.setText("Couche UA chargée")
+        self.lbl_ua_status.setStyleSheet("color: green;")
+        self._fill_widget()
+        return True
+
+    def _on_pb_check_ug_clicked(self):
+        if not self._on_pb_ua_status_clicked():
+            return
 
         if not self.ua_layer.isEditable():
             messageBox(
@@ -54,143 +68,93 @@ class UaCheckerWidget(QWidget, FORM_CLASS):
             )
             return
 
-        self._ui_status(state = True)
-        self._check_data()
-        self.populate_cb_from_field("cb_pf", self.ua_layer, "N_PARFOR")
-        self.populate_cb_from_field("cb_sspf", self.ua_layer, "N_SSPARFOR")
-
-    def _ua_status(self, state):
-        if state:
-            self.lbl_ua_status.setText("Couche UA chargée")
-            self.lbl_ua_status.setStyleSheet("color: green;")
-        else:
-            self.lbl_ua_status.setText("Couche UA non chargée")
-            self.lbl_ua_status.setStyleSheet("color: red;")
-
-    def _check_data(self):
-        is_auto_fill = self.cb_auto_fill.isChecked()
-        inconsistent_ug = ua_check_ug(self.ua_layer, auto_fill=is_auto_fill)
-        self._set_checker_status(inconsistent_ug)
+        report = ua_check_ug(self.ua_layer, auto_fill=self.cb_auto_fill.isChecked())
+        self._fill_checker_tree(report)
         self.ua_layer.removeSelection()
-        self.lbl_surf_sig.setText(f"Surface SIG : {sspf_surface_calculation(self.ua_layer)}")
-        self.lbl_nb_pf.setText(f"Nombre parcelles forestières : {str(len(get_pf_list(self.ua_layer)))}")
-        self.lbl_nb_sspf.setText(f"Nombre sous-parcelles forestières : {str(len(get_sspf_list(self.ua_layer)))}")
 
-    # Utilitaire pour UI 
-    def _ui_status(self, state):
-        self.cb_pf.setEnabled(state)
-        self.cb_sspf.setEnabled(state)
-    
-    def _setup_ui_errors(self, state):
-        self.lbl_errors.setVisible(state)
-        self.tree_checker.setVisible(state)
-    
-    def _on_layers_removed(self):
-        QTimer.singleShot(0,self.on_ua_layer_loaded)
+        self._fill_widget()
+        if not report:
+            messageBar(self.iface, "Toutes les UG sont cohérentes.", "s")
 
-    def populate_cb_from_field(self, cb_name, layer, field_name):
+    def _clear_widget(self):
+        self.ua_layer = None
+        self._fill_combo(self.cb_pf, [])
+        self._fill_combo(self.cb_sspf, [])
+        self._fill_checker_tree({})
+        self.lbl_ua_status.setText("Couche UA non chargée")
+        self.lbl_ua_status.setStyleSheet("color: red;")
+        self.lbl_nb_pf_res.setText("0")
+        self.lbl_nb_sspf_res.setText("0")
+        self.lbl_surf_sig_res.setText("0 ha")
 
-        cb = getattr(self, cb_name)
-        values = sorted({str(f[field_name]) for f in layer.getFeatures()})
-        cb.clear()
-        cb.addItem("")
-        cb.addItems(values)
-        cb.setCurrentIndex(0)
+    def _fill_widget(self):
+        pf_values = get_pf_list(self.ua_layer)
+        sspf_values = get_sspf_list(self.ua_layer)
 
-    def _on_cb_pf_changed(self, value=None, pf_value=None, sspf_value=None):
+        self._fill_combo(self.cb_pf, pf_values)
+        self._fill_combo(self.cb_sspf, sspf_values)
+        self.lbl_nb_pf_res.setText(str(len(pf_values)))
+        self.lbl_nb_sspf_res.setText(str(len(sspf_values)))
+        self.lbl_surf_sig_res.setText(sspf_surface_calculation(self.ua_layer))
 
-        if value is not None:
-            pf_value = self.cb_pf.currentText()
-            sspf_value = self.cb_sspf.currentText()
+    def _fill_combo(self, combo, values):
+        combo.clear()
+        combo.addItem("")
+        combo.addItems(sorted({str(value) for value in values}))
 
-            if self.sender() is self.cb_pf:
-                values = get_sspf_list(self.ua_layer, pf_list=pf_value or None)
-                self.cb_sspf.clear()
-                self.cb_sspf.addItem("")
-                self.cb_sspf.addItems(sorted({str(v) for v in values}))
-                sspf_value = ""
-
-        expr = self.build_sspf_expression(pf_value, sspf_value)
-        
-        if expr is None:
-            self.ua_layer.removeSelection()
-
-        ids = select_feats_by_expression(self.ua_layer, expr, self.iface)
-
-        if ids:
-            surf = sspf_surface_calculation(self.ua_layer)
-            if surf:
-                self.lbl_surf_sig.setText(f"Surface SIG : {surf}")
-
-    def build_sspf_expression(self, pf_value=None, sspf_value=None):
-
-        pf_field = seq_field("pcl_code")["name"]
-        sspf_field = seq_field("sub_code")["name"]
-
-        filters = []
-
-        if pf_value == "NULL":
-            filters.append(f"\"{pf_field}\" IS NULL")
-
-        elif pf_value not in (None, ""):
-            filters.append(f"\"{pf_field}\" = '{pf_value}'")
-
-        if sspf_value == "NULL":
-            filters.append(f"\"{sspf_field}\" IS NULL")
-
-        elif sspf_value not in (None, ""):
-            filters.append(f"\"{sspf_field}\" = '{sspf_value}'")
-
-        if not filters:
-            return None
-
-        return " AND ".join(filters)
-
-
-    def _set_checker_status(self, inc_ua=None):
-
-        if not inc_ua:
-            self._setup_ui_errors(False)
+    def _on_filter_changed(self):
+        if not self.ua_layer:
             return
 
-        self._setup_ui_errors(True)
-        self._fill_checker_tree(inc_ua)
+        pf_value = self.cb_pf.currentText()
+        if self.sender() is self.cb_pf:
+            self._fill_combo(self.cb_sspf, get_sspf_list(self.ua_layer, pf_list=pf_value or None))
 
+        self._select_features(pf_value, self.cb_sspf.currentText())
+
+    def _select_features(self, pf_value, sspf_value):
+        if not self.ua_layer:
+            return
+
+        expr = self.build_sspf_expression(pf_value, sspf_value)
+        if expr is None:
+            self.ua_layer.removeSelection()
+        else:
+            select_feats_by_expression(self.ua_layer, expr, self.iface)
+        self.lbl_surf_sig_res.setText(sspf_surface_calculation(self.ua_layer))
+
+    def build_sspf_expression(self, pf_value=None, sspf_value=None):
+        filters = []
+        for key, value in (("pcl_code", pf_value), ("sub_code", sspf_value)):
+            field = seq_field(key)["name"]
+            if value == "NULL":
+                filters.append(f'"{field}" IS NULL')
+            elif value not in (None, ""):
+                value = value.replace("'", "''")
+                filters.append(f'"{field}" = \'{value}\'')
+        return " AND ".join(filters) or None
 
     def _fill_checker_tree(self, bad_ua):
-
         tree = self.tree_checker
-        tree.itemDoubleClicked.connect(self._on_tree_item_clicked)
-        tree.setHeaderHidden(True)
-        tree.setRootIsDecorated(False)
-        tree.setIndentation(0)
         tree.clear()
-
+        tree.setVisible(bool(bad_ua))
+        self.lbl_errors.setVisible(bool(bad_ua))
         icon = QgsApplication.getThemeIcon("/mIconWarning.svg")
 
         for n_parfor, fields in bad_ua.items():
-
             for field, values in fields.items():
-
-                vals = ", ".join(str(v) for v in values)
-
-                warn = ""
-
-                item = QTreeWidgetItem([warn, n_parfor, field, vals])
+                item = QTreeWidgetItem(["", n_parfor, field, ", ".join(map(str, values))])
                 item.setIcon(0, icon)
-
                 for col in range(4):
                     item.setBackground(col, QColor(255, 220, 220))
                     item.setForeground(col, QColor(120, 0, 0))
-                    item.setTextAlignment(col, Qt.AlignCenter)
+                    item.setTextAlignment(col, Qt.AlignmentFlag.AlignCenter)
 
                 tree.addTopLevelItem(item)
-                
+
         for col in range(4):
             tree.resizeColumnToContents(col)
 
-    def _on_tree_item_clicked(self,item):
-        n_parfor = item.text(1)
-        pf = n_parfor.split(".")[0]
-        sspf = n_parfor.split(".")[1]
-        self._on_cb_pf_changed(value=None,pf_value=pf,sspf_value=sspf)
+    def _on_tree_item_clicked(self, item):
+        pf, sspf = item.text(1).split(".", 1)
+        self._select_features(pf, sspf)

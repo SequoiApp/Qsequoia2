@@ -148,7 +148,7 @@ def seq_layer(key):
 
     return result
 
-def resolve_seq_layer(key, project, seq_id=None):
+def resolve_seq_layer(key, project, seq_id=None, spatial_only=False):
     meta = seq_layer(key)
 
     filename = meta["filename"]
@@ -159,6 +159,8 @@ def resolve_seq_layer(key, project, seq_id=None):
     filename = filename.casefold()
 
     for layer in project.mapLayers().values():
+        if spatial_only and not (isinstance(layer, QgsVectorLayer) and layer.isSpatial()):
+            continue
         messageLog(f"Checking layer '{layer.name()}' with source '{layer.source()}'...")
         source = layer.source().split("|")[0]  # remove provider suffix : path|layername=...
         path = Path(source)
@@ -177,6 +179,7 @@ def resolve_seq_layer(key, project, seq_id=None):
             return layer
 
     return None
+
 
 def seq_field(field: str) -> dict:
 

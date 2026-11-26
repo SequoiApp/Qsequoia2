@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>EngagementFiscauxDialog</class>
+ <widget class="QWidget" name="EngagementFiscauxDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>396</width>
+    <height>349</height>
+   </rect>
+  </property>
+  <layout class="QVBoxLayout" name="vbox_engagement_fiscaux">
+   <item>
+    <widget class="QLabel" name="lbl_status">
+     <property name="text"><string>Veuillez charger la couche PARCA.</string></property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="btn_create_tables">
+     <property name="text">
+      <string>Créer les tables</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="btn_add_engagement">
+     <property name="text">
+      <string>Ajouter une certification…</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="grp_selection">
+     <property name="title">
+      <string>Consulter une certification</string>
+     </property>
+     <layout class="QFormLayout" name="form_selection">
+      <item row="0" column="0">
+       <widget class="QLabel" name="lbl_certifications">
+        <property name="text">
+         <string>Certification :</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QComboBox" name="cb_certifications"/>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="lbl_parcels">
+        <property name="text">
+         <string>Parcelles engagées :</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLabel" name="lbl_parcel_count"/>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="lbl_area">
+        <property name="text">
+         <string>Surface SIG :</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QLabel" name="lbl_area_value"/>
+      </item>
+      <item row="3" column="0" colspan="2">
+       <widget class="QPushButton" name="btn_delete">
+        <property name="text">
+         <string>Supprimer la certification…</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="grp_assignment">
+     <property name="title">
+      <string>Associer la sélection PARCA</string>
+     </property>
+     <layout class="QFormLayout" name="form_assignment">
+      <item row="0" column="0">
+       <widget class="QLabel" name="lbl_target">
+        <property name="text">
+         <string>Certification cible :</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QComboBox" name="cb_target"/>
+      </item>
+      <item row="1" column="0" colspan="2">
+       <widget class="QPushButton" name="btn_link_parcels">
+        <property name="text">
+         <string>Associer les parcelles sélectionnées</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0" colspan="2">
+       <widget class="QPushButton" name="btn_unlink_parcels">
+        <property name="text"><string>Dissocier les parcelles sélectionnées</string></property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <spacer name="vspace_bottom">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

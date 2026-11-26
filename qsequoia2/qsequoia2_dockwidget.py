@@ -199,7 +199,7 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         forest_tab = add_tab(ForestDataWidget(iface=self.iface, parent=self), "mActionCalculateField.svg", "Métadonnées")
         ua_check_tab = add_tab(UaCheckerWidget(self.iface,parent=self), "mActionZoomToSelected.svg", "Vérification des données")
         add_data_tab = add_tab(AddDataTabWidget(iface=self.iface, parent=self), "mActionAddLayer.svg", "Ajout de données")
-        engagements = add_tab(EngagementFiscauxDialog(self.iface, self), "mActionSelectByExpression.svg", "Engagements fiscaux")
+        engagements = add_tab(EngagementFiscauxDialog(self.iface, self), "mIconCertificate.svg", "Engagements fiscaux")
         self.layout_tab = add_tab(LayoutDesignerWidget(iface=self.iface, parent=self), "mActionNewLayout.svg", "Conception de mise en page")
         tools_tab = add_tab(ToolsDialog(iface=self.iface, parent=self), "processingAlgorithm.svg",  "Outils")
 

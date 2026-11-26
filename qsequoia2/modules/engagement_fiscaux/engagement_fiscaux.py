@@ -9,7 +9,7 @@ from qgis.gui import QgsAttributeDialog, QgsAttributeEditorContext
 from qgis.PyQt import uic
 from qgis.PyQt.QtWidgets import QMessageBox, QWidget
 
-from ..utils.Qmessage import messageBar
+from ..utils.Qmessage import messageBar, messageLog
 from ..utils.seq_config import resolve_seq_layer, seq_field, seq_layer
 from ..utils.variable import get_project_variable
 from . import database
@@ -37,9 +37,9 @@ class EngagementFiscauxDialog(QWidget, FORM_CLASS):
 
         self.parca = None
         self.seq_id = get_project_variable("QS2_seq_id")
-        self.table = f"{self.seq_id}_{seq_layer("parca")["name"]}"
+        self.table = f"{self.seq_id}_{seq_layer('parca')['name']}"
 
-        self.btn_create_tables.clicked.connect(self.create_tables)
+        self.btn_create_tables.clicked.connect(self.create_or_import_tables)
         self.btn_add_engagement.clicked.connect(self.add_engagement)
         self.btn_edit.clicked.connect(self.edit_engagement)
 
@@ -47,7 +47,7 @@ class EngagementFiscauxDialog(QWidget, FORM_CLASS):
         self.btn_unlink_parcels.clicked.connect(self.unlink_parcels)
         self.btn_delete.clicked.connect(self.delete_engagement)
 
-        self.cb_engagements.activated.connect(lambda _: self.show_engagement(select=True))
+        self.cb_engagements.activated.connect(self.show_engagement)
         self.cb_target.currentIndexChanged.connect(self.on_selection_changed)
 
         self.project.layersAdded.connect(self.refresh)
@@ -66,10 +66,6 @@ class EngagementFiscauxDialog(QWidget, FORM_CLASS):
 
         self.parca = parca
 
-        # Set widget editability
-        self.lbl_status.setVisible(not parca_is_loaded)
-        self.grp_selection.setEnabled(parca_is_loaded)
-        self.grp_assignment.setEnabled(parca_is_loaded)
 
         # Find database path
         self.path = None
@@ -77,19 +73,25 @@ class EngagementFiscauxDialog(QWidget, FORM_CLASS):
             source = QgsProviderRegistry.instance().decodeUri("ogr", self.parca.source())
             self.path = Path(self.project.readPath(source["path"])).resolve()
 
+        # Update UI state
         engagements = database.engagements(self.path) if parca_is_loaded else None
         has_tables = engagements is not None
-        can_create_tables = parca_is_loaded and not has_tables
-        self.btn_create_tables.setEnabled(can_create_tables)
+        has_engagements = bool(engagements)
+
+        self.btn_create_tables.setEnabled(parca_is_loaded)
+        self.btn_create_tables.setText("Importer les tables" if has_tables else "Créer les tables")
         self.btn_create_tables.setToolTip(
-            "Les tables d’engagements fiscaux existent déjà dans la base de données." if has_tables else ""
+            "Charger les tables dans le projet en lecture seule." if has_tables else ""
         )
         self.btn_add_engagement.setEnabled(has_tables)
 
         for combo in (self.cb_engagements, self.cb_target):
             populate_combo(combo, engagements or [], combo.currentData())
 
-        self.show_engagement()
+        # Set widget editability
+        self.lbl_status.setVisible(not parca_is_loaded)
+        self.grp_selection.setEnabled(has_engagements)
+        self.grp_assignment.setEnabled(has_engagements)
 
     def on_selection_changed(self):
         # Update parcels assignement UI
@@ -107,8 +109,12 @@ class EngagementFiscauxDialog(QWidget, FORM_CLASS):
         self.btn_edit.setEnabled(has_selected_engagement)
         self.btn_delete.setEnabled(has_selected_engagement)
 
-    def create_tables(self):
+    def create_or_import_tables(self):
         try:
+            has_tables = database.engagements(self.path) is not None
+            if has_tables:
+                self.import_tables()
+                return
             created = database.create_tables(self.path, self.table)
         except sqlite3.Error as error:
             messageBar(self.iface, str(error), "c")
@@ -123,6 +129,25 @@ class EngagementFiscauxDialog(QWidget, FORM_CLASS):
     def table_layer(self, table):
         uri = QgsProviderRegistry.instance().encodeUri("ogr", {"path": str(self.path), "layerName": table})
         return QgsVectorLayer(uri, table, "ogr")
+
+    def import_tables(self):
+        for table in (database.ENGAGEMENTS_TABLE_NAME, database.PARCA_ENGAGEMENTS_TABLE_NAME):
+            layer = self.table_layer(table)
+            existing = next((item for item in self.project.mapLayers().values()
+                             if isinstance(item, QgsVectorLayer) and item.source() == layer.source()), None)
+            if existing is not None:
+                layer = existing
+            layer_is_valid = layer.isValid()
+            if not layer_is_valid:
+                messageBar(self.iface, f"Impossible d’ouvrir la table {table}.", "c")
+                return
+            is_read_only = layer.setReadOnly(True)
+            if not is_read_only:
+                messageBar(self.iface, f"Terminez l’édition de {table} avant de l’importer en lecture seule.", "w")
+                return
+            if existing is None:
+                self.project.addMapLayer(layer)
+        self.refresh()
 
     def edit_engagement(self):
         fid = self.cb_engagements.currentData()
@@ -263,7 +288,7 @@ class EngagementFiscauxDialog(QWidget, FORM_CLASS):
 
         return count, hectares if complete else None, ids
 
-    def show_engagement(self, select=False):
+    def show_engagement(self):
         fid = self.cb_engagements.currentData()
         self.engaged_ids = set()
         self.on_selection_changed()
@@ -274,7 +299,8 @@ class EngagementFiscauxDialog(QWidget, FORM_CLASS):
         else:
             self.lbl_parcel_count.setText("-")
             self.lbl_area_value.setText("-")
-        if select and self.parca:
+            
+        if self.parca:
             self.parca.selectByIds(list(self.engaged_ids))
 
     def delete_engagement(self):

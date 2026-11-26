@@ -13,7 +13,9 @@
   <layout class="QVBoxLayout" name="vbox_engagement_fiscaux">
    <item>
     <widget class="QLabel" name="lbl_status">
-     <property name="text"><string>Veuillez charger la couche PARCA.</string></property>
+     <property name="text">
+      <string>Veuillez charger le parca</string>
+     </property>
     </widget>
    </item>
    <item>
@@ -26,25 +28,29 @@
    <item>
     <widget class="QPushButton" name="btn_add_engagement">
      <property name="text">
-      <string>Ajouter une certification…</string>
+      <string>Ajouter un engagement…</string>
      </property>
     </widget>
    </item>
    <item>
     <widget class="QGroupBox" name="grp_selection">
      <property name="title">
-      <string>Consulter une certification</string>
+      <string>Consulter un engagement</string>
      </property>
      <layout class="QFormLayout" name="form_selection">
       <item row="0" column="0">
-       <widget class="QLabel" name="lbl_certifications">
+       <widget class="QLabel" name="lbl_engagements">
         <property name="text">
-         <string>Certification :</string>
+         <string>Engagement :</string>
         </property>
        </widget>
       </item>
       <item row="0" column="1">
-       <widget class="QComboBox" name="cb_certifications"/>
+       <widget class="QComboBox" name="cb_engagements">
+        <property name="placeholderText">
+         <string>Choisir un engagement...</string>
+        </property>
+       </widget>
       </item>
       <item row="1" column="0">
        <widget class="QLabel" name="lbl_parcels">
@@ -59,7 +65,7 @@
       <item row="2" column="0">
        <widget class="QLabel" name="lbl_area">
         <property name="text">
-         <string>Surface SIG :</string>
+         <string>Surface CAD :</string>
         </property>
        </widget>
       </item>
@@ -67,9 +73,16 @@
        <widget class="QLabel" name="lbl_area_value"/>
       </item>
       <item row="3" column="0" colspan="2">
+       <widget class="QPushButton" name="btn_edit">
+        <property name="text">
+         <string>Modifier l’engagement…</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0" colspan="2">
        <widget class="QPushButton" name="btn_delete">
         <property name="text">
-         <string>Supprimer la certification…</string>
+         <string>Supprimer l’engagement…</string>
         </property>
        </widget>
       </item>
@@ -85,12 +98,16 @@
       <item row="0" column="0">
        <widget class="QLabel" name="lbl_target">
         <property name="text">
-         <string>Certification cible :</string>
+         <string>Engagement cible :</string>
         </property>
        </widget>
       </item>
       <item row="0" column="1">
-       <widget class="QComboBox" name="cb_target"/>
+       <widget class="QComboBox" name="cb_target">
+        <property name="placeholderText">
+         <string>Choisir un engagement...</string>
+        </property>
+       </widget>
       </item>
       <item row="1" column="0" colspan="2">
        <widget class="QPushButton" name="btn_link_parcels">
@@ -101,7 +118,9 @@
       </item>
       <item row="2" column="0" colspan="2">
        <widget class="QPushButton" name="btn_unlink_parcels">
-        <property name="text"><string>Dissocier les parcelles sélectionnées</string></property>
+        <property name="text">
+         <string>Dissocier les parcelles sélectionnées</string>
+        </property>
        </widget>
       </item>
      </layout>

@@ -205,7 +205,7 @@ class Qsequoia2DockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         self.projectChanged.connect(add_data_tab.on_project_changed)
         self.projectLoaded.connect(forest_tab.on_project_loaded)
-        self.projectLoaded.connect(engagements.refresh)
+        #self.projectLoaded.connect(engagements.refresh)
         self.projectLoaded.connect(configure_snapping)
 
     def refresh(self):

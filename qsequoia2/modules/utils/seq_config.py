@@ -127,6 +127,7 @@ def seq_layer(key):
     prefix = match_key.split(".")[0]
 
     type_map = {
+        "t": "table",
         "v": "vect",
         "r": "rast",
         "x": "xlsx"
@@ -233,12 +234,26 @@ def _vector_file_path(layer, project=None):
     )
     return _norm_project_path(parts.get("path"), project)
 
+def seq_layer_path(key, project=None, seq_id=None) -> Path | None:
+    """Chemin absolu du fichier d'une couche Sequoia chargée dans le projet, ou None."""
+    project = project or QgsProject.instance()
+    layer = resolve_seq_layer(key, project, seq_id=seq_id)
+    if layer is None:
+        return None
+    path = (_vector_file_path(layer, project) if isinstance(layer, QgsVectorLayer)
+            else _raster_file_path(layer, project))
+    return Path(path) if path else None
+
 def _raster_file_path(layer, project=None):
     project = project or QgsProject.instance()
     raw = layer.dataProvider().dataSourceUri() or layer.source()
     return _norm_project_path(raw, project)
 
-def _find_existing_seq_layer(path, layer_type, group=None):
+def _vector_layer_name(layer):
+    parts = QgsProviderRegistry.instance().decodeUri(layer.providerType(), layer.source())
+    return parts.get("layerName")
+
+def _find_existing_seq_layer(path, layer_type, group=None, layername=None):
     project = QgsProject.instance()
     target = _norm_project_path(path, project)
 
@@ -249,9 +264,12 @@ def _find_existing_seq_layer(path, layer_type, group=None):
     )
 
     for layer in layers:
-        if layer_type in {"vect", "xlsx"} and isinstance(layer, QgsVectorLayer):
-            if _vector_file_path(layer, project) == target:
-                return layer
+        if layer_type in {"vect", "xlsx", "table"} and isinstance(layer, QgsVectorLayer):
+            if _vector_file_path(layer, project) != target:
+                continue
+            if layername and (_vector_layer_name(layer) or "").casefold() != layername.casefold():
+                continue
+            return layer
 
         elif layer_type == "rast" and isinstance(layer, QgsRasterLayer):
             if _raster_file_path(layer, project) == target:
@@ -259,14 +277,21 @@ def _find_existing_seq_layer(path, layer_type, group=None):
 
     return None
 
-def seq_read(key, seq_dir, add_to_project=False, group=None, style_folder=None):
+
+def seq_read(key, seq_dir, add_to_project=False, group=None, style_folder=None,
+             layername=None, name=None, if_exists="raise"):
+    """
+    layername : table/couche à ouvrir dans un fichier multi-couches (GeoPackage)
+    name      : nom affiché dans QGIS (par défaut : alias, ou layername)
+    if_exists : "raise" (comportement actuel) ou "return" (renvoie la couche déjà chargée)
+    """
     meta = seq_layer(key)
     if not meta:
         raise RuntimeError(f"Couche Sequoia inconnue: {key}")
 
     layer_type = meta["type"]
     filename = meta["filename"]
-    alias = meta["alias"]
+    alias = name or layername or meta["alias"]
     family = (meta.get("family") or "autres").upper()
 
     seq_dir = Path(seq_dir)
@@ -274,63 +299,64 @@ def seq_read(key, seq_dir, add_to_project=False, group=None, style_folder=None):
 
     if not matches:
         raise FileNotFoundError(f"Layer '{filename}' not found in '{seq_dir}'")
-
     if len(matches) > 1:
         raise RuntimeError(
-            f"Multiple layers found for '{filename}':\n" +
-            "\n".join(map(str, matches))
+            f"Multiple layers found for '{filename}':\n" + "\n".join(map(str, matches))
         )
 
     path = matches[0]
     path_str = str(path)
-
     project = QgsProject.instance()
 
     if add_to_project:
         group = group or get_group(family, project=project)
 
-        existing = _find_existing_seq_layer(path, layer_type, group)
+        existing = _find_existing_seq_layer(path, layer_type, group, layername)
         if existing:
+            if if_exists == "return":
+                return existing
             messageLog(f"[SEQ] Déjà chargé : {existing.name()} dans '{group.name()}'")
             raise RuntimeError(f"Couche déjà chargée : {existing.name()}")
 
-    if layer_type in {"vect", "xlsx"}:
-        layer = QgsVectorLayer(path_str, alias, "ogr")
+    if layer_type in {"vect", "xlsx", "table"}:
+        uri = f"{path_str}|layername={layername}" if layername else path_str
+        layer = QgsVectorLayer(uri, alias, "ogr")
     elif layer_type == "rast":
         layer = QgsRasterLayer(path_str, alias)
     else:
         raise ValueError(f"Unsupported layer type: {layer_type}")
 
     if not layer.isValid():
-        raise RuntimeError(f"Invalid layer: {path}")
+        raise RuntimeError(f"Invalid layer: {uri if layer_type != 'rast' else path}")
 
     if style_folder:
-        styles = get_styles(key, style_folder)
-
-        if styles:
-            sm = layer.styleManager()
-            default_style = sm.currentStyle()
-            for style in styles:
-                style = Path(style)
-                style_name = style.stem
-
-                sm.addStyle(style_name, sm.style(sm.currentStyle()))
-                sm.setCurrentStyle(style_name)
-
-                layer.loadNamedStyle(str(style))
-
-            # Ensure the exact base style is selected
-            base_style_name = meta["name"]
-            if base_style_name in sm.styles():
-                sm.setCurrentStyle(base_style_name)
-
-            sm.removeStyle(default_style)
-            layer.triggerRepaint()
+        layer = apply_style(layer, key, style_folder)
 
     if add_to_project:
         project.addMapLayer(layer, False)
         group.addLayer(layer)
 
+    return layer
+
+def apply_style(layer, key, style_folder):
+    styles = get_styles(key, style_folder)
+    if not styles:
+        return layer
+
+    sm = layer.styleManager()
+    default_style = sm.currentStyle()
+    for style in map(Path, styles):
+        sm.addStyle(style.stem, sm.style(sm.currentStyle()))
+        sm.setCurrentStyle(style.stem)
+        layer.loadNamedStyle(str(style))
+
+    # Ensure the exact base style is selected
+    base_style_name = seq_layer(key)["name"]
+    if base_style_name in sm.styles():
+        sm.setCurrentStyle(base_style_name)
+
+    sm.removeStyle(default_style)
+    layer.triggerRepaint()
     return layer
 
 def find_all_seq_dir(root_dir, max_dirs=5000):

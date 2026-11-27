@@ -1,0 +1,20 @@
+
+CREATE TABLE IF NOT EXISTS "ENGAGEMENTS_FISCAUX" (
+    "fid"        INTEGER PRIMARY KEY AUTOINCREMENT,
+    "NOM"        TEXT NOT NULL UNIQUE,
+    "TYPE"       TEXT NOT NULL,
+    "DATE_DEBUT" DATE,
+    "DATE_FIN"   DATE
+);
+
+CREATE TABLE IF NOT EXISTS "PARCA_POSSEDE_ENGAGEMENTS" (
+    "fid"            INTEGER PRIMARY KEY AUTOINCREMENT,
+    "IDU"            TEXT NOT NULL,
+    "ENGAGEMENT_FID" INTEGER NOT NULL,
+    UNIQUE ("IDU", "ENGAGEMENT_FID"),
+    FOREIGN KEY ("ENGAGEMENT_FID") REFERENCES "ENGAGEMENTS_FISCAUX"("fid") ON DELETE CASCADE
+);
+
+INSERT OR IGNORE INTO gpkg_contents (table_name, data_type, identifier)
+VALUES ('ENGAGEMENTS_FISCAUX', 'attributes', 'Engagements fiscaux'),
+       ('PARCA_POSSEDE_ENGAGEMENTS', 'attributes', 'Association parca <-> engagements');
